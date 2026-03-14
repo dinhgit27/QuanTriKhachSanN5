@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using HotelManagement.API.DTOs;
-using HotelManagement.API.DTOs.Room;
-using HotelManagement.API.Models;
+using KS_N5.API.DTOs;
+using KS_N5.API.DTOs.Room;
+using KS_N5.API.Models;
 
-namespace HotelManagement.API.Interfaces
+namespace KS_N5.API.Interfaces
 {
     public interface IBookingService
     {

@@ -1,4 +1,4 @@
-namespace QL_KhachSan.DTOs
+namespace KS_N5.DTOs
 {
     public class GenerateInvoiceRequestDto
     {

@@ -1,6 +1,6 @@
 using System;
 
-namespace HotelManagement.API.DTOs.Room
+namespace KS_N5.API.DTOs.Room
 {
     public class SearchRoomRequestDTO
     {

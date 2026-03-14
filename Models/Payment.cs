@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace QL_KhachSan.Models
+namespace KS_N5.Models
 {
     [Table("Payments")]
     public class Payment

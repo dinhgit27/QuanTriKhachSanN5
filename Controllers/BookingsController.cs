@@ -1,10 +1,10 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using HotelManagement.API.Interfaces;
-using HotelManagement.API.DTOs.Room;
+using KS_N5.API.Interfaces;
+using KS_N5.API.DTOs.Room;
 
-namespace HotelManagement.API.Controllers
+namespace KS_N5.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

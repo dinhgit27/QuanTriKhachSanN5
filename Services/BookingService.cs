@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using HotelManagement.API.Data;
-using HotelManagement.API.DTOs;
-using HotelManagement.API.DTOs.Room;
-using HotelManagement.API.Interfaces;
-using HotelManagement.API.Models;
+using KS_N5.API.Data;
+using KS_N5.API.DTOs;
+using KS_N5.API.DTOs.Room;
+using KS_N5.API.Interfaces;
+using KS_N5.API.Models;
 
-namespace HotelManagement.API.Services
+namespace KS_N5.API.Services
 {
     public class BookingService : IBookingService
     {

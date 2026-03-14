@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using QL_KhachSan.Models;   // Đổi namespace nếu thư mục Models của bạn tên khác
-using QL_KhachSan.Services; // Nơi chứa CheckoutService
+using KS_N5.Models;   // Đổi namespace nếu thư mục Models của bạn tên khác
+using KS_N5.Services; // Nơi chứa CheckoutService
 
 var builder = WebApplication.CreateBuilder(args);
 

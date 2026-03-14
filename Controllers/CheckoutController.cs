@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using QL_KhachSan.DTOs;
-using QL_KhachSan.Services;
+using KS_N5.DTOs;
+using KS_N5.Services;
 
-namespace QL_KhachSan.Controllers
+namespace KS_N5.Controllers
 {
     [ApiController]
     [Route("api/checkout")]

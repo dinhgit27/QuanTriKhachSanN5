@@ -1,9 +1,9 @@
-using QL_KhachSan.Models;
-using QL_KhachSan.DTOs;
+using KS_N5.Models;
+using KS_N5.DTOs;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 
-namespace QL_KhachSan.Services
+namespace KS_N5.Services
 {
     public class CheckoutService
     {
