@@ -1,6 +1,11 @@
+// =========================================================================
+// PROGRAM.CS - CẤU HÌNH ỨNG DỤNG VỚI 6 MODULE
+// =========================================================================
+
 using Microsoft.EntityFrameworkCore;
-using KS_N5.Models;   // Đổi namespace nếu thư mục Models của bạn tên khác
-using KS_N5.Services; // Nơi chứa CheckoutService
+using KS_N5.API.Data;
+using KS_N5.API.Services;
+using KS_N5.API.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,24 +16,37 @@ var builder = WebApplication.CreateBuilder(args);
 // Cấu hình Controller
 builder.Services.AddControllers();
 
-// Cấu hình Swagger (để test API trên trình duyệt)
+// Cấu hình Swagger (để test API)
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Cấu hình Database Context (Lấy chuỗi kết nối từ appsettings.json)
-builder.Services.AddDbContext<QlyKhachSanContext>(options =>
+// Cấu hình CORS (cho phép frontend gọi API)
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+    });
+});
+
+// Cấu hình Database Context
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Cấu hình Service của bạn (Code mình vừa đưa ở trên)
-builder.Services.AddHttpClient<CheckoutService>();
-builder.Services.AddScoped<CheckoutService>();
+// Đăng ký Services cho 6 Module
+builder.Services.AddScoped<IBookingService, BookingService>(); // Module 2
+builder.Services.AddScoped<ICMSService, CMSService>(); // Module 1
+builder.Services.AddScoped<IRoomInventoryService, RoomInventoryService>(); // Module 3
+builder.Services.AddScoped<IReceptionService, ReceptionService>(); // Module 4
+builder.Services.AddScoped<IPaymentService, PaymentService>(); // Module 5
+builder.Services.AddScoped<IHRRBACService, HRRBACService>(); // Module 6
 
 // ==========================================
 // 2. BUILD APP VÀ CẤU HÌNH PIPELINE
 // ==========================================
 var app = builder.Build();
 
-// Cấu hình môi trường chạy (Mở Swagger khi đang code)
+// Cấu hình môi trường chạy
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -36,7 +54,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+app.UseCors("AllowAll");
 app.UseAuthorization();
 
 // Map các API Controllers

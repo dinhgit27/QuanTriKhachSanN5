@@ -1,0 +1,60 @@
+// =========================================================================
+// MODULE 1: CMS - CONTROLLER
+// =========================================================================
+
+using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using KS_N5.API.Interfaces;
+using KS_N5.API.Models;
+
+namespace KS_N5.API.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    public class CMSController : ControllerBase
+    {
+        private readonly ICMSService _cmsService;
+
+        public CMSController(ICMSService cmsService)
+        {
+            _cmsService = cmsService;
+        }
+
+        [HttpGet("articles")]
+        public async Task<ActionResult<List<Article>>> GetArticles()
+        {
+            var articles = await _cmsService.GetArticlesAsync();
+            return Ok(articles);
+        }
+
+        [HttpGet("articles/{id}")]
+        public async Task<ActionResult<Article>> GetArticle(int id)
+        {
+            var article = await _cmsService.GetArticleByIdAsync(id);
+            if (article == null) return NotFound();
+            return Ok(article);
+        }
+
+        [HttpPost("articles")]
+        public async Task<IActionResult> CreateArticle(Article article)
+        {
+            await _cmsService.CreateArticleAsync(article);
+            return CreatedAtAction(nameof(GetArticle), new { id = article.Id }, article);
+        }
+
+        [HttpGet("attractions")]
+        public async Task<ActionResult<List<Attraction>>> GetAttractions()
+        {
+            var attractions = await _cmsService.GetAttractionsAsync();
+            return Ok(attractions);
+        }
+
+        [HttpGet("reviews/room/{roomId}")]
+        public async Task<ActionResult<List<Review>>> GetReviewsByRoom(int roomId)
+        {
+            var reviews = await _cmsService.GetReviewsByRoomAsync(roomId);
+            return Ok(reviews);
+        }
+    }
+}

@@ -1,0 +1,9 @@
+C:\QuanTriKhachSanN5\obj\Debug\net8.0\QuanTriKhachSanN5.csproj.AssemblyReference.cache
+C:\QuanTriKhachSanN5\obj\Debug\net8.0\rpswa.dswa.cache.json
+C:\QuanTriKhachSanN5\obj\Debug\net8.0\QuanTriKhachSanN5.GeneratedMSBuildEditorConfig.editorconfig
+C:\QuanTriKhachSanN5\obj\Debug\net8.0\QuanTriKhachSanN5.AssemblyInfoInputs.cache
+C:\QuanTriKhachSanN5\obj\Debug\net8.0\QuanTriKhachSanN5.AssemblyInfo.cs
+C:\QuanTriKhachSanN5\obj\Debug\net8.0\QuanTriKhachSanN5.csproj.CoreCompileInputs.cache
+C:\QuanTriKhachSanN5\obj\Debug\net8.0\QuanTriKhachSanN5.MvcApplicationPartsAssemblyInfo.cs
+C:\QuanTriKhachSanN5\obj\Debug\net8.0\QuanTriKhachSanN5.MvcApplicationPartsAssemblyInfo.cache
+C:\QuanTriKhachSanN5\obj\Debug\net8.0\QuanTriKhachSanN5.sourcelink.json
