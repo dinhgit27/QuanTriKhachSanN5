@@ -12,6 +12,7 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Post> Posts => Set<Post>();
+    public DbSet<Attraction> Attractions => Set<Attraction>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -33,5 +34,17 @@ public class ApplicationDbContext : DbContext
                 CreatedAt = DateTime.UtcNow
             }
         );
+
+        modelBuilder.Entity<Attraction>().HasData(
+            new Attraction
+            {
+                Id = 1,
+                Name = "Bãi biển Nha Trang",
+                Description = "Bãi biển nổi tiếng với cát trắng và nước trong xanh.",
+                Location = "Nha Trang, Khánh Hòa",
+                CreatedAt = DateTime.UtcNow
+            }
+        );
     }
 }
+
