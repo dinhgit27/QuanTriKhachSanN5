@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\PC\\Downloads\\quantrikhachsan\\QuanTriKhachSanN5\\QuanTriKhachSanN5.csproj": {}
+    "C:\\Users\\SikunZed\\Downloads\\Lập trình Web\\QuanTriKhachSanN5\\QuanTriKhachSanN5.csproj": {}
   },
   "projects": {
-    "C:\\Users\\PC\\Downloads\\quantrikhachsan\\QuanTriKhachSanN5\\QuanTriKhachSanN5.csproj": {
+    "C:\\Users\\SikunZed\\Downloads\\Lập trình Web\\QuanTriKhachSanN5\\QuanTriKhachSanN5.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\PC\\Downloads\\quantrikhachsan\\QuanTriKhachSanN5\\QuanTriKhachSanN5.csproj",
+        "projectUniqueName": "C:\\Users\\SikunZed\\Downloads\\Lập trình Web\\QuanTriKhachSanN5\\QuanTriKhachSanN5.csproj",
         "projectName": "QuanTriKhachSanN5",
-        "projectPath": "C:\\Users\\PC\\Downloads\\quantrikhachsan\\QuanTriKhachSanN5\\QuanTriKhachSanN5.csproj",
-        "packagesPath": "C:\\Users\\PC\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\PC\\Downloads\\quantrikhachsan\\QuanTriKhachSanN5\\obj\\",
+        "projectPath": "C:\\Users\\SikunZed\\Downloads\\Lập trình Web\\QuanTriKhachSanN5\\QuanTriKhachSanN5.csproj",
+        "packagesPath": "C:\\Users\\SikunZed\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\SikunZed\\Downloads\\Lập trình Web\\QuanTriKhachSanN5\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\PC\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\SikunZed\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -51,6 +51,18 @@
         "net10.0": {
           "targetAlias": "net10.0",
           "dependencies": {
+            "BCrypt.Net-Next": {
+              "target": "Package",
+              "version": "[4.1.0, )"
+            },
+            "Google.Apis.Auth": {
+              "target": "Package",
+              "version": "[1.73.0, )"
+            },
+            "Microsoft.AspNetCore.Authentication.JwtBearer": {
+              "target": "Package",
+              "version": "[10.0.5, )"
+            },
             "Microsoft.AspNetCore.OpenApi": {
               "target": "Package",
               "version": "[10.0.5, )"
@@ -72,6 +84,10 @@
             "Swashbuckle.AspNetCore": {
               "target": "Package",
               "version": "[10.1.5, )"
+            },
+            "System.IdentityModel.Tokens.Jwt": {
+              "target": "Package",
+              "version": "[8.16.0, )"
             }
           },
           "imports": [

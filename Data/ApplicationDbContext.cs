@@ -11,5 +11,6 @@ namespace QuanTriKhachSanN5.Data
         }
 
         public DbSet<Service> Services { get; set; }
+        public DbSet<User> Users { get; set; }
     }
 }
