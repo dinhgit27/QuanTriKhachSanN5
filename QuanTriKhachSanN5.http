@@ -1,0 +1,6 @@
+@QuanTriKhachSanN5_HostAddress = http://localhost:5070
+
+GET {{QuanTriKhachSanN5_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
