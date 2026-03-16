@@ -2,23 +2,24 @@ using System.ComponentModel.DataAnnotations;
 
 namespace QuanTriKhachSanN5.Models
 {
+    // Model Service ánh xạ với bảng Services trong SQL Server
     public class Service
     {
-        [Key]
-        public int ServiceId { get; set; } 
-        // ID dịch vụ (khóa chính)
+        // Khóa chính của bảng
+        public int id { get; set; }
 
-        [Required]
-        public string ServiceName { get; set; } 
-        // tên dịch vụ (Pizza, Massage...)
+        // ID của loại dịch vụ (liên kết với bảng Service_Categories)
+        public int category_id { get; set; }
 
-        public string ServiceType { get; set; } 
-        // loại dịch vụ (Food, Spa, Laundry)
+        // Tên dịch vụ (ví dụ: Giặt đồ, Spa, Ăn sáng)
+        public string name { get; set; }
 
-        public decimal Price { get; set; } 
-        // giá tiền
+        // Giá dịch vụ
+        public decimal price { get; set; }
 
-        public string Description { get; set; } 
-        // mô tả dịch vụ
+        // Đơn vị tính (ví dụ: lần, giờ, người)
+        public string unit { get; set; }
+
+        public int status { get; set; } // 1 = enable, 0 = disable
     }
 }
