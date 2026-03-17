@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using KS_N5.DTOs;
-using KS_N5.Services;
+using QuanTriKhachSanN5.DTOs;
+using QuanTriKhachSanN5.Services;
 
-namespace KS_N5.Controllers
+namespace QuanTriKhachSanN5.Controllers.Disabled
 {
     [ApiController]
     [Route("api/checkout")]

@@ -6,11 +6,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using KS_N5.API.Data;
-using KS_N5.API.Interfaces;
-using KS_N5.API.Models;
+using QuanTriKhachSanN5.Data;
+using QuanTriKhachSanN5.Interfaces;
+using QuanTriKhachSanN5.Models;
 
-namespace KS_N5.API.Services
+namespace QuanTriKhachSanN5.Services
 {
     public class RoomInventoryService : IRoomInventoryService
     {
@@ -48,7 +48,7 @@ namespace KS_N5.API.Services
 
         public async Task<List<Room_Inventory>> GetRoomInventoryAsync(int roomId)
         {
-            return await _context.Room_Inventories.Where(ri => ri.RoomId == roomId).Include(ri => ri.Amenity).ToListAsync();
+            return await _context.RoomInventories.Where(ri => ri.RoomId == roomId).Include(ri => ri.Amenity).ToListAsync();
         }
     }
 }

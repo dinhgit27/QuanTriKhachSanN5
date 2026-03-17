@@ -4,9 +4,10 @@
 
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using KS_N5.API.DTOs;
+using QuanTriKhachSanN5.DTOs;
+using QuanTriKhachSanN5.Models;
 
-namespace KS_N5.API.Interfaces
+namespace QuanTriKhachSanN5.Interfaces
 {
     public interface IReceptionService
     {

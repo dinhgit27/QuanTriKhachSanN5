@@ -6,11 +6,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using KS_N5.API.Data;
-using KS_N5.API.Interfaces;
-using KS_N5.API.Models;
+using QuanTriKhachSanN5.Data;
+using QuanTriKhachSanN5.Interfaces;
+using QuanTriKhachSanN5.Models;
 
-namespace KS_N5.API.Services
+namespace QuanTriKhachSanN5.Services
 {
     public class CMSService : ICMSService
     {

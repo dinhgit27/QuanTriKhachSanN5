@@ -2,7 +2,7 @@
 // MODULE 4: LỄ TÂN & DỊCH VỤ MỞ RỘNG - MODELS
 // =========================================================================
 
-namespace KS_N5.API.Models
+namespace QuanTriKhachSanN5.Models
 {
     // Bảng Services: Dịch vụ (Spa, gọi món)
     public class Service

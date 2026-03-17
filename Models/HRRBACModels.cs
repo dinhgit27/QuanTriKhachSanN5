@@ -2,7 +2,7 @@
 // MODULE 6: NHÂN SỰ & PHÂN QUYỀN (RBAC) - MODELS
 // =========================================================================
 
-namespace KS_N5.API.Models
+namespace QuanTriKhachSanN5.Models
 {
     // Bảng Users: Tài khoản người dùng
     public class User

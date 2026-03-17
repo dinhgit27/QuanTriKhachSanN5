@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using KS_N5.API.DTOs;
-using KS_N5.API.DTOs.Room;
-using KS_N5.API.Models;
+using QuanTriKhachSanN5.DTOs;
+using QuanTriKhachSanN5.DTOs.Room;
+using QuanTriKhachSanN5.Models;
 
-namespace KS_N5.API.Interfaces
+namespace QuanTriKhachSanN5.Interfaces
 {
     public interface IBookingService
     {

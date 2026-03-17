@@ -4,11 +4,11 @@
 
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
-using KS_N5.API.DTOs;
-using KS_N5.API.Interfaces;
-using KS_N5.API.Models;
+using QuanTriKhachSanN5.DTOs;
+using QuanTriKhachSanN5.Interfaces;
+using QuanTriKhachSanN5.Models;
 
-namespace KS_N5.API.Controllers
+namespace QuanTriKhachSanN5.Controllers.Disabled
 {
     [ApiController]
     [Route("api/[controller]")]

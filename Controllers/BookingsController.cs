@@ -1,10 +1,10 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using KS_N5.API.Interfaces;
-using KS_N5.API.DTOs.Room;
+using QuanTriKhachSanN5.Interfaces;
+using QuanTriKhachSanN5.DTOs.Room;
 
-namespace KS_N5.API.Controllers
+namespace QuanTriKhachSanN5.Controllers.Disabled
 {
     [Route("api/[controller]")]
     [ApiController]

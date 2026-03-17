@@ -1,6 +1,6 @@
 using System;
 
-namespace KS_N5.API.DTOs.Room
+namespace QuanTriKhachSanN5.DTOs.Room
 {
     public class SearchRoomRequestDTO
     {

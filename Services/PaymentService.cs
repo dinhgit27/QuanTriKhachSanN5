@@ -6,11 +6,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using KS_N5.API.Data;
-using KS_N5.API.Interfaces;
-using KS_N5.API.Models;
+using QuanTriKhachSanN5.Data;
+using QuanTriKhachSanN5.Interfaces;
+using QuanTriKhachSanN5.Models;
 
-namespace KS_N5.API.Services
+namespace QuanTriKhachSanN5.Services
 {
     public class PaymentService : IPaymentService
     {
@@ -41,9 +41,9 @@ namespace KS_N5.API.Services
             var payment = new Payment
             {
                 InvoiceId = invoiceId,
-                Amount = amount,
+                AmountPaid = amount,
                 PaymentMethod = method,
-                PaymentDate = System.DateTime.Now,
+                CreatedAt = System.DateTime.Now,
                 Status = "Completed"
             };
             _context.Payments.Add(payment);

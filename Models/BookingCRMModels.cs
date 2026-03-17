@@ -2,7 +2,7 @@
 // MODULE 2: ĐẶT PHÒNG & CRM - MODELS (Bổ sung)
 // =========================================================================
 
-namespace KS_N5.API.Models
+namespace QuanTriKhachSanN5.Models
 {
     // Booking.cs đã có, bổ sung Booking_Details
     public class Booking_Detail

@@ -2,7 +2,7 @@
 // MODULE 3: QUẢN TRỊ QUỸ PHÒNG & VẬT TƯ - MODELS (Bổ sung)
 // =========================================================================
 
-namespace KS_N5.API.Models
+namespace QuanTriKhachSanN5.Models
 {
     // Rooms.cs và RoomType.cs đã có
 

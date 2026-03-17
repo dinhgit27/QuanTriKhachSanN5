@@ -2,7 +2,7 @@
 // MODULE 1: TRẢI NGHIỆM DU LỊCH & CMS - MODELS
 // =========================================================================
 
-namespace KS_N5.API.Models
+namespace QuanTriKhachSanN5.Models
 {
     // Bảng Articles: Bài viết blog, thông tin phòng
     public class Article

@@ -4,8 +4,9 @@
 
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using QuanTriKhachSanN5.Models;
 
-namespace KS_N5.API.Interfaces
+namespace QuanTriKhachSanN5.Interfaces
 {
     public interface IRoomInventoryService
     {

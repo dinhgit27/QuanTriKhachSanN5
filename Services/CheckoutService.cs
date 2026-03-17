@@ -1,16 +1,17 @@
-using KS_N5.Models;
-using KS_N5.DTOs;
+using QuanTriKhachSanN5.Models;
+using QuanTriKhachSanN5.DTOs;
+using QuanTriKhachSanN5.Data;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 
-namespace KS_N5.Services
+namespace QuanTriKhachSanN5.Services
 {
     public class CheckoutService
     {
-        private readonly QlyKhachSanContext _dbContext;
+        private readonly ApplicationDbContext _dbContext;
         private readonly HttpClient _httpClient;
 
-        public CheckoutService(QlyKhachSanContext dbContext, HttpClient httpClient)
+        public CheckoutService(ApplicationDbContext dbContext, HttpClient httpClient)
         {
             _dbContext = dbContext;
             _httpClient = httpClient;
