@@ -698,17 +698,17 @@
           }
         }
       },
-<<<<<<< HEAD
-      "Microsoft.EntityFrameworkCore.Tools/8.0.0": {
+      "Microsoft.EntityFrameworkCore.Tools/10.0.5": {
         "type": "package",
         "dependencies": {
+          "Microsoft.EntityFrameworkCore.Design": "10.0.5"
         }
       },
       "Microsoft.Extensions.ApiDescription.Server/10.0.0": {
->>>>>>> origin/tuan
         "type": "package",
         "build": {
           "build/Microsoft.Extensions.ApiDescription.Server.props": {},
+          "build/Microsoft.Extensions.ApiDescription.Server.targets": {}
         },
         "buildMultiTargeting": {
           "buildMultiTargeting/Microsoft.Extensions.ApiDescription.Server.props": {},
@@ -3837,23 +3837,23 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\SikunZed\\.nuget\\packages\\": {},
+    "C:\\Users\\DINH\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\SikunZed\\Downloads\\Lập trình Web\\QuanTriKhachSanN5\\QuanTriKhachSanN5.csproj",
+      "projectUniqueName": "C:\\QuanTriKhachSanN5\\QuanTriKhachSanN5.csproj",
       "projectName": "QuanTriKhachSanN5",
-      "projectPath": "C:\\Users\\SikunZed\\Downloads\\Lập trình Web\\QuanTriKhachSanN5\\QuanTriKhachSanN5.csproj",
-      "packagesPath": "C:\\Users\\SikunZed\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\SikunZed\\Downloads\\Lập trình Web\\QuanTriKhachSanN5\\obj\\",
+      "projectPath": "C:\\QuanTriKhachSanN5\\QuanTriKhachSanN5.csproj",
+      "packagesPath": "C:\\Users\\DINH\\.nuget\\packages\\",
+      "outputPath": "C:\\QuanTriKhachSanN5\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\SikunZed\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\DINH\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -4362,5 +4362,13 @@
         }
       }
     }
-  }
+  },
+  "logs": [
+    {
+      "code": "Undefined",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "Problem reading the cache file C:\\QuanTriKhachSanN5\\obj\\project.nuget.cache : '<' is an invalid start of a property name. Expected a '\"'. Path: $ | LineNumber: 2 | BytePositionInLine: 0."
+    }
+  ]
 }
