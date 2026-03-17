@@ -175,3 +175,4 @@ C:\QuanTriKhachSanN5\obj\Debug\net10.0\refint\QuanTriKhachSanN5.dll
 C:\QuanTriKhachSanN5\obj\Debug\net10.0\QuanTriKhachSanN5.pdb
 C:\QuanTriKhachSanN5\obj\Debug\net10.0\QuanTriKhachSanN5.genruntimeconfig.cache
 C:\QuanTriKhachSanN5\obj\Debug\net10.0\ref\QuanTriKhachSanN5.dll
+C:\QuanTriKhachSanN5\bin\Debug\net10.0\Microsoft.EntityFrameworkCore.InMemory.dll
