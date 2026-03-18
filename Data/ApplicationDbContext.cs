@@ -9,6 +9,8 @@ namespace QuanTriKhachSanN5.Data
             : base(options)
         {
         }
+        
+        public DbSet<LossAndDamage> Loss_And_Damages { get; set; }
         public DbSet<OrderService> Order_Services { get; set; }
         public DbSet<OrderServiceDetail> Order_Service_Details { get; set; }
         public DbSet<Service> Services { get; set; }
