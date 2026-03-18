@@ -103,5 +103,19 @@ public IActionResult CreateOrder([FromBody] OrderRequest request)
 
             return Ok("Cập nhật trạng thái thành công");
         }
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Cancel(int id)
+        {
+            var order = await _context.Order_Services.FindAsync(id);
+
+            if (order == null)
+            return NotFound();
+
+            order.status = "Cancelled";
+
+            await _context.SaveChangesAsync();
+
+            return Ok(order);
+        }
     }
 }

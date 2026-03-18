@@ -8,6 +8,7 @@ namespace QuanTriKhachSanN5.Models
     {
         [Key]
         public int id { get; set; }
+        public string status { get; set; } = "đã ghi nhận";
 
         public int booking_detail_id { get; set; }
 

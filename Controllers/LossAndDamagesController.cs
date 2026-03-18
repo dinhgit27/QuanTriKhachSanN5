@@ -34,9 +34,9 @@ namespace QuanTriKhachSanN5.Controllers
         // ======================
         [HttpGet]
         public async Task<ActionResult<IEnumerable<LossAndDamage>>> GetAll()
-        {
-            return await _context.Loss_And_Damages.ToListAsync();
-        }
+    {
+        return await _context.Loss_And_Damages.ToListAsync();
+    }
 
         // ======================
         // PUT
@@ -57,6 +57,48 @@ public async Task<IActionResult> Update(int id, LossAndDamage model)
     data.penalty_amount = model.penalty_amount;
     data.description = model.description;
     data.created_at = model.created_at;
+
+    await _context.SaveChangesAsync();
+
+    return Ok(data);
+}
+[HttpDelete("{id}")]
+public async Task<IActionResult> Disable(int id)
+{
+    var data = await _context.Loss_And_Damages.FindAsync(id);
+
+    if (data == null)
+        return NotFound();
+
+    data.status = "đã hủy";
+
+    await _context.SaveChangesAsync();
+
+    return Ok("Disabled");
+}
+[HttpPut("enable/{id}")]
+public async Task<IActionResult> Enable(int id)
+{
+    var data = await _context.Loss_And_Damages.FindAsync(id);
+
+    if (data == null)
+        return NotFound();
+
+    data.status = "đã ghi nhận";
+
+    await _context.SaveChangesAsync();
+
+    return Ok("Enabled");
+}
+[HttpPut("status/{id}")]
+public async Task<IActionResult> UpdateStatus(int id, string status)
+{
+    var data = await _context.Loss_And_Damages.FindAsync(id);
+
+    if (data == null)
+        return NotFound();
+
+    data.status = status;
 
     await _context.SaveChangesAsync();
 
