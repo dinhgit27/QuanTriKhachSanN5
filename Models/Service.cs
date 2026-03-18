@@ -12,13 +12,13 @@ namespace QuanTriKhachSanN5.Models
         public int category_id { get; set; }
 
         // Tên dịch vụ (ví dụ: Giặt đồ, Spa, Ăn sáng)
-        public string name { get; set; }
+        public string? name { get; set; }
 
         // Giá dịch vụ
         public decimal price { get; set; }
 
         // Đơn vị tính (ví dụ: lần, giờ, người)
-        public string unit { get; set; }
+        public string? unit { get; set; }
 
         public int status { get; set; } // 1 = enable, 0 = disable
     }
