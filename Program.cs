@@ -24,6 +24,10 @@ builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<IRoomService, RoomService>();
 builder.Services.AddScoped<IRoomInventoryService, RoomInventoryService>();
 
+// Attraction & Review Service
+builder.Services.AddScoped<IAttractionService, AttractionService>();
+builder.Services.AddScoped<IReviewService, ReviewService>();
+
 // Comment out other services to avoid build errors
 // builder.Services.AddScoped<IBookingService, BookingService>();
 // builder.Services.AddScoped<ICMSService, CMSService>();
