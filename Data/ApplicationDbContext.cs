@@ -9,7 +9,7 @@ namespace QuanTriKhachSanN5.Data
             : base(options)
         {
         }
-
+        
         public DbSet<Service> Services { get; set; }
         public DbSet<Service_Category> ServiceCategories { get; set; }
         public DbSet<User> Users { get; set; }
@@ -26,6 +26,7 @@ namespace QuanTriKhachSanN5.Data
         public DbSet<Order_Service> OrderServices { get; set; }
         public DbSet<Order_Service_Detail> OrderServiceDetails { get; set; }
         public DbSet<Loss_And_Damage> LossAndDamages { get; set; }
+
         public DbSet<Amenity> Amenities { get; set; }
         public DbSet<Room_Inventory> RoomInventories { get; set; }
         public DbSet<Room_Image> RoomImages { get; set; }

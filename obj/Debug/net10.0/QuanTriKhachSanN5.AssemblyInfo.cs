@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("QuanTriKhachSanN5")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9cf2dda6243514cf0f67cbb30518fbf460b6ce0c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a66bb1d85ddb2ec46bcad4116387ff9c904f72b2")]
 [assembly: System.Reflection.AssemblyProductAttribute("QuanTriKhachSanN5")]
 [assembly: System.Reflection.AssemblyTitleAttribute("QuanTriKhachSanN5")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
