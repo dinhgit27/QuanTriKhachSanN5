@@ -42,9 +42,9 @@ namespace QuanTriKhachSanN5.Services
             return await _context.Attractions.ToListAsync();
         }
 
-        public async Task<List<Review>> GetReviewsByRoomAsync(int roomId)
+        public async Task<List<Review>> GetReviewsByRoomTypeAsync(int roomTypeId)
         {
-            return await _context.Reviews.Where(r => r.RoomId == roomId).ToListAsync();
+            return await _context.Reviews.Where(r => r.RoomTypeId == roomTypeId).ToListAsync();
         }
     }
 }

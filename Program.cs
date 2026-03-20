@@ -36,6 +36,10 @@ builder.Services.AddScoped<IHRRBACService, HRRBACService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IReceptionService, ReceptionService>();
 builder.Services.AddScoped<IPromotionService, PromotionService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IPostService, PostService>();
+builder.Services.AddScoped<IAttractionService, AttractionService>();
+builder.Services.AddScoped<IReviewService, ReviewService>();
 
 // Cấu hình cho CheckoutService có sử dụng HttpClient
 builder.Services.AddHttpClient<CheckoutService>();

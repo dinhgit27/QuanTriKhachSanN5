@@ -50,10 +50,10 @@ namespace QuanTriKhachSanN5.Controllers.Disabled
             return Ok(attractions);
         }
 
-        [HttpGet("reviews/room/{roomId}")]
-        public async Task<ActionResult<List<Review>>> GetReviewsByRoom(int roomId)
+        [HttpGet("reviews/roomtype/{roomTypeId}")]
+        public async Task<ActionResult<List<Review>>> GetReviewsByRoomType(int roomTypeId)
         {
-            var reviews = await _cmsService.GetReviewsByRoomAsync(roomId);
+            var reviews = await _cmsService.GetReviewsByRoomTypeAsync(roomTypeId);
             return Ok(reviews);
         }
     }

@@ -14,6 +14,6 @@ namespace QuanTriKhachSanN5.Interfaces
         Task<Article> GetArticleByIdAsync(int id);
         Task CreateArticleAsync(Article article);
         Task<List<Attraction>> GetAttractionsAsync();
-        Task<List<Review>> GetReviewsByRoomAsync(int roomId);
+        Task<List<Review>> GetReviewsByRoomTypeAsync(int roomTypeId);
     }
 }

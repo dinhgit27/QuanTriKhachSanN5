@@ -36,5 +36,7 @@ namespace QuanTriKhachSanN5.Data
         public DbSet<Audit_Log> AuditLogs { get; set; }
         public DbSet<Voucher> Vouchers { get; set; }
         public DbSet<Membership> Memberships { get; set; }
+        public DbSet<Post> Posts { get; set; }
+        public DbSet<Category> Categories { get; set; }
     }
 }

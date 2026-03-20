@@ -12,18 +12,18 @@ namespace QuanTriKhachSanN5.Models
         public int UserId { get; set; }
 
         [ForeignKey("UserId")]
-        public User User { get; set; }
+        public User? User { get; set; }
 
         [Required]
         public int RoomTypeId { get; set; }
 
         [ForeignKey("RoomTypeId")]
-        public RoomType RoomType { get; set; }
+        public RoomType? RoomType { get; set; }
 
         public int? BookingId { get; set; }
 
         [ForeignKey("BookingId")]
-        public Booking Booking { get; set; }
+        public Booking? Booking { get; set; }
 
         [Required]
         [Range(1, 5)]
