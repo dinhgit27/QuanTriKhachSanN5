@@ -26,7 +26,7 @@ namespace QuanTriKhachSanN5.DTOs
         public int InvoiceId { get; set; }
         public string PaymentMethod { get; set; } = null!;
         public decimal AmountPaid { get; set; }
-        public string? TransactionId { get; set; }
+        public string TransactionId { get; set; }
     }
 
     public class M2BookingCostDto
