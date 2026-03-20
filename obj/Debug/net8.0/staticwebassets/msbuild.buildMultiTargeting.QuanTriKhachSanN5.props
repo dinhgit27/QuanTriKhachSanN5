@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="..\build\QuanTriKhachSanN5.props" />
-</Project>

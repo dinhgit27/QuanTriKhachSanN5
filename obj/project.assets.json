@@ -3828,27 +3828,19 @@
     ]
   },
   "packageFolders": {
-<<<<<<< HEAD
     "C:\\Users\\DINH\\.nuget\\packages\\": {}
-=======
-    "C:\\Users\\PHI HUNG\\.nuget\\packages\\": {}
->>>>>>> origin/phihung
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\PHI HUNG\\Downloads\\QuanTriKhachSanN5\\QuanTriKhachSanN5.csproj",
+      "projectUniqueName": "C:\\QuanTriKhachSanN5\\QuanTriKhachSanN5.csproj",
       "projectName": "QuanTriKhachSanN5",
-      "projectPath": "C:\\Users\\PHI HUNG\\Downloads\\QuanTriKhachSanN5\\QuanTriKhachSanN5.csproj",
-      "packagesPath": "C:\\Users\\PHI HUNG\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\PHI HUNG\\Downloads\\QuanTriKhachSanN5\\obj\\",
+      "projectPath": "C:\\QuanTriKhachSanN5\\QuanTriKhachSanN5.csproj",
+      "packagesPath": "C:\\Users\\DINH\\.nuget\\packages\\",
+      "outputPath": "C:\\QuanTriKhachSanN5\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-<<<<<<< HEAD
         "C:\\Users\\DINH\\AppData\\Roaming\\NuGet\\NuGet.Config"
-=======
-        "C:\\Users\\PHI HUNG\\AppData\\Roaming\\NuGet\\NuGet.Config"
->>>>>>> origin/phihung
       ],
       "originalTargetFrameworks": [
         "net10.0"

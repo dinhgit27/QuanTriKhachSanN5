@@ -2,7 +2,7 @@
   "version": 2,
   "dgSpecHash": "+O/vRWOlrQU=",
   "success": true,
-  "projectFilePath": "C:\\Users\\PHI HUNG\\Downloads\\QuanTriKhachSanN5\\QuanTriKhachSanN5.csproj",
+  "projectFilePath": "C:\\QuanTriKhachSanN5\\QuanTriKhachSanN5.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\DINH\\.nuget\\packages\\azure.core\\1.47.1\\azure.core.1.47.1.nupkg.sha512",
     "C:\\Users\\DINH\\.nuget\\packages\\azure.identity\\1.14.2\\azure.identity.1.14.2.nupkg.sha512",

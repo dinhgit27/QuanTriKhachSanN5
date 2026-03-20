@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.ForeignKey;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace QuanTriKhachSanN5.Models
 {

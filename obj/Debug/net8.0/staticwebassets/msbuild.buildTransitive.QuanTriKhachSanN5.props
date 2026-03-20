@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="..\buildMultiTargeting\QuanTriKhachSanN5.props" />
-</Project>
