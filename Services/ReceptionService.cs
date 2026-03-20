@@ -50,12 +50,15 @@ namespace QuanTriKhachSanN5.API.Services
             _context.OrderServices.Add(order);
             await _context.SaveChangesAsync();
 
+            var service = await _context.Services.FindAsync(serviceId);
+            if (service == null) throw new Exception("Service not found");
+
             var detail = new Order_Service_Detail
             {
                 OrderServiceId = order.Id,
                 ServiceId = serviceId,
                 Quantity = quantity,
-                UnitPrice = (await _context.Services.FindAsync(serviceId)).Price
+                UnitPrice = service.Price
             };
             _context.OrderServiceDetails.Add(detail);
             await _context.SaveChangesAsync();
@@ -81,6 +84,9 @@ namespace QuanTriKhachSanN5.API.Services
         {
             // Tính tổng: Tiền phòng + Dịch vụ + Phạt - Giảm giá
             var booking = await _context.Bookings.Include(b => b.BookingDetails).FirstOrDefaultAsync(b => b.Id == bookingId);
+            
+            if (booking == null) throw new Exception("Booking not found");
+
             var services = await _context.OrderServices.Where(os => os.BookingId == bookingId)
                 .Include(os => os.Details).ThenInclude(d => d.Service).ToListAsync();
             var damages = await _context.LossAndDamages.Where(l => l.BookingId == bookingId).ToListAsync();

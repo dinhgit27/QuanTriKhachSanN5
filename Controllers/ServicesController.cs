@@ -25,7 +25,7 @@ namespace QuanTriKhachSanN5.Controllers
         public async Task<ActionResult<IEnumerable<Service>>> GetServices()
     {
         return await _context.Services
-        .Where(s => s.status == 1)
+        .Where(s => s.Status == 1)
         .ToListAsync();
     }
 
@@ -58,7 +58,7 @@ namespace QuanTriKhachSanN5.Controllers
 
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetService), new { id = service.id }, service);
+            return CreatedAtAction(nameof(GetService), new { id = service.Id }, service);
         }
 
         // ==============================
@@ -68,7 +68,7 @@ namespace QuanTriKhachSanN5.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutService(int id, Service service)
         {
-            if (id != service.id)
+            if (id != service.Id)
             {
                 return BadRequest();
             }
@@ -97,7 +97,7 @@ namespace QuanTriKhachSanN5.Controllers
 
             // Không xoá dữ liệu
             // Chỉ chuyển trạng thái sang disable
-            service.status = 0;
+            service.Status = 0;
 
             await _context.SaveChangesAsync();
 
@@ -119,7 +119,7 @@ namespace QuanTriKhachSanN5.Controllers
             }
 
             // bật lại dịch vụ
-            service.status = 1;
+            service.Status = 1;
 
             await _context.SaveChangesAsync();
 

@@ -23,7 +23,7 @@ namespace QuanTriKhachSanN5.Controllers
         [HttpPost]
         public async Task<IActionResult> ReportLoss([FromBody] LossAndDamage report)
         {
-            _context.Loss_And_Damages.Add(report);
+            _context.LossAndDamages.Add(report);
             await _context.SaveChangesAsync();
 
             return Ok(report);
@@ -35,7 +35,7 @@ namespace QuanTriKhachSanN5.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<LossAndDamage>>> GetAll()
     {
-        return await _context.Loss_And_Damages.ToListAsync();
+        return await _context.LossAndDamages.ToListAsync();
     }
 
         // ======================
@@ -44,19 +44,19 @@ namespace QuanTriKhachSanN5.Controllers
         [HttpPut("{id}")]
 public async Task<IActionResult> Update(int id, LossAndDamage model)
 {
-    var data = await _context.Loss_And_Damages.FindAsync(id);
+    var data = await _context.LossAndDamages.FindAsync(id);
 
     if (data == null)
     {
         return NotFound();
     }
 
-    data.booking_detail_id = model.booking_detail_id;
-    data.room_inventory_id = model.room_inventory_id;
-    data.quantity = model.quantity;
-    data.penalty_amount = model.penalty_amount;
-    data.description = model.description;
-    data.created_at = model.created_at;
+    data.BookingDetailId = model.BookingDetailId;
+    data.RoomInventoryId = model.RoomInventoryId;
+    data.Quantity = model.Quantity;
+    data.FineAmount = model.FineAmount;
+    data.Description = model.Description;
+    data.ReportedDate = model.ReportedDate;
 
     await _context.SaveChangesAsync();
 
@@ -65,12 +65,12 @@ public async Task<IActionResult> Update(int id, LossAndDamage model)
 [HttpDelete("{id}")]
 public async Task<IActionResult> Disable(int id)
 {
-    var data = await _context.Loss_And_Damages.FindAsync(id);
+    var data = await _context.LossAndDamages.FindAsync(id);
 
     if (data == null)
         return NotFound();
 
-    data.status = "đã hủy";
+    data.Status = "đã hủy";
 
     await _context.SaveChangesAsync();
 
@@ -79,12 +79,12 @@ public async Task<IActionResult> Disable(int id)
 [HttpPut("enable/{id}")]
 public async Task<IActionResult> Enable(int id)
 {
-    var data = await _context.Loss_And_Damages.FindAsync(id);
+    var data = await _context.LossAndDamages.FindAsync(id);
 
     if (data == null)
         return NotFound();
 
-    data.status = "đã ghi nhận";
+    data.Status = "đã ghi nhận";
 
     await _context.SaveChangesAsync();
 
@@ -93,12 +93,12 @@ public async Task<IActionResult> Enable(int id)
 [HttpPut("status/{id}")]
 public async Task<IActionResult> UpdateStatus(int id, string status)
 {
-    var data = await _context.Loss_And_Damages.FindAsync(id);
+    var data = await _context.LossAndDamages.FindAsync(id);
 
     if (data == null)
         return NotFound();
 
-    data.status = status;
+    data.Status = status;
 
     await _context.SaveChangesAsync();
 

@@ -142,10 +142,10 @@ namespace QuanTriKhachSanN5.Services
             if (dto.BookingId.HasValue)
             {
                 var booking = await _context.Bookings
-                    .Include(b => b.Room)
+                    .Include(b => b.BookingDetails)
                     .FirstOrDefaultAsync(b => b.Id == dto.BookingId.Value && b.GuestId == userId);
 
-                if (booking != null && booking.Room.RoomTypeId == dto.RoomTypeId)
+                if (booking != null && booking.BookingDetails.Any(bd => bd.RoomTypeId == dto.RoomTypeId))
                 {
                     isVerified = true;
                 }

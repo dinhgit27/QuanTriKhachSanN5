@@ -1,3 +1,7 @@
+global using LossAndDamage = QuanTriKhachSanN5.Models.Loss_And_Damage;
+global using OrderService = QuanTriKhachSanN5.Models.Order_Service;
+global using OrderServiceDetail = QuanTriKhachSanN5.Models.Order_Service_Detail;
+
 using Microsoft.EntityFrameworkCore;
 using QuanTriKhachSanN5.Data;
 using QuanTriKhachSanN5.Services;
@@ -87,7 +91,7 @@ builder.Services.AddSwaggerGen(c =>
 
     c.AddSecurityRequirement(document => new OpenApiSecurityRequirement
     {
-        [new OpenApiSecuritySchemeReference("Bearer", document)] = []
+        [new OpenApiSecuritySchemeReference("Bearer")] = new List<string>()
     });
 });
 

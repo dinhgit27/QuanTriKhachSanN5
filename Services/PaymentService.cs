@@ -43,6 +43,7 @@ namespace QuanTriKhachSanN5.Services
                 InvoiceId = invoiceId,
                 AmountPaid = amount,
                 PaymentMethod = method,
+                TransactionId = Guid.NewGuid().ToString(),
                 CreatedAt = System.DateTime.Now,
                 Status = "Completed"
             };
@@ -50,7 +51,8 @@ namespace QuanTriKhachSanN5.Services
 
             // Cập nhật Invoice
             var invoice = await _context.Invoices.FindAsync(invoiceId);
-            invoice.Status = "Paid";
+            if (invoice != null)
+                invoice.Status = "Paid";
 
             await _context.SaveChangesAsync();
             return payment;

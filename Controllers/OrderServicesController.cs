@@ -45,15 +45,23 @@ namespace QuanTriKhachSanN5.Controllers
         [HttpPost("order")]
 public IActionResult CreateOrder([FromBody] OrderRequest request)
 {
+    // 0. Lấy thông tin BookingId từ BookingDetail
+    var bookingDetail = _context.BookingDetails.Find(request.BookingDetailId);
+    
+    if (bookingDetail == null)
+        return BadRequest("Chi tiết đặt phòng (BookingDetail) không tồn tại.");
+
     // 1. tạo order
     var order = new OrderService
     {
-        booking_detail_id = request.BookingDetailId,
-        total_amount = 0,
-        
+        BookingDetailId = request.BookingDetailId,
+        BookingId = bookingDetail.BookingId, // Bắt buộc phải có khóa ngoại này
+        OrderDate = DateTime.Now,
+        Status = "Pending",
+        TotalAmount = 0
     };
 
-    _context.Order_Services.Add(order);
+    _context.OrderServices.Add(order);
     _context.SaveChanges();
 
     decimal total = 0;
@@ -68,19 +76,19 @@ public IActionResult CreateOrder([FromBody] OrderRequest request)
 
         var detail = new OrderServiceDetail
         {
-            order_service_id = order.id,
-            service_id = item.ServiceId,
-            quantity = item.Quantity,
-            unit_price = service.price
+            OrderServiceId = order.Id,
+            ServiceId = item.ServiceId,
+            Quantity = item.Quantity,
+            UnitPrice = service.Price
         };
 
-        total += item.Quantity * service.price;
+        total += item.Quantity * service.Price;
 
-        _context.Order_Service_Details.Add(detail);
+        _context.OrderServiceDetails.Add(detail);
     }
 
     // 3. update total
-    order.total_amount = total;
+    order.TotalAmount = total;
     _context.SaveChanges();
 
     return Ok(order);
@@ -97,7 +105,7 @@ public IActionResult CreateOrder([FromBody] OrderRequest request)
             if (order == null)
                 return NotFound();
 
-            order.status = status;
+            order.Status = status;
 
             await _context.SaveChangesAsync();
 
@@ -106,12 +114,12 @@ public IActionResult CreateOrder([FromBody] OrderRequest request)
         [HttpDelete("{id}")]
         public async Task<IActionResult> Cancel(int id)
         {
-            var order = await _context.Order_Services.FindAsync(id);
+            var order = await _context.OrderServices.FindAsync(id);
 
             if (order == null)
             return NotFound();
 
-            order.status = "Cancelled";
+            order.Status = "Cancelled";
 
             await _context.SaveChangesAsync();
 

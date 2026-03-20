@@ -41,12 +41,9 @@ namespace QuanTriKhachSanN5.Services
             var invoice = new Invoice
             {
                 BookingId = bookingId,
-                RoomTotalCost = m2Data.RoomTotalCost,
-                ServicesCost = m4Data.ServicesCost,
-                DamageFee = m4Data.DamageFee,
-                VoucherDiscount = m2Data.VoucherDiscount,
                 TotalAmount = totalAmount,
-                Status = "Pending"
+                Status = "Pending",
+                CreatedAt = DateTime.UtcNow
             };
 
             _dbContext.Invoices.Add(invoice);
