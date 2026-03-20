@@ -39,5 +39,25 @@ namespace QuanTriKhachSanN5.Data
         public DbSet<Membership> Memberships { get; set; }
         public DbSet<Post> Posts { get; set; }
         public DbSet<Category> Categories { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            // 1. Giải quyết lỗi ĐỎ: Ngắt vòng lặp xóa dây chuyền (Multiple Cascade Paths)
+            modelBuilder.Entity<Booking_Detail>()
+                .HasOne(bd => bd.RoomType)
+                .WithMany()
+                .HasForeignKey(bd => bd.RoomTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // 2. Giải quyết lỗi VÀNG: Định dạng tất cả kiểu thập phân thành decimal(18,2)
+            foreach (var property in modelBuilder.Model.GetEntityTypes()
+                .SelectMany(t => t.GetProperties())
+                .Where(p => p.ClrType == typeof(decimal) || p.ClrType == typeof(decimal?)))
+            {
+                property.SetColumnType("decimal(18,2)");
+            }
+        }
     }
 }

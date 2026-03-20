@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuanTriKhachSanN5.Data;
@@ -20,6 +21,7 @@ namespace QuanTriKhachSanN5.Controllers
         // ======================
         // POST
         // ======================
+        [Authorize(Roles = "Admin,Receptionist,Housekeeping")] // Buồng phòng đi dọn phát hiện hỏng đồ thì gọi API này
         [HttpPost]
         public async Task<IActionResult> ReportLoss([FromBody] LossAndDamage report)
         {
@@ -32,6 +34,7 @@ namespace QuanTriKhachSanN5.Controllers
         // ======================
         // GET
         // ======================
+        [Authorize(Roles = "Admin,Receptionist")] // Chỉ Lễ tân/Quản lý mới xem danh sách phạt để tính tiền khách
         [HttpGet]
         public async Task<ActionResult<IEnumerable<LossAndDamage>>> GetAll()
     {
@@ -41,6 +44,7 @@ namespace QuanTriKhachSanN5.Controllers
         // ======================
         // PUT
         // ======================
+        [Authorize(Roles = "Admin,Receptionist")]
         [HttpPut("{id}")]
 public async Task<IActionResult> Update(int id, LossAndDamage model)
 {
@@ -62,6 +66,7 @@ public async Task<IActionResult> Update(int id, LossAndDamage model)
 
     return Ok(data);
 }
+[Authorize(Roles = "Admin")] // Hủy biên bản phạt là việc nhạy cảm, chỉ Quản lý được làm
 [HttpDelete("{id}")]
 public async Task<IActionResult> Disable(int id)
 {
@@ -76,6 +81,7 @@ public async Task<IActionResult> Disable(int id)
 
     return Ok("Disabled");
 }
+[Authorize(Roles = "Admin")]
 [HttpPut("enable/{id}")]
 public async Task<IActionResult> Enable(int id)
 {
@@ -90,6 +96,7 @@ public async Task<IActionResult> Enable(int id)
 
     return Ok("Enabled");
 }
+[Authorize(Roles = "Admin,Receptionist")] // Lễ tân cập nhật trạng thái khi khách đã đền tiền
 [HttpPut("status/{id}")]
 public async Task<IActionResult> UpdateStatus(int id, string status)
 {

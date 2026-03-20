@@ -3,45 +3,31 @@ using QuanTriKhachSanN5.DTOs;
 using QuanTriKhachSanN5.Data;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using QuanTriKhachSanN5.Interfaces;
 
 namespace QuanTriKhachSanN5.Services
 {
     public class CheckoutService
     {
         private readonly ApplicationDbContext _dbContext;
-        private readonly HttpClient _httpClient;
+        private readonly IReceptionService _receptionService;
 
-        public CheckoutService(ApplicationDbContext dbContext, HttpClient httpClient)
+        public CheckoutService(ApplicationDbContext dbContext, IReceptionService receptionService)
         {
             _dbContext = dbContext;
-            _httpClient = httpClient;
+            _receptionService = receptionService;
         }
 
         public async Task<Invoice> GenerateInvoiceAsync(int bookingId)
         {
-            // 1. Gọi API Module 2 (Thay URL sau)
-            var m2Response = await _httpClient.GetAsync($"http://m2-service.local/api/bookings/{bookingId}/costs");
-            m2Response.EnsureSuccessStatusCode();
-            var m2Data = JsonSerializer.Deserialize<M2BookingCostDto>(
-                await m2Response.Content.ReadAsStringAsync(), 
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-            // 2. Gọi API Module 4 (Thay URL sau)
-            var m4Response = await _httpClient.GetAsync($"http://m4-service.local/api/reception/{bookingId}/costs");
-            m4Response.EnsureSuccessStatusCode();
-            var m4Data = JsonSerializer.Deserialize<M4ServiceCostDto>(
-                await m4Response.Content.ReadAsStringAsync(), 
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-            // 3. Tính toán tổng tiền
-            decimal totalAmount = m2Data!.RoomTotalCost + m4Data!.ServicesCost + m4Data.DamageFee - m2Data.VoucherDiscount;
-            totalAmount = totalAmount < 0 ? 0 : totalAmount;
+            // Tận dụng Service tính tiền nội bộ, nhanh và bảo mật hơn gọi HTTP
+            var checkoutInfo = await _receptionService.CalculateCheckoutAsync(bookingId);
 
             // 4. Lưu Invoice
             var invoice = new Invoice
             {
                 BookingId = bookingId,
-                TotalAmount = totalAmount,
+                TotalAmount = checkoutInfo.TotalAmount,
                 Status = "Pending",
                 CreatedAt = DateTime.UtcNow
             };
