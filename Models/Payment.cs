@@ -15,7 +15,7 @@ namespace QuanTriKhachSanN5.Models
         public decimal AmountPaid { get; set; }
         
         [StringLength(100)]
-        public string? TransactionId { get; set; }
+        public string TransactionId { get; set; }
         
         [StringLength(50)]
         public string Status { get; set; } = "Success";

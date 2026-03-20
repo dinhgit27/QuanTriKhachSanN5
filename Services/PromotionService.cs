@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
-using QUANTRIKHACHSANN5.Data;
-using QUANTRIKHACHSANN5.DTOs.Promotion;
-using QUANTRIKHACHSANN5.Interfaces;
+using QuanTriKhachSanN5.Data;
+using QuanTriKhachSanN5.DTOs.Promotion;
+using QuanTriKhachSanN5.Interfaces;
 
-namespace QUANTRIKHACHSANN5.Services
+namespace QuanTriKhachSanN5.Services
 {
     public class PromotionService : IPromotionService
     {

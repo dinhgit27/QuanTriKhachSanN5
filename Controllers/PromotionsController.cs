@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using QUANTRIKHACHSANN5.DTOs.Promotion;
-using QUANTRIKHACHSANN5.Interfaces;
+using QuanTriKhachSanN5.DTOs.Promotion;
+using QuanTriKhachSanN5.Interfaces;
 
-namespace QUANTRIKHACHSANN5.Controllers
+namespace QuanTriKhachSanN5.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

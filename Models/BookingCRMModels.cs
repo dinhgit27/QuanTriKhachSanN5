@@ -13,7 +13,7 @@ namespace QuanTriKhachSanN5.Models
         public int RoomTypeId { get; set; }
         public RoomType RoomType { get; set; }
         public int? RoomId { get; set; } // Gán sau khi check-in
-        public Room? Room { get; set; }
+        public Room Room { get; set; }
         public DateTime CheckInDate { get; set; }
         public DateTime CheckOutDate { get; set; }
         public decimal Price { get; set; }
@@ -38,5 +38,6 @@ namespace QuanTriKhachSanN5.Models
         public User User { get; set; }
         public string Level { get; set; } // Bronze, Silver, Gold
         public int Points { get; set; }
+        public decimal DiscountPercent { get; set; }
     }
 }

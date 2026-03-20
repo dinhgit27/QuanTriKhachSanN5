@@ -34,5 +34,7 @@ namespace QuanTriKhachSanN5.Data
         public DbSet<Role_Permission> RolePermissions { get; set; }
         public DbSet<User_Role> UserRoles { get; set; }
         public DbSet<Audit_Log> AuditLogs { get; set; }
+        public DbSet<Voucher> Vouchers { get; set; }
+        public DbSet<Membership> Memberships { get; set; }
     }
 }
