@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\QuanTriKhachSanN5\\QuanTriKhachSanN5.csproj": {}
+    "C:\\Users\\PHI HUNG\\Downloads\\QuanTriKhachSanN5\\QuanTriKhachSanN5.csproj": {}
   },
   "projects": {
-    "C:\\QuanTriKhachSanN5\\QuanTriKhachSanN5.csproj": {
+    "C:\\Users\\PHI HUNG\\Downloads\\QuanTriKhachSanN5\\QuanTriKhachSanN5.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\QuanTriKhachSanN5\\QuanTriKhachSanN5.csproj",
+        "projectUniqueName": "C:\\Users\\PHI HUNG\\Downloads\\QuanTriKhachSanN5\\QuanTriKhachSanN5.csproj",
         "projectName": "QuanTriKhachSanN5",
-        "projectPath": "C:\\QuanTriKhachSanN5\\QuanTriKhachSanN5.csproj",
-        "packagesPath": "C:\\Users\\DINH\\.nuget\\packages\\",
-        "outputPath": "C:\\QuanTriKhachSanN5\\obj\\",
+        "projectPath": "C:\\Users\\PHI HUNG\\Downloads\\QuanTriKhachSanN5\\QuanTriKhachSanN5.csproj",
+        "packagesPath": "C:\\Users\\PHI HUNG\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\PHI HUNG\\Downloads\\QuanTriKhachSanN5\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\DINH\\AppData\\Roaming\\NuGet\\NuGet.Config"

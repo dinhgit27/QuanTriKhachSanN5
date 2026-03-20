@@ -1,0 +1,389 @@
+### Hotel Management API - Test Requests
+### Sử dụng REST Client extension cho VS Code
+
+@baseUrl = https://localhost:5001/api
+@token = your_jwt_token_here
+
+###
+### ========== AUTHENTICATION ==========
+
+### Register
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "username": "john_hotel",
+  "email": "john@example.com",
+  "password": "Password@123"
+}
+
+###
+### Login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "john@example.com",
+  "password": "Password@123"
+}
+
+###
+### ========== ATTRACTIONS - Địa điểm du lịch ==========
+
+### Get All Attractions
+GET {{baseUrl}}/attractions
+
+###
+### Get Attraction Detail
+GET {{baseUrl}}/attractions/1
+
+###
+### Create Attraction (Admin/Staff only)
+POST {{baseUrl}}/attractions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Bãi biển Nha Trang",
+  "description": "Bãi biển nổi tiếng với cát trắng và nước trong xanh",
+  "location": "Nha Trang, Khánh Hòa"
+}
+
+###
+### Update Attraction
+PUT {{baseUrl}}/attractions/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Bãi biển Nha Trang - Updated",
+  "description": "Bãi biển nổi tiếng với cát trắng và nước trong xanh, cách khách sạn 5km",
+  "location": "Nha Trang, Khánh Hòa"
+}
+
+###
+### Delete Attraction
+DELETE {{baseUrl}}/attractions/1
+Authorization: Bearer {{token}}
+
+###
+### ========== REVIEWS - Comment & Rating ==========
+
+### Get All Reviews (Verified only)
+GET {{baseUrl}}/reviews
+
+###
+### Get Reviews by Room Type
+GET {{baseUrl}}/reviews/roomtype/1
+
+###
+### Get Average Rating of Room Type
+GET {{baseUrl}}/reviews/roomtype/1/average-rating
+
+###
+### Get My Reviews
+GET {{baseUrl}}/reviews/my-reviews
+Authorization: Bearer {{token}}
+
+###
+### Get Review Detail
+GET {{baseUrl}}/reviews/1
+
+###
+### Create Review (with comment and rating)
+POST {{baseUrl}}/reviews
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "roomTypeId": 1,
+  "bookingId": 1,
+  "rating": 5,
+  "comment": "Phòng rất sạch, thoải mái và có tầm nhìn đẹp. Nhân viên rất thân thiện!",
+  "cleanliness": 5,
+  "comfort": 5,
+  "serviceQuality": 4,
+  "valueForMoney": 5
+}
+
+###
+### Update Review
+PUT {{baseUrl}}/reviews/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "rating": 4,
+  "comment": "Phòng rất sạch và thoải mái. Chỉ có một chút tiếng ồn từ đường phố.",
+  "comfort": 4
+}
+
+###
+### Delete Review
+DELETE {{baseUrl}}/reviews/1
+Authorization: Bearer {{token}}
+
+###
+### ========== ROOM TYPES - Loại Phòng ==========
+
+### Get All Room Types
+GET {{baseUrl}}/roomtypes
+Authorization: Bearer {{token}}
+
+###
+### Create Room Type
+POST {{baseUrl}}/roomtypes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Deluxe Suite",
+  "description": "Phòng suite cao cấp với view biển",
+  "basePrice": 1500000,
+  "maxGuests": 4
+}
+
+###
+### ========== ROOMS - Quản lý Phòng ==========
+
+### Get All Rooms
+GET {{baseUrl}}/rooms
+Authorization: Bearer {{token}}
+
+###
+### Get Room Detail
+GET {{baseUrl}}/rooms/1
+Authorization: Bearer {{token}}
+
+###
+### Create Room (Admin/Staff only)
+POST {{baseUrl}}/rooms
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "roomNumber": "101",
+  "roomTypeId": 1,
+  "floor": 1,
+  "status": "Available"
+}
+
+###
+### Update Room Status
+PUT {{baseUrl}}/rooms/1/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+"Available"
+
+###
+### ========== BOOKINGS - Đặt Phòng ==========
+
+### Search Available Rooms
+POST {{baseUrl}}/bookings/search-room
+Content-Type: application/json
+
+{
+  "checkInDate": "2026-03-25",
+  "checkOutDate": "2026-03-27",
+  "guestCount": 2,
+  "roomTypeId": 1
+}
+
+###
+### Get Available Physical Rooms
+GET {{baseUrl}}/bookings/available-physical-rooms?roomTypeId=1&checkIn=2026-03-25&checkOut=2026-03-27
+
+###
+### Create Booking
+POST {{baseUrl}}/bookings
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "userId": 1,
+  "roomId": 1,
+  "checkInDate": "2026-03-25",
+  "checkOutDate": "2026-03-27",
+  "guestName": "Nguyễn Văn A",
+  "guestEmail": "guest@example.com",
+  "guestPhone": "0901234567",
+  "totalPrice": 3000000
+}
+
+###
+### Get My Bookings
+GET {{baseUrl}}/bookings/my-bookings
+Authorization: Bearer {{token}}
+
+###
+### Cancel Booking
+DELETE {{baseUrl}}/bookings/1
+Authorization: Bearer {{token}}
+
+###
+### ========== CHECKOUT & PAYMENT - Thanh Toán ==========
+
+### Generate Invoice
+POST {{baseUrl}}/checkout/generate-invoice
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "bookingId": 1
+}
+
+###
+### Create Payment
+POST {{baseUrl}}/payment/invoices
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "bookingId": 1,
+  "amount": 3000000,
+  "paymentMethod": "Card"
+}
+
+###
+### Confirm Payment
+POST {{baseUrl}}/payment/confirm-payment
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "paymentId": "PAY001",
+  "transactionId": "TRX123"
+}
+
+###
+### ========== RECEPTION - Tiếp Đón ==========
+
+### Check-in
+POST {{baseUrl}}/reception/check-in
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "bookingId": 1,
+  "actualCheckInTime": "2026-03-25T15:00:00"
+}
+
+###
+### Check-out
+POST {{baseUrl}}/reception/check-out
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "bookingId": 1,
+  "actualCheckOutTime": "2026-03-27T11:00:00",
+  "roomCondition": "Good"
+}
+
+###
+### ========== CATEGORIES - Danh mục ==========
+
+### Get All Categories
+GET {{baseUrl}}/categories
+
+###
+### Create Category
+POST {{baseUrl}}/categories
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Tin tức",
+  "description": "Tin tức và thông báo"
+}
+
+###
+### ========== POSTS - CMS ==========
+
+### Get All Posts
+GET {{baseUrl}}/posts
+
+###
+### Get Post Detail
+GET {{baseUrl}}/posts/1
+
+###
+### Create Post
+POST {{baseUrl}}/posts
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "Khuyến mãi mùa hè",
+  "content": "Giảm giá 20% cho booking trong tháng 6",
+  "categoryId": 1
+}
+
+###
+### Update Post
+PUT {{baseUrl}}/posts/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "Khuyến mãi mùa hè - Updated",
+  "content": "Giảm giá 30% cho booking trong tháng 6",
+  "categoryId": 1
+}
+
+###
+### Delete Post
+DELETE {{baseUrl}}/posts/1
+Authorization: Bearer {{token}}
+
+###
+### ========== SERVICES - Dịch Vụ Thêm ==========
+
+### Get All Services
+GET {{baseUrl}}/services
+Authorization: Bearer {{token}}
+
+###
+### Order Service
+POST {{baseUrl}}/services/order
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "bookingId": 1,
+  "serviceId": 1,
+  "quantity": 1,
+  "requestedTime": "2026-03-25T18:00:00"
+}
+
+###
+### ========== HR / RBAC - Nhân sự & Phân quyền ==========
+
+### Get All Users (HR)
+GET {{baseUrl}}/hr/users
+Authorization: Bearer {{token}}
+
+###
+### Assign Role to User
+POST {{baseUrl}}/rbac/assign-role
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "userId": 1,
+  "roleId": 2
+}
+
+###
+### Get User Permissions
+GET {{baseUrl}}/rbac/permissions
+Authorization: Bearer {{token}}
+
+###
+
+### ========== NOTES ==========
+# 1. Thay {{token}} bằng JWT token từ login response
+# 2. Thay {{baseUrl}} nếu API chạy trên port khác
+# 3. Sử dụng REST Client extension (REST Client by Huachao Mao) để chạy requests
+# 4. Nhấp "Send Request" trên dòng đầu tiên của mỗi request
