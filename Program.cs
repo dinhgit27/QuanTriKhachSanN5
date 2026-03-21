@@ -1,35 +1,36 @@
 global using LossAndDamage = QuanTriKhachSanN5.Models.Loss_And_Damage;
 global using OrderService = QuanTriKhachSanN5.Models.Order_Service;
 global using OrderServiceDetail = QuanTriKhachSanN5.Models.Order_Service_Detail;
-
-using Microsoft.EntityFrameworkCore;
-using QuanTriKhachSanN5.Data;
-using QuanTriKhachSanN5.Services;
-using QuanTriKhachSanN5.Interfaces;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Text;
+using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using QuanTriKhachSanN5.API.Services;
-using System.Text.Json.Serialization;
+using QuanTriKhachSanN5.Data;
+using QuanTriKhachSanN5.Interfaces;
+using QuanTriKhachSanN5.Models;
+using QuanTriKhachSanN5.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Đăng ký AuditLogFilter cho toàn bộ các Controllers
 // Controllers
-builder.Services.AddControllers(options => 
-{
-    options.Filters.Add<QuanTriKhachSanN5.Filters.AuditLogFilter>();
-}).AddJsonOptions(options =>
-{
-    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-});
+builder
+    .Services.AddControllers(options =>
+    {
+        options.Filters.Add<QuanTriKhachSanN5.Filters.AuditLogFilter>();
+    })
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    });
 
 // Database
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection")
-    ));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+);
 
 // JWT Service
 builder.Services.AddScoped<JwtService>();
@@ -56,23 +57,24 @@ builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<CheckoutService>();
 
 // Authentication
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
+builder
+    .Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
     {
-        ValidateIssuer = true,
-        ValidateAudience = false,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = false,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
 
-        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
 
-        IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)
-        )
-    };
-});
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)
+            ),
+        };
+    });
 
 // ĐĂNG KÝ PHÂN QUYỀN NÂNG CAO (POLICY-BASED)
 builder.Services.AddAuthorization(options =>
@@ -84,29 +86,29 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo
-    {
-        Title = "Hotel Management API",
-        Version = "v1"
-    });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Hotel Management API", Version = "v1" });
 
     // Ngăn lỗi trùng lặp tên Model (ví dụ: BookingDetail) và xung đột định tuyến
     c.CustomSchemaIds(type => type.FullName);
     c.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
 
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Description = "JWT Authorization. Vui lòng CHỈ dán chuỗi Token của bạn vào ô bên dưới (KHÔNG cần gõ chữ Bearer).",
-        Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.Http,
-        Scheme = "bearer",
-        BearerFormat = "JWT"
-    });
+    c.AddSecurityDefinition(
+        "Bearer",
+        new OpenApiSecurityScheme
+        {
+            Description =
+                "JWT Authorization. Vui lòng CHỈ dán chuỗi Token của bạn vào ô bên dưới (KHÔNG cần gõ chữ Bearer).",
+            Name = "Authorization",
+            In = ParameterLocation.Header,
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT",
+        }
+    );
 
     c.AddSecurityRequirement(document => new OpenApiSecurityRequirement
     {
-        [new OpenApiSecuritySchemeReference("Bearer")] = new List<string>()
+        [new OpenApiSecuritySchemeReference("Bearer")] = new List<string>(),
     });
 });
 
@@ -120,16 +122,76 @@ using (var scope = app.Services.CreateScope())
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     try
     {
-        if (!context.Users.Any(u => u.Email == "admin@test.com"))
+        if (!context.Roles.Any())
         {
-            context.Users.AddRange(
-                new QuanTriKhachSanN5.Models.User { Username = "Admin", Email = "admin@test.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"), Role = "Admin", CreatedAt = DateTime.UtcNow },
-                new QuanTriKhachSanN5.Models.User { Username = "User", Email = "user@test.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"), Role = "User", CreatedAt = DateTime.UtcNow },
-                new QuanTriKhachSanN5.Models.User { Username = "Receptionist", Email = "receptionist@test.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"), Role = "Receptionist", CreatedAt = DateTime.UtcNow },
-                new QuanTriKhachSanN5.Models.User { Username = "Housekeeping", Email = "housekeeping@test.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"), Role = "Housekeeping", CreatedAt = DateTime.UtcNow }
+            context.Roles.AddRange(
+                new Role { Name = "Admin" },
+                new Role { Name = "User" },
+                new Role { Name = "Receptionist" },
+                new Role { Name = "Housekeeping" }
             );
             context.SaveChanges();
+
+            context.SaveChanges();
             Console.WriteLine("Đã tạo thành công 4 tài khoản test!");
+        }
+
+        if (!context.Users.Any(u => u.Email == "admin@test.com"))
+        {
+            var admin = new User
+            {
+                FullName = "Admin",
+                Email = "admin@test.com",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
+            };
+
+            var user = new User
+            {
+                FullName = "User",
+                Email = "user@test.com",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
+            };
+
+            var receptionist = new User
+            {
+                FullName = "Receptionist",
+                Email = "receptionist@test.com",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
+            };
+
+            var housekeeping = new User
+            {
+                FullName = "Housekeeping",
+                Email = "housekeeping@test.com",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
+            };
+
+            context.Users.AddRange(admin, user, receptionist, housekeeping);
+            context.SaveChanges();
+            var roles = context.Roles.ToList();
+
+            context.UserRoles.AddRange(
+                new User_Role
+                {
+                    UserId = admin.Id,
+                    RoleId = roles.First(r => r.Name == "Admin").Id,
+                },
+                new User_Role { UserId = user.Id, RoleId = roles.First(r => r.Name == "User").Id },
+                new User_Role
+                {
+                    UserId = receptionist.Id,
+                    RoleId = roles.First(r => r.Name == "Receptionist").Id,
+                },
+                new User_Role
+                {
+                    UserId = housekeeping.Id,
+                    RoleId = roles.First(r => r.Name == "Housekeeping").Id,
+                }
+            );
+
+            context.SaveChanges();
+
+            Console.WriteLine("Seed RBAC thành công!");
         }
     }
     catch (Exception ex)

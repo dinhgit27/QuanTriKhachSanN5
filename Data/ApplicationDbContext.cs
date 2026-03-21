@@ -5,11 +5,9 @@ namespace QuanTriKhachSanN5.Data
 {
     public class ApplicationDbContext : DbContext
     {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) 
-            : base(options)
-        {
-        }
-        
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+            : base(options) { }
+
         public DbSet<Service> Services { get; set; }
         public DbSet<Service_Category> ServiceCategories { get; set; }
         public DbSet<User> Users { get; set; }
@@ -45,16 +43,23 @@ namespace QuanTriKhachSanN5.Data
             base.OnModelCreating(modelBuilder);
 
             // 1. Giải quyết lỗi ĐỎ: Ngắt vòng lặp xóa dây chuyền (Multiple Cascade Paths)
-            modelBuilder.Entity<Booking_Detail>()
+            modelBuilder
+                .Entity<Booking_Detail>()
                 .HasOne(bd => bd.RoomType)
                 .WithMany()
                 .HasForeignKey(bd => bd.RoomTypeId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<User_Role>().HasKey(x => new { x.UserId, x.RoleId });
+
+            modelBuilder.Entity<Role_Permission>().HasKey(x => new { x.RoleId, x.PermissionId });
             // 2. Giải quyết lỗi VÀNG: Định dạng tất cả kiểu thập phân thành decimal(18,2)
-            foreach (var property in modelBuilder.Model.GetEntityTypes()
-                .SelectMany(t => t.GetProperties())
-                .Where(p => p.ClrType == typeof(decimal) || p.ClrType == typeof(decimal?)))
+            foreach (
+                var property in modelBuilder
+                    .Model.GetEntityTypes()
+                    .SelectMany(t => t.GetProperties())
+                    .Where(p => p.ClrType == typeof(decimal) || p.ClrType == typeof(decimal?))
+            )
             {
                 property.SetColumnType("decimal(18,2)");
             }
