@@ -96,6 +96,35 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var app = builder.Build();
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    try
+    {
+        if (dbContext.Database.CanConnect())
+        {
+            Console.WriteLine("✅ KẾT NỐI DATABASE THÀNH CÔNG!");
+            Console.WriteLine($"   Server: {dbContext.Database.GetDbConnection().DataSource}");
+            Console.WriteLine($"   Database: {dbContext.Database.GetDbConnection().Database}");
+            
+            // Kiểm tra đọc dữ liệu từ bảng Users
+            var userCount = dbContext.Users.Count();
+            Console.WriteLine($"   Số lượng Users: {userCount}");
+        }
+        else
+        {
+            Console.WriteLine("❌ KHÔNG THỂ KẾT NỐI DATABASE!");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"❌ LỖI KẾT NỐI: {ex.Message}");
+        if (ex.InnerException != null)
+        {
+            Console.WriteLine($"   Chi tiết: {ex.InnerException.Message}");
+        }
+    }
+}
 
 if (app.Environment.IsDevelopment())
 {

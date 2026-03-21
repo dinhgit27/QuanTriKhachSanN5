@@ -39,5 +39,29 @@ namespace QuanTriKhachSanN5.Data
         public DbSet<Membership> Memberships { get; set; }
         public DbSet<Post> Posts { get; set; }
         public DbSet<Category> Categories { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            // Configure decimal precision and scale for money fields (18, 2)
+            modelBuilder.Entity<Amenity>().Property(x => x.Price).HasPrecision(18, 2);
+            modelBuilder.Entity<Booking>().Property(x => x.TotalAmount).HasPrecision(18, 2);
+            modelBuilder.Entity<Booking_Detail>().Property(x => x.Price).HasPrecision(18, 2);
+            modelBuilder.Entity<Invoice>().Property(x => x.DamageFee).HasPrecision(18, 2);
+            modelBuilder.Entity<Invoice>().Property(x => x.RoomTotalCost).HasPrecision(18, 2);
+            modelBuilder.Entity<Invoice>().Property(x => x.ServicesCost).HasPrecision(18, 2);
+            modelBuilder.Entity<Invoice>().Property(x => x.TotalAmount).HasPrecision(18, 2);
+            modelBuilder.Entity<Invoice>().Property(x => x.VoucherDiscount).HasPrecision(18, 2);
+            modelBuilder.Entity<Loss_And_Damage>().Property(x => x.FineAmount).HasPrecision(18, 2);
+            modelBuilder.Entity<Membership>().Property(x => x.DiscountPercent).HasPrecision(18, 2);
+            modelBuilder.Entity<Order_Service>().Property(x => x.TotalAmount).HasPrecision(18, 2);
+            modelBuilder.Entity<Order_Service_Detail>().Property(x => x.UnitPrice).HasPrecision(18, 2);
+            modelBuilder.Entity<Payment>().Property(x => x.AmountPaid).HasPrecision(18, 2);
+            modelBuilder.Entity<RoomType>().Property(x => x.BasePrice).HasPrecision(18, 2);
+            modelBuilder.Entity<Service>().Property(x => x.Price).HasPrecision(18, 2);
+            modelBuilder.Entity<Voucher>().Property(x => x.DiscountAmount).HasPrecision(18, 2);
+            modelBuilder.Entity<Voucher>().Property(x => x.DiscountPercent).HasPrecision(18, 2);
+        }
     }
 }
