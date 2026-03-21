@@ -32,6 +32,7 @@ builder.Services.AddScoped<JwtService>();
 
 // Room Service
 builder.Services.AddScoped<IRoomService, RoomService>();
+builder.Services.AddScoped<IRoomTypeService, RoomTypeService>();
 builder.Services.AddScoped<IRoomInventoryService, RoomInventoryService>();
 
 builder.Services.AddScoped<IBookingService, BookingService>();
