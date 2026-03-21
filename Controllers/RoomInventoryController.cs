@@ -22,7 +22,7 @@ namespace QuanTriKhachSanN5.Controllers
             _roomService = roomService;
         }
 
-        [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
+[Authorize(Roles = "Admin,Receptionist,Housekeeping", Policy = "ViewRooms")]
         [HttpGet("rooms")]
         public async Task<ActionResult<List<Room>>> GetRooms()
         {
@@ -39,7 +39,7 @@ namespace QuanTriKhachSanN5.Controllers
             return Ok(room);
         }
 
-        [Authorize(Roles = "Admin,Receptionist,Housekeeping")] // Buồng phòng dọn xong gọi API này đổi từ Dirty sang Clean
+[Authorize(Roles = "Admin,Receptionist,Housekeeping", Policy = "UpdateRoomStatus")]
         [HttpPut("rooms/{id}/status")]
         public async Task<IActionResult> UpdateRoomStatus(int id, [FromBody] string status)
         {
@@ -58,7 +58,7 @@ namespace QuanTriKhachSanN5.Controllers
         // =========================================================
         // 1. GÁN VẬT TƯ / TIỆN ÍCH CHO PHÒNG
         // =========================================================
-        [Authorize(Roles = "Admin")] // Việc thiết lập vật tư ban đầu do Quản lý làm
+[Authorize(Roles = "Admin", Policy = "UpdateInventory")]
         [HttpPost("rooms/{roomId}/inventory")]
         public async Task<IActionResult> AssignAmenityToRoom(int roomId, [FromBody] Room_Inventory inventory)
         {
@@ -71,7 +71,7 @@ namespace QuanTriKhachSanN5.Controllers
             return Ok(new { Message = "Đã gán vật tư/tiện ích cho phòng thành công!", Data = inventory });
         }
 
-        [Authorize(Roles = "Admin,Receptionist,Housekeeping")] // Buồng phòng kiểm tra vật tư (khăn, nước) trong phòng
+[Authorize(Roles = "Admin,Receptionist,Housekeeping", Policy = "ViewInventory")]
         [HttpGet("rooms/{roomId}/inventory")]
         public async Task<ActionResult<List<Room_Inventory>>> GetRoomInventory(int roomId)
         {

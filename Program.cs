@@ -83,8 +83,31 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 // ĐĂNG KÝ PHÂN QUYỀN NÂNG CAO (POLICY-BASED)
 builder.Services.AddAuthorization(options =>
 {
-    // Cấu hình: Ai muốn truy cập API có policy này, Token của họ BẮT BUỘC phải có Claim tên "Permission" = "MANAGE_ROOMS"
+    // RBAC Policies - Require specific Permission claim
+    var policies = new[] {
+        "ViewBookings", "CreateBooking", "UpdateBooking", "CancelBooking",
+        "ViewRooms", "ManageRooms", "UpdateRoomStatus", "ViewRoomTypes", "ManageRoomTypes",
+        "ViewInventory", "UpdateInventory",
+        "ViewPayments", "ManagePayments",
+        "ViewAttractions", "CreateAttraction", "UpdateAttraction", "DeleteAttraction", "RestoreAttraction",
+        "ManagePosts", "ViewPosts",
+        "ViewReviews", "ManageReviews",
+        "ViewServices", "ManageServices", "ManageOrderServices",
+        "ViewLossDamages", "ManageLossDamages",
+        "ManageUsers", "ManageRoles",
+        "CheckInOut", "CleanRooms", "GuestViewOnly"
+    };
+
+    foreach (var policyName in policies)
+    {
+        options.AddPolicy(policyName, p => p.RequireClaim("Permission", policyName));
+    }
+
+// Legacy
     options.AddPolicy("MANAGE_ROOMS", policy => policy.RequireClaim("Permission", "MANAGE_ROOMS"));
+    
+    // NEW: AdminOnly policy for HR controllers
+    options.AddPolicy("AdminOnly", policy => policy.RequireClaim("Permission", "ManageRoles"));
 });
 
 builder.Services.AddEndpointsApiExplorer();
@@ -147,39 +170,82 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// ==========================================
-// TỰ ĐỘNG TẠO 4 TÀI KHOẢN TEST (SEED DATA)
-// ==========================================
-using (var scope = app.Services.CreateScope())
-{
-    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    try
+    // ==========================================
+    // TỰ ĐỘNG SEED ROLES/PERMISSIONS TRƯỚC → USERS SAU (FIX CRASH)
+    // ==========================================
+    using (var scope = app.Services.CreateScope())
     {
-        if (!context.Users.Any(u => u.Email == "admin@test.com"))
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        try
         {
-            context.Users.AddRange(
-                new QuanTriKhachSanN5.Models.User { Username = "Admin", Email = "admin@test.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"), Role = "Admin", CreatedAt = DateTime.UtcNow },
-                new QuanTriKhachSanN5.Models.User { Username = "Guest", Email = "guest@test.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"), Role = "Guest", CreatedAt = DateTime.UtcNow },
-                new QuanTriKhachSanN5.Models.User { Username = "Receptionist", Email = "receptionist@test.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"), Role = "Receptionist", CreatedAt = DateTime.UtcNow },
-                new QuanTriKhachSanN5.Models.User { Username = "Housekeeping", Email = "housekeeping@test.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"), Role = "Housekeeping", CreatedAt = DateTime.UtcNow }
-            );
-            context.SaveChanges();
-            Console.WriteLine("✅ Đã tạo thành công 4 tài khoản test!");
-        }
+            // 1. FIRST: Seed Roles & Permissions (required for user assignment)
+            AuthSeedData.SeedRolesAndPermissions(context);
 
-// Seed auth data
-        AuthSeedData.SeedRolesAndPermissions(context);
-        // Seed dữ liệu mẫu cho các bảng khác
-        SeedData.Initialize(context);
+            // 2. THEN: Create test users + assign roles (now safe)
+            if (!context.Users.Any(u => u.Email == "admin@test.com"))
+            {
+                context.Users.AddRange(
+                    new QuanTriKhachSanN5.Models.User { Username = "Admin", Email = "admin@test.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"), CreatedAt = DateTime.UtcNow },
+                    new QuanTriKhachSanN5.Models.User { Username = "Guest", Email = "guest@test.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"), CreatedAt = DateTime.UtcNow },
+                    new QuanTriKhachSanN5.Models.User { Username = "Receptionist", Email = "receptionist@test.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"), CreatedAt = DateTime.UtcNow },
+                    new QuanTriKhachSanN5.Models.User { Username = "Housekeeping", Email = "housekeeping@test.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"), CreatedAt = DateTime.UtcNow }
+                );
+                context.SaveChanges();
+
+                // Safe assign roles (Roles now exist)
+                var adminRole = context.Roles.First(r => r.Name == "Admin");
+                var guestRole = context.Roles.First(r => r.Name == "Guest");
+                var receptionistRole = context.Roles.First(r => r.Name == "Receptionist");
+                var housekeepingRole = context.Roles.First(r => r.Name == "Housekeeping");
+
+                var adminUser = context.Users.First(u => u.Email == "admin@test.com");
+                var guestUser = context.Users.First(u => u.Email == "guest@test.com");
+                var receptionistUser = context.Users.First(u => u.Email == "receptionist@test.com");
+                var housekeepingUser = context.Users.First(u => u.Email == "housekeeping@test.com");
+
+                context.UserRoles.AddRange(
+                    new QuanTriKhachSanN5.Models.User_Role { UserId = adminUser.Id, RoleId = adminRole.Id },
+                    new QuanTriKhachSanN5.Models.User_Role { UserId = guestUser.Id, RoleId = guestRole.Id },
+                    new QuanTriKhachSanN5.Models.User_Role { UserId = receptionistUser.Id, RoleId = receptionistRole.Id },
+                    new QuanTriKhachSanN5.Models.User_Role { UserId = housekeepingUser.Id, RoleId = housekeepingRole.Id }
+                );
+                context.SaveChanges();
+
+                Console.WriteLine("✅ Đã tạo 4 test users + assigned roles!");
+            }
+
+            // 3. Seed other data
+            SeedData.Initialize(context);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Seed data error: {ex.Message}");
+            if (ex.InnerException != null) Console.WriteLine($"   Detail: {ex.InnerException.Message}");
+        }
     }
-    catch (Exception ex)
-    {
-        Console.WriteLine("❌ Chưa thể seed data (Có thể do Database chưa sẵn sàng): " + ex.Message);
-    }
-}
 
 if (app.Environment.IsDevelopment())
 {
+    app.UseExceptionHandler(errorApp =>
+    {
+        errorApp.Run(async context =>
+        {
+            var exceptionHandlerPathFeature = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerPathFeature>();
+            var exception = exceptionHandlerPathFeature?.Error;
+
+            context.Response.StatusCode = 500;
+            context.Response.ContentType = "application/json";
+
+            var response = new { 
+                error = "Internal Server Error", 
+                message = exception?.Message ?? "Unknown error",
+                stackTrace = exception?.StackTrace 
+            };
+
+            await context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(response));
+        });
+    });
+
     app.UseSwagger();
     app.UseSwaggerUI();
 }

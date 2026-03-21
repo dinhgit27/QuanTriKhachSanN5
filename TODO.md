@@ -1,34 +1,31 @@
-# TODO: Fix Auth & Clean Project
+# RBAC 4-ROLES IMPLEMENTATION (Admin/Guest/Receptionist/Housekeeping)
+✅ **Step 1 Complete:** Created TODO.md tracking
 
-## Plan Steps (Approved)
+## PROGRESS: 1/12 ✅
 
-### 1. Delete unnecessary files
-- [ ] Controllers/ExampleRBACController.cs
-- [ ] Controllers/HRRBACController.cs  
-- [ ] Services/HRRBACService.cs
-- [ ] Interfaces/IHRRBACService.cs
+**Phase 1: Core Fixes (4 steps)**
+- [x] 1. Create TODO.md 
+- [ ] 2. Models/HRRBACModels.cs: Remove redundant User.Role string
+- [ ] 3. Services/JwtService.cs: Fix role claim from junction table
+- [ ] 4. Data/AuthSeedData.cs: Update seeding (null string Role)
+- [ ] 5. Program.cs: Add role-based policies
 
-### 2. Edit Program.cs
-- [ ] Change "User" → "Guest" in seeding
-- [ ] Add Role seeding
-- [ ] Add User_Role seeding
-- [ ] Remove HRRBACService registration
+**Phase 2: Controllers Standardization (6 steps)**
+- [ ] 6. Controllers/AuthController.cs: Pass roles to JWT
+- [ ] 7. Fix Attractions/Rooms/RoomInventory (existing mixed Roles+Policy)
+- [ ] 8. Fix Bookings/Reception/Payment/OrderServices/LossAndDamages
+- [ ] 9. Guest-only protections (read-only)
+- [ ] 10. Add missing [Authorize] to unprotected controllers
 
-### 3. Enhance Data/SeedData.cs
-- [ ] Add Permissions seed
-- [ ] Add Role_Permission links
+**Phase 3: Role Management (1 step)**
+- [ ] 11. Create UserRolesController.cs (Admin CRUD)
 
-### 4. Standardize auth attributes
-- [ ] Replace [Permission()] → [Authorize(Roles=)] in all controllers (e.g. AttractionsController.cs)
-- [ ] Delete Attributes/PermissionAttribute.cs
+**Phase 4: Test & Docs (1 step)**
+- [ ] 12. Migrations + Tests + Docs
 
-### 5. Database migrations
-- Run `dotnet ef migrations add FixAuthRoles`
-- Run `dotnet ef database update`
-
-### 6. Test
-- [ ] dotnet run (seeds data)
-- [ ] Test logins: admin@test.com/123456 etc.
-
-**Current progress: ✅ Steps 1-4 complete. Step 5: Migrations & Test**
+**Test Users (all roles seeded):**
+- Admin: admin@test.com / 123456
+- Guest: guest@test.com / 123456  
+- Receptionist: receptionist@test.com / 123456
+- Housekeeping: housekeeping@test.com / 123456
 

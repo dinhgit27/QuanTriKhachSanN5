@@ -22,37 +22,87 @@ namespace QuanTriKhachSanN5.Data
             context.Roles.AddRange(roles);
             context.SaveChanges();
 
-            // Permissions examples
+            // Comprehensive Permissions for full RBAC
             var permissions = new List<Permission>
             {
-                new Permission { Name = "ManageBookings" },
+                // Bookings
+                new Permission { Name = "ViewBookings" },
+                new Permission { Name = "CreateBooking" },
+                new Permission { Name = "UpdateBooking" },
+                new Permission { Name = "CancelBooking" },
+                // Rooms
+                new Permission { Name = "ViewRooms" },
+                new Permission { Name = "ManageRooms" },
+                new Permission { Name = "UpdateRoomStatus" },
+                new Permission { Name = "ViewRoomTypes" },
+                new Permission { Name = "ManageRoomTypes" },
+                // Inventory
                 new Permission { Name = "ViewInventory" },
+                new Permission { Name = "UpdateInventory" },
+                // Payments
+                new Permission { Name = "ViewPayments" },
+                new Permission { Name = "ManagePayments" },
+                // Attractions
+                new Permission { Name = "ViewAttractions" },
+                new Permission { Name = "CreateAttraction" },
+                new Permission { Name = "UpdateAttraction" },
+                new Permission { Name = "DeleteAttraction" },
+                new Permission { Name = "RestoreAttraction" },
+                // CMS/Posts
+                new Permission { Name = "ManagePosts" },
+                new Permission { Name = "ViewPosts" },
+                // Reviews
+                new Permission { Name = "ViewReviews" },
+                new Permission { Name = "ManageReviews" },
+                // Services/Orders
+                new Permission { Name = "ViewServices" },
+                new Permission { Name = "ManageServices" },
+                new Permission { Name = "ManageOrderServices" },
+                // Loss/Damage
+                new Permission { Name = "ViewLossDamages" },
+                new Permission { Name = "ManageLossDamages" },
+                // Users/Roles
+                new Permission { Name = "ManageUsers" },
+                new Permission { Name = "ManageRoles" },
+                // Ops
                 new Permission { Name = "CheckInOut" },
                 new Permission { Name = "CleanRooms" },
-                new Permission { Name = "ManageUsers" }
+                new Permission { Name = "GuestViewOnly" }
             };
             context.Permissions.AddRange(permissions);
             context.SaveChanges();
 
-            // Role_Permissions (Admin has all, etc.)
-            var rolePermissions = new List<Role_Permission>
+// Comprehensive Role_Permissions
+            var allPermissionIds = permissions.Select(p => p.Id).ToList();
+            var rolePermissions = new List<Role_Permission>();
+
+            // Admin: ALL permissions
+            foreach (var permId in allPermissionIds)
             {
-                // Admin all
-                new Role_Permission { RoleId = roles[0].Id, PermissionId = permissions[0].Id },
-                new Role_Permission { RoleId = roles[0].Id, PermissionId = permissions[1].Id },
-                new Role_Permission { RoleId = roles[0].Id, PermissionId = permissions[2].Id },
-                new Role_Permission { RoleId = roles[0].Id, PermissionId = permissions[3].Id },
-                new Role_Permission { RoleId = roles[0].Id, PermissionId = permissions[4].Id },
-                // Receptionist: bookings, checkin, inventory
-                new Role_Permission { RoleId = roles[2].Id, PermissionId = permissions[0].Id },
-                new Role_Permission { RoleId = roles[2].Id, PermissionId = permissions[1].Id },
-                new Role_Permission { RoleId = roles[2].Id, PermissionId = permissions[2].Id },
-                // Housekeeping: inventory, clean
-                new Role_Permission { RoleId = roles[3].Id, PermissionId = permissions[1].Id },
-                new Role_Permission { RoleId = roles[3].Id, PermissionId = permissions[3].Id },
-                // Guest: none
-            };
+                rolePermissions.Add(new Role_Permission { RoleId = roles[0].Id, PermissionId = permId });
+            }
+
+            // Receptionist: Bookings, Rooms, Attractions, Payments, Services, Inventory, CheckInOut
+            var receptionistPerms = new[] { "CreateBooking", "UpdateBooking", "ViewBookings", "ManageRooms", "ViewRooms", "UpdateRoomStatus", "ViewRoomTypes", "ViewInventory", "UpdateInventory", "ViewPayments", "ManagePayments", "ViewAttractions", "CreateAttraction", "UpdateAttraction", "ManageOrderServices", "ViewServices", "ManageServices", "CheckInOut" };
+            foreach (var permName in receptionistPerms)
+            {
+                var permId = permissions.First(p => p.Name == permName).Id;
+                rolePermissions.Add(new Role_Permission { RoleId = roles[2].Id, PermissionId = permId });
+            }
+
+            // Housekeeping: Rooms, Inventory, Clean, LossDamages
+            var housekeepingPerms = new[] { "ViewRooms", "UpdateRoomStatus", "ViewInventory", "UpdateInventory", "CleanRooms", "ViewLossDamages", "ManageLossDamages" };
+            foreach (var permName in housekeepingPerms)
+            {
+                var permId = permissions.First(p => p.Name == permName).Id;
+                rolePermissions.Add(new Role_Permission { RoleId = roles[3].Id, PermissionId = permId });
+            }
+
+            // Guest: limited view
+            rolePermissions.Add(new Role_Permission { RoleId = roles[1].Id, PermissionId = permissions.First(p => p.Name == "GuestViewOnly").Id });
+
             context.RolePermissions.AddRange(rolePermissions);
+            context.SaveChanges();
             context.SaveChanges();
 
             Console.WriteLine("✅ Auth roles, permissions seeded!");

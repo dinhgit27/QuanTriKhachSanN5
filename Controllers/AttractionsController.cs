@@ -52,8 +52,8 @@ public class AttractionsController : ControllerBase
     /// Tạo điểm du lịch mới
     /// Yêu cầu: Admin hoặc Receptionist
     /// </summary>
-    [HttpPost]
-    [Authorize(Roles = "Admin,Receptionist")]
+[HttpPost]
+    [Authorize(Roles = "Admin,Receptionist", Policy = "CreateAttraction")]
     public async Task<ActionResult<AttractionDTO>> Create([FromBody] CreateAttractionDTO dto)
     {
         if (!ModelState.IsValid)
@@ -67,8 +67,8 @@ public class AttractionsController : ControllerBase
     /// Cập nhật điểm du lịch
     /// Yêu cầu: Admin hoặc Receptionist
     /// </summary>
-    [HttpPut("{id:int}")]
-    [Authorize(Roles = "Admin,Receptionist")]
+[HttpPut("{id:int}")]
+    [Authorize(Roles = "Admin,Receptionist", Policy = "UpdateAttraction")]
     public async Task<IActionResult> Update(int id, [FromBody] CreateAttractionDTO dto)
     {
         if (!ModelState.IsValid)
@@ -85,8 +85,8 @@ public class AttractionsController : ControllerBase
     /// Xóa điểm du lịch (Soft Delete)
     /// Yêu cầu: Admin hoặc Receptionist
     /// </summary>
-    [HttpDelete("{id:int}")]
-    [Authorize(Roles = "Admin,Receptionist")]
+[HttpDelete("{id:int}")]
+    [Authorize(Roles = "Admin,Receptionist", Policy = "DeleteAttraction")]
     public async Task<IActionResult> Delete(int id)
     {
         var deleted = await _attractionService.DeleteAsync(id);
@@ -100,8 +100,8 @@ public class AttractionsController : ControllerBase
     /// Tìm kiếm điểm du lịch từ Google Maps
     /// Yêu cầu: Admin hoặc Receptionist
     /// </summary>
-    [HttpGet("search/{query}")]
-    [Authorize(Roles = "Admin,Receptionist")]
+[HttpGet("search/{query}")]
+    [Authorize(Roles = "Admin,Receptionist", Policy = "ViewAttractions")]
     public async Task<ActionResult<List<GooglePlaceDetailsDTO>>> SearchAttractions(string query)
     {
         if (string.IsNullOrWhiteSpace(query))
@@ -139,8 +139,8 @@ public class AttractionsController : ControllerBase
     /// Khôi phục điểm du lịch đã xóa
     /// Yêu cầu: Admin
     /// </summary>
-    [HttpPost("{id:int}/restore")]
-    [Authorize(Roles = "Admin")]
+[HttpPost("{id:int}/restore")]
+    [Authorize(Roles = "Admin", Policy = "RestoreAttraction")]
     public async Task<IActionResult> Restore(int id)
     {
         var restored = await _attractionService.RestoreAsync(id);

@@ -36,7 +36,8 @@ namespace QuanTriKhachSanN5.Controllers
                 Username = dto.Username,
                 Email = dto.Email,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-                Role = "Guest" // Cập nhật đúng Role theo thiết kế RBAC
+                // Role = null - managed via User_Role junction
+                CreatedAt = DateTime.UtcNow
             };
 
             _context.Users.Add(user);
@@ -67,7 +68,12 @@ namespace QuanTriKhachSanN5.Controllers
                 .Distinct()
                 .ToListAsync();
 
-            var token = _jwt.GenerateToken(user, permissions);
+            var userRoles = await _context.UserRoles
+                .Where(ur => ur.UserId == user.Id)
+                .Select(ur => ur.Role.Name)
+                .ToListAsync();
+
+            var token = _jwt.GenerateToken(user, permissions, userRoles);
 
             return Ok(new { token });
         }
@@ -86,7 +92,8 @@ namespace QuanTriKhachSanN5.Controllers
                 {
                     Email = payload.Email,
                     Username = payload.Name,
-                    Role = "Guest" // Cập nhật đúng Role theo thiết kế RBAC
+                    // Role = null - managed via User_Role junction
+                    CreatedAt = DateTime.UtcNow
                 };
 
                 _context.Users.Add(user);
@@ -101,7 +108,12 @@ namespace QuanTriKhachSanN5.Controllers
                 .Distinct()
                 .ToListAsync();
 
-            var token = _jwt.GenerateToken(user, permissions);
+            var userRoles = await _context.UserRoles
+                .Where(ur => ur.UserId == user.Id)
+                .Select(ur => ur.Role.Name)
+                .ToListAsync();
+
+            var token = _jwt.GenerateToken(user, permissions, userRoles);
 
             return Ok(new { token });
         }

@@ -18,7 +18,7 @@ namespace QuanTriKhachSanN5.Controllers
             _roomService = roomService;
         }
 
-        [Authorize(Roles = "Admin")] // Việc tạo thêm phòng vật lý mới phải do Quản lý làm
+[Authorize(Roles = "Admin", Policy = "ManageRooms")]
         [HttpPost]
         public async Task<IActionResult> CreateRoom([FromBody] Room room)
         {
@@ -26,7 +26,7 @@ namespace QuanTriKhachSanN5.Controllers
             return CreatedAtAction(nameof(GetRoom), new { id = room.Id }, room);
         }
 
-        [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
+[Authorize(Roles = "Admin,Receptionist,Housekeeping", Policy = "ViewRooms")]
         [HttpGet]
         public async Task<ActionResult<List<Room>>> GetRooms()
         {

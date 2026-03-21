@@ -3,6 +3,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using QuanTriKhachSanN5.Models;
+using Microsoft.Extensions.Configuration;
 
 namespace QuanTriKhachSanN5.Services
 {
@@ -15,13 +16,13 @@ namespace QuanTriKhachSanN5.Services
             _config = config;
         }
 
-        public string GenerateToken(User user, IList<string> permissions)
+        public string GenerateToken(User user, IList<string> permissions, IList<string> roles = null)
         {
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, user.Username),
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.Role),
+                new Claim(ClaimTypes.Role, roles?.FirstOrDefault() ?? "Guest"),
                 new Claim("UserId", user.Id.ToString())
             };
 
@@ -31,7 +32,7 @@ namespace QuanTriKhachSanN5.Services
             }
 
             var key = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(_config["Jwt:Key"])
+                Encoding.UTF8.GetBytes(_config["Jwt:Key"]!)
             );
 
             var creds = new SigningCredentials(
