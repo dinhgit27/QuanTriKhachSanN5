@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace QuanTriKhachSanN5.DTOs.Attraction;
 
-public class CreateAttractionDTO
+public class UpdateAttractionDTO
 {
     [Required(ErrorMessage = "Tên điểm du lịch là bắt buộc")]
     [MaxLength(250, ErrorMessage = "Tên không quá 250 ký tự")]
@@ -24,10 +24,11 @@ public class CreateAttractionDTO
     [Range(-180, 180, ErrorMessage = "Longitude phải từ -180 đến 180")]
     public double? Longitude { get; set; }
 
-    // Image uploads (base64 or file upload)
+    // Image management
     [MaxLength(500)]
-    public string? MainImageBase64 { get; set; }
+    public string? MainImageUrl { get; set; }
 
-    // Optional: Multiple image URLs (from Cloudinary)
-    public List<string>? ImageUrls { get; set; }
+    public List<string>? ImageUrlsToAdd { get; set; }
+
+    public List<int>? ImageIdsToRemove { get; set; }
 }

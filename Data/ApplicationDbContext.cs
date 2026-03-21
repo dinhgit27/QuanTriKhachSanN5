@@ -20,6 +20,7 @@ namespace QuanTriKhachSanN5.Data
         public DbSet<Article> Articles { get; set; }
         public DbSet<Article_Category> ArticleCategories { get; set; }
         public DbSet<Attraction> Attractions { get; set; }
+        public DbSet<AttractionImage> AttractionImages { get; set; }
         public DbSet<Review> Reviews { get; set; }
         public DbSet<Invoice> Invoices { get; set; }
         public DbSet<Payment> Payments { get; set; }

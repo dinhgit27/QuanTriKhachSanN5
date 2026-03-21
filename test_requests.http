@@ -309,6 +309,114 @@ GET {{baseUrl}}/posts
 GET {{baseUrl}}/posts/1
 
 ###
+### ========== ATTRACTIONS ENHANCEMENTS ==========
+### Soft Delete, Google Maps Integration, Cloudinary Image Storage
+
+### 1. Create Attraction with Google Places Data and Base64 Image
+POST {{baseUrl}}/attractions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Tháp Trầm Hương - Nha Trang",
+  "description": "Tháp cổ kính 9 tầng với kiến trúc châu Á đặc sắc, nằm trên đỉnh đồi Trầm Hương",
+  "location": "Nha Trang, Khánh Hòa, Việt Nam",
+  "googlePlaceId": "ChIJ7aFvPHNIVjARqnO_3zrGEcU",
+  "latitude": 12.2427,
+  "longitude": 109.2032,
+  "mainImageBase64": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+  "imageUrls": ["https://example.com/image1.jpg", "https://example.com/image2.jpg"]
+}
+
+###
+### 2. Get All Attractions (non-deleted only)
+GET {{baseUrl}}/attractions
+
+###
+### 3. Get Single Attraction with Images
+GET {{baseUrl}}/attractions/1
+
+###
+### 4. Search Attractions by Google Places (Admin/Receptionist only)
+GET {{baseUrl}}/attractions/search/nhà%20thờ%20đá
+Authorization: Bearer {{token}}
+
+###
+### Alternative: Search with query parameter
+GET {{baseUrl}}/attractions/search/cảng%20và%20bãi%20biển
+Authorization: Bearer {{token}}
+
+###
+### 5. Get Nearby Attractions (Google Maps - No Auth Required)
+### Find tourist attractions within 5000 meters of Nha Trang center (12.2427, 109.2032)
+GET {{baseUrl}}/attractions/nearby/12.2427/109.2032?radiusMeters=5000
+Authorization: Bearer {{token}}
+
+###
+### 6. Update Attraction (with image management)
+PUT {{baseUrl}}/attractions/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Tháp Trầm Hương - Nha Trang [Cập nhật]",
+  "description": "Tháp cổ kính 9 tầng với kiến trúc châu Á đặc sắc, nằm trên đỉnh đồi Trầm Hương. Nơi tuyệt vời để chụp ảnh lúc hoàng hôn.",
+  "location": "Nha Trang, Khánh Hòa, Việt Nam",
+  "googlePlaceId": "ChIJ7aFvPHNIVjARqnO_3zrGEcU",
+  "latitude": 12.2427,
+  "longitude": 109.2032,
+  "mainImageUrl": "https://res.cloudinary.com/your-cloud/image/upload/v1234567890/example.jpg",
+  "imageUrlsToAdd": ["https://example.com/new-image1.jpg"],
+  "imageIdsToRemove": [1]
+}
+
+###
+### 7. Soft Delete Attraction (logical delete - IsDeleted = true)
+DELETE {{baseUrl}}/attractions/1
+Authorization: Bearer {{token}}
+
+###
+### 8. Verify Attraction is Soft Deleted (should not appear in list)
+GET {{baseUrl}}/attractions
+
+###
+### 9. Restore Deleted Attraction (Admin Only)
+POST {{baseUrl}}/attractions/1/restore
+Authorization: Bearer {{token}}
+
+###
+### 10. Verify Attraction is Restored
+GET {{baseUrl}}/attractions/1
+
+###
+### ========== NOTES ==========
+### 
+### Authentication:
+### 1. Get admin/receptionist token from /auth/login
+### 2. Replace {{token}} with actual JWT token
+### 
+### Soft Delete Benefits:
+### - Data is never permanently deleted
+### - Can restore if needed
+### - Maintains referential integrity
+### - Supports audit trails
+### 
+### Google Maps Integration:
+### - searchPlaces: Text search for attractions
+### - nearbyPlaces: Find attractions near coordinates
+### - getDetails: Fetch photos and ratings from Google
+### 
+### Cloudinary Image Storage:
+### - Automatic image optimization (1200x800)
+### - CDN delivery for faster loading
+### - Store public IDs for future deletion
+### 
+### RBAC Permissions:
+### - Public: List, Details, Nearby (no auth required)
+### - Admin/Receptionist: Create, Update, Soft Delete
+### - Admin Only: Restore deleted attractions
+
+###
 ### Create Post
 POST {{baseUrl}}/posts
 Authorization: Bearer {{token}}

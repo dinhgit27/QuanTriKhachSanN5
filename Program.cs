@@ -44,7 +44,7 @@ builder.Services.AddScoped<IRoomInventoryService, RoomInventoryService>();
 
 builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<ICMSService, CMSService>();
-builder.Services.AddScoped<IHRRBACService, HRRBACService>();
+
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IReceptionService, ReceptionService>();
 builder.Services.AddScoped<IPromotionService, PromotionService>();
@@ -52,6 +52,11 @@ builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<IAttractionService, AttractionService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
+
+// Cloudinary & Google Maps Services
+builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
+builder.Services.AddHttpClient<IGoogleMapsService, GoogleMapsService>();
+builder.Services.AddScoped<IGoogleMapsService, GoogleMapsService>();
 
 // CheckoutService
 builder.Services.AddScoped<CheckoutService>();
@@ -154,17 +159,22 @@ using (var scope = app.Services.CreateScope())
         {
             context.Users.AddRange(
                 new QuanTriKhachSanN5.Models.User { Username = "Admin", Email = "admin@test.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"), Role = "Admin", CreatedAt = DateTime.UtcNow },
-                new QuanTriKhachSanN5.Models.User { Username = "User", Email = "user@test.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"), Role = "User", CreatedAt = DateTime.UtcNow },
+                new QuanTriKhachSanN5.Models.User { Username = "Guest", Email = "guest@test.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"), Role = "Guest", CreatedAt = DateTime.UtcNow },
                 new QuanTriKhachSanN5.Models.User { Username = "Receptionist", Email = "receptionist@test.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"), Role = "Receptionist", CreatedAt = DateTime.UtcNow },
                 new QuanTriKhachSanN5.Models.User { Username = "Housekeeping", Email = "housekeeping@test.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"), Role = "Housekeeping", CreatedAt = DateTime.UtcNow }
             );
             context.SaveChanges();
-            Console.WriteLine("Đã tạo thành công 4 tài khoản test!");
+            Console.WriteLine("✅ Đã tạo thành công 4 tài khoản test!");
         }
+
+// Seed auth data
+        AuthSeedData.SeedRolesAndPermissions(context);
+        // Seed dữ liệu mẫu cho các bảng khác
+        SeedData.Initialize(context);
     }
     catch (Exception ex)
     {
-        Console.WriteLine("Chưa thể seed data (Có thể do Database chưa sẵn sàng): " + ex.Message);
+        Console.WriteLine("❌ Chưa thể seed data (Có thể do Database chưa sẵn sàng): " + ex.Message);
     }
 }
 

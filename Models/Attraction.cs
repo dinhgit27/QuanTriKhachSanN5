@@ -16,5 +16,28 @@ public class Attraction
     [MaxLength(500)]
     public string? Location { get; set; }
 
+    // Google Maps Integration
+    [MaxLength(100)]
+    public string? GooglePlaceId { get; set; }
+
+    public double? Latitude { get; set; }
+
+    public double? Longitude { get; set; }
+
+    // Image storage URLs (Cloudinary)
+    [MaxLength(500)]
+    public string? MainImageUrl { get; set; } // Main display image
+
+    // Navigation property for multiple images
+    public ICollection<AttractionImage> Images { get; set; } = new List<AttractionImage>();
+
+    // Soft Delete
+    public bool IsDeleted { get; set; } = false;
+
+    // Audit
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    public DateTime? UpdatedAt { get; set; }
+
+    public DateTime? DeletedAt { get; set; }
 }
