@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QuanTriKhachSanN5.DTOs.Post;
 using QuanTriKhachSanN5.Interfaces;
@@ -6,8 +7,10 @@ namespace QuanTriKhachSanN5.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize(Policy = "ManagePosts")]
 public class PostsController : ControllerBase
 {
+
     private readonly IPostService _postService;
 
     public PostsController(IPostService postService)

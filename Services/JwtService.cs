@@ -22,10 +22,23 @@ namespace QuanTriKhachSanN5.Services
             {
                 new Claim(ClaimTypes.Name, user.Username),
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, roles?.FirstOrDefault() ?? "Guest"),
                 new Claim("UserId", user.Id.ToString())
             };
 
+            // Multi-role support
+            if (roles != null)
+            {
+                foreach (var role in roles)
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, role));
+                }
+            }
+            else
+            {
+                claims.Add(new Claim(ClaimTypes.Role, "Guest"));
+            }
+
+            // Permissions
             foreach (var perm in permissions)
             {
                 claims.Add(new Claim("Permission", perm));
@@ -42,6 +55,7 @@ namespace QuanTriKhachSanN5.Services
 
             var token = new JwtSecurityToken(
                 issuer: _config["Jwt:Issuer"],
+                audience: _config["Jwt:Audience"],
                 claims: claims,
                 expires: DateTime.Now.AddDays(7),
                 signingCredentials: creds

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QuanTriKhachSanN5.DTOs.Category;
 using QuanTriKhachSanN5.Interfaces;
@@ -6,8 +7,10 @@ namespace QuanTriKhachSanN5.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize(Policy = "ManageServices")]
 public class CategoriesController : ControllerBase
 {
+
     private readonly ICategoryService _categoryService;
 
     public CategoriesController(ICategoryService categoryService)

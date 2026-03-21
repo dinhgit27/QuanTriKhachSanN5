@@ -9,13 +9,13 @@ using QuanTriKhachSanN5.Interfaces;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Text;
-using Microsoft.OpenApi;
-using QuanTriKhachSanN5.API.Services;
+using QuanTriKhachSanN5.Models;
+using Microsoft.OpenApi.Models;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.Logging;  // Added for logger
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Đăng ký AuditLogFilter cho toàn bộ các Controllers
 // Controllers
 builder.Services.AddControllers(options => 
 {
@@ -31,20 +31,14 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         builder.Configuration.GetConnectionString("DefaultConnection")
     ));
 
-// JWT Service
+// Services...
 builder.Services.AddScoped<JwtService>();
-
-// Đăng ký bộ lọc Audit làm Scoped Service để tiêm DbContext
 builder.Services.AddScoped<QuanTriKhachSanN5.Filters.AuditLogFilter>();
-
-// Room Service
 builder.Services.AddScoped<IRoomService, RoomService>();
 builder.Services.AddScoped<IRoomTypeService, RoomTypeService>();
 builder.Services.AddScoped<IRoomInventoryService, RoomInventoryService>();
-
 builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<ICMSService, CMSService>();
-
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IReceptionService, ReceptionService>();
 builder.Services.AddScoped<IPromotionService, PromotionService>();
@@ -52,38 +46,42 @@ builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<IAttractionService, AttractionService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
-
-// Cloudinary & Google Maps Services
 builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
 builder.Services.AddHttpClient<IGoogleMapsService, GoogleMapsService>();
 builder.Services.AddScoped<IGoogleMapsService, GoogleMapsService>();
-
-// CheckoutService
 builder.Services.AddScoped<CheckoutService>();
 
-// Authentication
+// Authentication with logging
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 .AddJwtBearer(options =>
 {
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
-        ValidateAudience = false,
+        ValidateAudience = true,
+        ValidAudience = builder.Configuration["Jwt:Audience"],
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
-
         IssuerSigningKey = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)
         )
     };
+    
+    options.Events = new JwtBearerEvents
+    {
+        OnAuthenticationFailed = context =>
+        {
+            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+            logger.LogError("JWT Authentication failed: {Reason}", context.Exception?.Message);
+            return Task.CompletedTask;
+        }
+    };
 });
 
-// ĐĂNG KÝ PHÂN QUYỀN NÂNG CAO (POLICY-BASED)
+// Authorization policies
 builder.Services.AddAuthorization(options =>
 {
-    // RBAC Policies - Require specific Permission claim
     var policies = new[] {
         "ViewBookings", "CreateBooking", "UpdateBooking", "CancelBooking",
         "ViewRooms", "ManageRooms", "UpdateRoomStatus", "ViewRoomTypes", "ManageRoomTypes",
@@ -103,23 +101,14 @@ builder.Services.AddAuthorization(options =>
         options.AddPolicy(policyName, p => p.RequireClaim("Permission", policyName));
     }
 
-// Legacy
     options.AddPolicy("MANAGE_ROOMS", policy => policy.RequireClaim("Permission", "MANAGE_ROOMS"));
-    
-    // NEW: AdminOnly policy for HR controllers
     options.AddPolicy("AdminOnly", policy => policy.RequireClaim("Permission", "ManageRoles"));
 });
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo
-    {
-        Title = "Hotel Management API",
-        Version = "v1"
-    });
-
-    // Ngăn lỗi trùng lặp tên Model (ví dụ: BookingDetail) và xung đột định tuyến
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Hotel Management API", Version = "v1" });
     c.CustomSchemaIds(type => type.FullName);
     c.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
 
@@ -133,13 +122,19 @@ builder.Services.AddSwaggerGen(c =>
         BearerFormat = "JWT"
     });
 
-    c.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
-        [new OpenApiSecuritySchemeReference("Bearer")] = new List<string>()
+        [new OpenApiSecuritySchemeReference 
+        {
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer"
+        }] = new List<string>()
     });
 });
 
 var app = builder.Build();
+
+// DB check & seed
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -150,8 +145,6 @@ using (var scope = app.Services.CreateScope())
             Console.WriteLine("✅ KẾT NỐI DATABASE THÀNH CÔNG!");
             Console.WriteLine($"   Server: {dbContext.Database.GetDbConnection().DataSource}");
             Console.WriteLine($"   Database: {dbContext.Database.GetDbConnection().Database}");
-            
-            // Kiểm tra đọc dữ liệu từ bảng Users
             var userCount = dbContext.Users.Count();
             Console.WriteLine($"   Số lượng Users: {userCount}");
         }
@@ -162,70 +155,65 @@ using (var scope = app.Services.CreateScope())
     }
     catch (Exception ex)
     {
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Database connection failed");
         Console.WriteLine($"❌ LỖI KẾT NỐI: {ex.Message}");
-        if (ex.InnerException != null)
-        {
-            Console.WriteLine($"   Chi tiết: {ex.InnerException.Message}");
-        }
     }
 }
 
-    // ==========================================
-    // TỰ ĐỘNG SEED ROLES/PERMISSIONS TRƯỚC → USERS SAU (FIX CRASH)
-    // ==========================================
-    using (var scope = app.Services.CreateScope())
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    try
     {
-        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        try
+        AuthSeedData.SeedRolesAndPermissions(context);
+
+        if (!context.Users.Any(u => u.Email == "admin@test.com"))
         {
-            // 1. FIRST: Seed Roles & Permissions (required for user assignment)
-            AuthSeedData.SeedRolesAndPermissions(context);
+            // Add test users...
+            context.Users.AddRange(
+                new QuanTriKhachSanN5.Models.User { Username = "Admin", Email = "admin@test.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"), CreatedAt = DateTime.UtcNow },
+                new QuanTriKhachSanN5.Models.User { Username = "Guest", Email = "guest@test.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"), CreatedAt = DateTime.UtcNow },
+                new QuanTriKhachSanN5.Models.User { Username = "Receptionist", Email = "receptionist@test.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"), CreatedAt = DateTime.UtcNow },
+                new QuanTriKhachSanN5.Models.User { Username = "Housekeeping", Email = "housekeeping@test.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"), CreatedAt = DateTime.UtcNow }
+            );
+            context.SaveChanges();
 
-            // 2. THEN: Create test users + assign roles (now safe)
-            if (!context.Users.Any(u => u.Email == "admin@test.com"))
-            {
-                context.Users.AddRange(
-                    new QuanTriKhachSanN5.Models.User { Username = "Admin", Email = "admin@test.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"), CreatedAt = DateTime.UtcNow },
-                    new QuanTriKhachSanN5.Models.User { Username = "Guest", Email = "guest@test.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"), CreatedAt = DateTime.UtcNow },
-                    new QuanTriKhachSanN5.Models.User { Username = "Receptionist", Email = "receptionist@test.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"), CreatedAt = DateTime.UtcNow },
-                    new QuanTriKhachSanN5.Models.User { Username = "Housekeeping", Email = "housekeeping@test.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"), CreatedAt = DateTime.UtcNow }
-                );
-                context.SaveChanges();
+            var adminRole = context.Roles.First(r => r.Name == "Admin");
+            var guestRole = context.Roles.FirstOrDefault(r => r.Name == "Guest") ?? throw new InvalidOperationException("Guest role not found");
+            var receptionistRole = context.Roles.FirstOrDefault(r => r.Name == "Receptionist") ?? throw new InvalidOperationException("Receptionist role not found");
+            var housekeepingRole = context.Roles.First(r => r.Name == "Housekeeping");
 
-                // Safe assign roles (Roles now exist)
-                var adminRole = context.Roles.First(r => r.Name == "Admin");
-                var guestRole = context.Roles.First(r => r.Name == "Guest");
-                var receptionistRole = context.Roles.First(r => r.Name == "Receptionist");
-                var housekeepingRole = context.Roles.First(r => r.Name == "Housekeeping");
+            var adminUser = context.Users.First(u => u.Email == "admin@test.com");
+            var guestUser = context.Users.First(u => u.Email == "guest@test.com");
+            var receptionistUser = context.Users.First(u => u.Email == "receptionist@test.com");
+            var housekeepingUser = context.Users.First(u => u.Email == "housekeeping@test.com");
 
-                var adminUser = context.Users.First(u => u.Email == "admin@test.com");
-                var guestUser = context.Users.First(u => u.Email == "guest@test.com");
-                var receptionistUser = context.Users.First(u => u.Email == "receptionist@test.com");
-                var housekeepingUser = context.Users.First(u => u.Email == "housekeeping@test.com");
+            context.UserRoles.AddRange(
+                new QuanTriKhachSanN5.Models.User_Role { UserId = adminUser.Id, RoleId = adminRole.Id },
+                new QuanTriKhachSanN5.Models.User_Role { UserId = guestUser.Id, RoleId = guestRole.Id },
+                new QuanTriKhachSanN5.Models.User_Role { UserId = receptionistUser.Id, RoleId = receptionistRole.Id },
+                new QuanTriKhachSanN5.Models.User_Role { UserId = housekeepingUser.Id, RoleId = housekeepingRole.Id }
+            );
+            context.SaveChanges();
 
-                context.UserRoles.AddRange(
-                    new QuanTriKhachSanN5.Models.User_Role { UserId = adminUser.Id, RoleId = adminRole.Id },
-                    new QuanTriKhachSanN5.Models.User_Role { UserId = guestUser.Id, RoleId = guestRole.Id },
-                    new QuanTriKhachSanN5.Models.User_Role { UserId = receptionistUser.Id, RoleId = receptionistRole.Id },
-                    new QuanTriKhachSanN5.Models.User_Role { UserId = housekeepingUser.Id, RoleId = housekeepingRole.Id }
-                );
-                context.SaveChanges();
-
-                Console.WriteLine("✅ Đã tạo 4 test users + assigned roles!");
-            }
-
-            // 3. Seed other data
-            SeedData.Initialize(context);
+            Console.WriteLine("✅ Đã tạo 4 test users + assigned roles!");
         }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"❌ Seed data error: {ex.Message}");
-            if (ex.InnerException != null) Console.WriteLine($"   Detail: {ex.InnerException.Message}");
-        }
+
+        SeedData.Initialize(context);
     }
+catch (Exception ex)
+    {
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Seed data failed");
+        Console.WriteLine($"❌ Seed data error: {ex.Message}");
+    }
+}
 
 if (app.Environment.IsDevelopment())
 {
+    app.UseSwagger();
+    app.UseSwaggerUI();
     app.UseExceptionHandler(errorApp =>
     {
         errorApp.Run(async context =>
@@ -245,14 +233,10 @@ if (app.Environment.IsDevelopment())
             await context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(response));
         });
     });
-
-    app.UseSwagger();
-    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
 
-// IMPORTANT
 app.UseAuthentication();
 app.UseAuthorization();
 

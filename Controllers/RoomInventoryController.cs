@@ -11,8 +11,9 @@ using QuanTriKhachSanN5.Models;
 
 namespace QuanTriKhachSanN5.Controllers
 {
-    [ApiController]
+[ApiController]
     [Route("api/[controller]")]
+    [Authorize(Policy = "UpdateInventory")]
     public class RoomInventoryController : ControllerBase
     {
         private readonly IRoomInventoryService _roomService;

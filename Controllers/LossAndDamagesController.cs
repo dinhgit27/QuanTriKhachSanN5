@@ -3,12 +3,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuanTriKhachSanN5.Data;
 using QuanTriKhachSanN5.Models;
-using System.Collections.Generic;
 
 namespace QuanTriKhachSanN5.Controllers
 {
-    [Route("api/[controller]")]
+[Route("api/[controller]")]
     [ApiController]
+    [Authorize(Policy = "ManageLossDamages")]
     public class LossAndDamagesController : ControllerBase
     {
         private readonly ApplicationDbContext _context;

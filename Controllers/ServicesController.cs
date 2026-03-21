@@ -6,8 +6,9 @@ using QuanTriKhachSanN5.Models;
 
 namespace QuanTriKhachSanN5.Controllers
 {
-    [Route("api/[controller]")]
+[Route("api/[controller]")]
     [ApiController]
+    [Authorize(Policy = "ManageServices")]
     public class ServicesController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
