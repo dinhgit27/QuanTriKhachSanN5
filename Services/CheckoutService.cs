@@ -9,27 +9,47 @@ namespace QuanTriKhachSanN5.Services
 {
     public class CheckoutService
     {
-        private readonly ApplicationDbContext _dbContext;
-        private readonly IReceptionService _receptionService;
+        // Nhớ kiểm tra lại tên QlyKhachSanContext xem đã đúng với tên file DB Context của bạn chưa nhé
+        private readonly QlyKhachSanContext _dbContext;
+        private readonly HttpClient _httpClient;
 
-        public CheckoutService(ApplicationDbContext dbContext, IReceptionService receptionService)
+        public CheckoutService(QlyKhachSanContext dbContext, HttpClient httpClient)
         {
             _dbContext = dbContext;
-            _receptionService = receptionService;
+            _httpClient = httpClient;
         }
 
         public async Task<Invoice> GenerateInvoiceAsync(int bookingId)
         {
-            // Tận dụng Service tính tiền nội bộ, nhanh và bảo mật hơn gọi HTTP
-            var checkoutInfo = await _receptionService.CalculateCheckoutAsync(bookingId);
+            var m2Response = await _httpClient.GetAsync($"http://m2-service.local/api/bookings/{bookingId}/costs");
+            m2Response.EnsureSuccessStatusCode();
+            var m2Data = JsonSerializer.Deserialize<M2BookingCostDto>(
+                await m2Response.Content.ReadAsStringAsync(), 
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-            // 4. Lưu Invoice
+            var m4Response = await _httpClient.GetAsync($"http://m4-service.local/api/reception/{bookingId}/costs");
+            m4Response.EnsureSuccessStatusCode();
+            var m4Data = JsonSerializer.Deserialize<M4ServiceCostDto>(
+                await m4Response.Content.ReadAsStringAsync(), 
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            decimal roomTotal = m2Data!.RoomTotalCost;
+            decimal serviceAndDamageTotal = m4Data!.ServicesCost + m4Data.DamageFee; 
+            decimal discount = m2Data.VoucherDiscount;
+            decimal tax = 0; 
+
+            decimal finalTotal = roomTotal + serviceAndDamageTotal + tax - discount;
+            finalTotal = finalTotal < 0 ? 0 : finalTotal;
+
             var invoice = new Invoice
             {
                 BookingId = bookingId,
-                TotalAmount = checkoutInfo.TotalAmount,
-                Status = "Pending",
-                CreatedAt = DateTime.UtcNow
+                TotalRoomAmount = roomTotal,
+                TotalServiceAmount = serviceAndDamageTotal,
+                DiscountAmount = discount,
+                TaxAmount = tax,
+                FinalTotal = finalTotal,
+                Status = "Unpaid"
             };
 
             _dbContext.Invoices.Add(invoice);
@@ -49,17 +69,15 @@ namespace QuanTriKhachSanN5.Services
                 InvoiceId = request.InvoiceId,
                 PaymentMethod = request.PaymentMethod,
                 AmountPaid = request.AmountPaid,
-                TransactionId = request.TransactionId,
-                Status = "Success"
+                TransactionCode = request.TransactionId,
+                PaymentDate = DateTime.Now
             };
 
             _dbContext.Payments.Add(payment);
 
             invoice.Status = "Paid";
-            invoice.UpdatedAt = DateTime.UtcNow;
             
             _dbContext.Invoices.Update(invoice);
-            
             await _dbContext.SaveChangesAsync();
 
             return payment;
