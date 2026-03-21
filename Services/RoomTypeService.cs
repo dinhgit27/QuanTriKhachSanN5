@@ -47,7 +47,7 @@ public class RoomTypeService : IRoomTypeService
         var entity = new RoomType
         {
             Name = dto.Name.Trim(),
-            Description = dto.Description?.Trim(),
+            Description = dto.Description?.Trim() ?? string.Empty,
             BasePrice = dto.BasePrice,
             CapacityAdults = dto.CapacityAdults,
             CapacityChildren = dto.CapacityChildren
@@ -69,7 +69,7 @@ public class RoomTypeService : IRoomTypeService
             return false;
 
         entity.Name = dto.Name.Trim();
-        entity.Description = dto.Description?.Trim();
+        entity.Description = dto.Description?.Trim() ?? string.Empty;
         entity.BasePrice = dto.BasePrice;
         entity.CapacityAdults = dto.CapacityAdults;
         entity.CapacityChildren = dto.CapacityChildren;
