@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using QuanTriKhachSanN5.Attributes;
 using QuanTriKhachSanN5.Interfaces;
 using QuanTriKhachSanN5.Models;
 
@@ -18,7 +18,7 @@ namespace QuanTriKhachSanN5.Controllers
             _roomService = roomService;
         }
 
-        [Permission("Admin", "Staff")]
+        [Authorize(Roles = "Admin")] // Việc tạo thêm phòng vật lý mới phải do Quản lý làm
         [HttpPost]
         public async Task<IActionResult> CreateRoom([FromBody] Room room)
         {
@@ -26,6 +26,7 @@ namespace QuanTriKhachSanN5.Controllers
             return CreatedAtAction(nameof(GetRoom), new { id = room.Id }, room);
         }
 
+        [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
         [HttpGet]
         public async Task<ActionResult<List<Room>>> GetRooms()
         {
@@ -33,6 +34,7 @@ namespace QuanTriKhachSanN5.Controllers
             return Ok(rooms);
         }
 
+        [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
         [HttpGet("{id}")]
         public async Task<ActionResult<Room>> GetRoom(int id)
         {
@@ -41,6 +43,7 @@ namespace QuanTriKhachSanN5.Controllers
             return Ok(room);
         }
 
+        [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
         [HttpPut("{id}/status")]
         public async Task<IActionResult> UpdateRoomStatus(int id, [FromBody] string status)
         {

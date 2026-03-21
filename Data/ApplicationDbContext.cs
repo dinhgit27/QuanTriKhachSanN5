@@ -44,6 +44,7 @@ namespace QuanTriKhachSanN5.Data
         {
             base.OnModelCreating(modelBuilder);
 
+<<<<<<< HEAD
             // Configure decimal precision and scale for money fields (18, 2)
             modelBuilder.Entity<Amenity>().Property(x => x.Price).HasPrecision(18, 2);
             modelBuilder.Entity<Booking>().Property(x => x.TotalAmount).HasPrecision(18, 2);
@@ -62,6 +63,22 @@ namespace QuanTriKhachSanN5.Data
             modelBuilder.Entity<Service>().Property(x => x.Price).HasPrecision(18, 2);
             modelBuilder.Entity<Voucher>().Property(x => x.DiscountAmount).HasPrecision(18, 2);
             modelBuilder.Entity<Voucher>().Property(x => x.DiscountPercent).HasPrecision(18, 2);
+=======
+            // 1. Giải quyết lỗi ĐỎ: Ngắt vòng lặp xóa dây chuyền (Multiple Cascade Paths)
+            modelBuilder.Entity<Booking_Detail>()
+                .HasOne(bd => bd.RoomType)
+                .WithMany()
+                .HasForeignKey(bd => bd.RoomTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // 2. Giải quyết lỗi VÀNG: Định dạng tất cả kiểu thập phân thành decimal(18,2)
+            foreach (var property in modelBuilder.Model.GetEntityTypes()
+                .SelectMany(t => t.GetProperties())
+                .Where(p => p.ClrType == typeof(decimal) || p.ClrType == typeof(decimal?)))
+            {
+                property.SetColumnType("decimal(18,2)");
+            }
+>>>>>>> origin/dinh_nguyen
         }
     }
 }

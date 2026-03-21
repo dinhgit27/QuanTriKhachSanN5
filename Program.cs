@@ -15,8 +15,12 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Đăng ký AuditLogFilter cho toàn bộ các Controllers
 // Controllers
-builder.Services.AddControllers().AddJsonOptions(options =>
+builder.Services.AddControllers(options => 
+{
+    options.Filters.Add<QuanTriKhachSanN5.Filters.AuditLogFilter>();
+}).AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
 });
@@ -29,6 +33,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 // JWT Service
 builder.Services.AddScoped<JwtService>();
+
+// Đăng ký bộ lọc Audit làm Scoped Service để tiêm DbContext
+builder.Services.AddScoped<QuanTriKhachSanN5.Filters.AuditLogFilter>();
 
 // Room Service
 builder.Services.AddScoped<IRoomService, RoomService>();
@@ -46,8 +53,8 @@ builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<IAttractionService, AttractionService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
 
-// Cấu hình cho CheckoutService có sử dụng HttpClient
-builder.Services.AddHttpClient<CheckoutService>();
+// CheckoutService
+builder.Services.AddScoped<CheckoutService>();
 
 // Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -68,6 +75,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     };
 });
 
+// ĐĂNG KÝ PHÂN QUYỀN NÂNG CAO (POLICY-BASED)
+builder.Services.AddAuthorization(options =>
+{
+    // Cấu hình: Ai muốn truy cập API có policy này, Token của họ BẮT BUỘC phải có Claim tên "Permission" = "MANAGE_ROOMS"
+    options.AddPolicy("MANAGE_ROOMS", policy => policy.RequireClaim("Permission", "MANAGE_ROOMS"));
+});
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -83,11 +97,12 @@ builder.Services.AddSwaggerGen(c =>
 
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Description = "JWT Authorization header. Example: Bearer {token}",
+        Description = "JWT Authorization. Vui lòng CHỈ dán chuỗi Token của bạn vào ô bên dưới (KHÔNG cần gõ chữ Bearer).",
         Name = "Authorization",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.Http,
-        Scheme = "bearer"
+        Scheme = "bearer",
+        BearerFormat = "JWT"
     });
 
     c.AddSecurityRequirement(document => new OpenApiSecurityRequirement
@@ -124,6 +139,32 @@ using (var scope = app.Services.CreateScope())
         {
             Console.WriteLine($"   Chi tiết: {ex.InnerException.Message}");
         }
+    }
+}
+
+// ==========================================
+// TỰ ĐỘNG TẠO 4 TÀI KHOẢN TEST (SEED DATA)
+// ==========================================
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    try
+    {
+        if (!context.Users.Any(u => u.Email == "admin@test.com"))
+        {
+            context.Users.AddRange(
+                new QuanTriKhachSanN5.Models.User { Username = "Admin", Email = "admin@test.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"), Role = "Admin", CreatedAt = DateTime.UtcNow },
+                new QuanTriKhachSanN5.Models.User { Username = "User", Email = "user@test.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"), Role = "User", CreatedAt = DateTime.UtcNow },
+                new QuanTriKhachSanN5.Models.User { Username = "Receptionist", Email = "receptionist@test.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"), Role = "Receptionist", CreatedAt = DateTime.UtcNow },
+                new QuanTriKhachSanN5.Models.User { Username = "Housekeeping", Email = "housekeeping@test.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"), Role = "Housekeeping", CreatedAt = DateTime.UtcNow }
+            );
+            context.SaveChanges();
+            Console.WriteLine("Đã tạo thành công 4 tài khoản test!");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine("Chưa thể seed data (Có thể do Database chưa sẵn sàng): " + ex.Message);
     }
 }
 

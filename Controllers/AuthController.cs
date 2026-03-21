@@ -36,7 +36,7 @@ namespace QuanTriKhachSanN5.Controllers
                 Username = dto.Username,
                 Email = dto.Email,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-                Role = "Customer"
+                Role = "Guest" // Cập nhật đúng Role theo thiết kế RBAC
             };
 
             _context.Users.Add(user);
@@ -59,7 +59,15 @@ namespace QuanTriKhachSanN5.Controllers
             if (!check)
                 return Unauthorized("Sai mật khẩu!");
 
-            var token = _jwt.GenerateToken(user);
+            // TÍNH NĂNG NÂNG CAO: Lấy danh sách Permission từ CSDL của Role người dùng đang giữ
+            var permissions = await _context.UserRoles
+                .Where(ur => ur.UserId == user.Id)
+                .SelectMany(ur => ur.Role.RolePermissions)
+                .Select(rp => rp.Permission.Name)
+                .Distinct()
+                .ToListAsync();
+
+            var token = _jwt.GenerateToken(user, permissions);
 
             return Ok(new { token });
         }
@@ -78,14 +86,22 @@ namespace QuanTriKhachSanN5.Controllers
                 {
                     Email = payload.Email,
                     Username = payload.Name,
-                    Role = "Customer"
+                    Role = "Guest" // Cập nhật đúng Role theo thiết kế RBAC
                 };
 
                 _context.Users.Add(user);
                 await _context.SaveChangesAsync();
             }
 
-            var token = _jwt.GenerateToken(user);
+            // Truy vấn lấy danh sách Permission của user đăng nhập qua Google
+            var permissions = await _context.UserRoles
+                .Where(ur => ur.UserId == user.Id)
+                .SelectMany(ur => ur.Role.RolePermissions)
+                .Select(rp => rp.Permission.Name)
+                .Distinct()
+                .ToListAsync();
+
+            var token = _jwt.GenerateToken(user, permissions);
 
             return Ok(new { token });
         }

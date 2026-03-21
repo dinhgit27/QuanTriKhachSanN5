@@ -15,15 +15,20 @@ namespace QuanTriKhachSanN5.Services
             _config = config;
         }
 
-        public string GenerateToken(User user)
+        public string GenerateToken(User user, IList<string> permissions)
         {
-            var claims = new[]
+            var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, user.Username),
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim(ClaimTypes.Role, user.Role),
                 new Claim("UserId", user.Id.ToString())
             };
+
+            foreach (var perm in permissions)
+            {
+                claims.Add(new Claim("Permission", perm));
+            }
 
             var key = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(_config["Jwt:Key"])

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuanTriKhachSanN5.Data;
@@ -21,6 +22,7 @@ namespace QuanTriKhachSanN5.Controllers
         // LẤY DANH SÁCH SERVICES
         // ==============================
         // GET: api/services
+        [AllowAnonymous] // Ai cũng xem được danh sách dịch vụ (Khách vãng lai trên web)
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Service>>> GetServices()
     {
@@ -33,6 +35,7 @@ namespace QuanTriKhachSanN5.Controllers
         // LẤY SERVICE THEO ID
         // ==============================
         // GET: api/services/5
+        [AllowAnonymous]
         [HttpGet("{id}")]
         public async Task<ActionResult<Service>> GetService(int id)
         {
@@ -50,6 +53,7 @@ namespace QuanTriKhachSanN5.Controllers
         // THÊM SERVICE
         // ==============================
         // POST: api/services
+        [Authorize(Roles = "Admin")] // Chỉ Quản lý mới được tạo dịch vụ mới
         [HttpPost]
         public async Task<ActionResult<Service>> PostService(Service service)
         {
@@ -65,6 +69,7 @@ namespace QuanTriKhachSanN5.Controllers
         // SỬA SERVICE
         // ==============================
         // PUT: api/services/5
+        [Authorize(Roles = "Admin")] // Chỉ Quản lý mới được sửa cấu hình
         [HttpPut("{id}")]
         public async Task<IActionResult> PutService(int id, Service service)
         {
@@ -85,6 +90,7 @@ namespace QuanTriKhachSanN5.Controllers
         // DISABLE SERVICE (KHÔNG XOÁ)
         // ==============================
         // DELETE: api/services/5
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DisableService(int id)
         {
@@ -108,6 +114,7 @@ namespace QuanTriKhachSanN5.Controllers
         // ENABLE SERVICE
         // ==============================
         // PUT: api/services/enable/5
+        [Authorize(Roles = "Admin")]
         [HttpPut("enable/{id}")]
         public async Task<IActionResult> EnableService(int id)
         {

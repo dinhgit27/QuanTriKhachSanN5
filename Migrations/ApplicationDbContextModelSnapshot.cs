@@ -39,7 +39,10 @@ namespace QuanTriKhachSanN5.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("Price")
+<<<<<<< HEAD
                         .HasPrecision(18, 2)
+=======
+>>>>>>> origin/dinh_nguyen
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
@@ -186,7 +189,10 @@ namespace QuanTriKhachSanN5.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("TotalAmount")
+<<<<<<< HEAD
                         .HasPrecision(18, 2)
+=======
+>>>>>>> origin/dinh_nguyen
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
@@ -216,7 +222,10 @@ namespace QuanTriKhachSanN5.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<decimal>("Price")
+<<<<<<< HEAD
                         .HasPrecision(18, 2)
+=======
+>>>>>>> origin/dinh_nguyen
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int?>("RoomId")
@@ -273,6 +282,7 @@ namespace QuanTriKhachSanN5.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<decimal>("DamageFee")
+<<<<<<< HEAD
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
@@ -282,6 +292,14 @@ namespace QuanTriKhachSanN5.Migrations
 
                     b.Property<decimal>("ServicesCost")
                         .HasPrecision(18, 2)
+=======
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("RoomTotalCost")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("ServicesCost")
+>>>>>>> origin/dinh_nguyen
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Status")
@@ -290,14 +308,20 @@ namespace QuanTriKhachSanN5.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<decimal>("TotalAmount")
+<<<<<<< HEAD
                         .HasPrecision(18, 2)
+=======
+>>>>>>> origin/dinh_nguyen
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<decimal>("VoucherDiscount")
+<<<<<<< HEAD
                         .HasPrecision(18, 2)
+=======
+>>>>>>> origin/dinh_nguyen
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
@@ -324,7 +348,10 @@ namespace QuanTriKhachSanN5.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("FineAmount")
+<<<<<<< HEAD
                         .HasPrecision(18, 2)
+=======
+>>>>>>> origin/dinh_nguyen
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("Quantity")
@@ -356,7 +383,10 @@ namespace QuanTriKhachSanN5.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("DiscountPercent")
+<<<<<<< HEAD
                         .HasPrecision(18, 2)
+=======
+>>>>>>> origin/dinh_nguyen
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Level")
@@ -398,7 +428,10 @@ namespace QuanTriKhachSanN5.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("TotalAmount")
+<<<<<<< HEAD
                         .HasPrecision(18, 2)
+=======
+>>>>>>> origin/dinh_nguyen
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
@@ -426,7 +459,10 @@ namespace QuanTriKhachSanN5.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("UnitPrice")
+<<<<<<< HEAD
                         .HasPrecision(18, 2)
+=======
+>>>>>>> origin/dinh_nguyen
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
@@ -447,7 +483,10 @@ namespace QuanTriKhachSanN5.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("AmountPaid")
+<<<<<<< HEAD
                         .HasPrecision(18, 2)
+=======
+>>>>>>> origin/dinh_nguyen
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("CreatedAt")
@@ -655,7 +694,10 @@ namespace QuanTriKhachSanN5.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("BasePrice")
+<<<<<<< HEAD
                         .HasPrecision(18, 2)
+=======
+>>>>>>> origin/dinh_nguyen
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("CapacityAdults")
@@ -752,7 +794,10 @@ namespace QuanTriKhachSanN5.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("Price")
+<<<<<<< HEAD
                         .HasPrecision(18, 2)
+=======
+>>>>>>> origin/dinh_nguyen
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("Status")
@@ -853,11 +898,17 @@ namespace QuanTriKhachSanN5.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("DiscountAmount")
+<<<<<<< HEAD
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("DiscountPercent")
                         .HasPrecision(18, 2)
+=======
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("DiscountPercent")
+>>>>>>> origin/dinh_nguyen
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("ExpiryDate")
@@ -927,7 +978,11 @@ namespace QuanTriKhachSanN5.Migrations
                     b.HasOne("QuanTriKhachSanN5.Models.RoomType", "RoomType")
                         .WithMany()
                         .HasForeignKey("RoomTypeId")
+<<<<<<< HEAD
                         .OnDelete(DeleteBehavior.Cascade)
+=======
+                        .OnDelete(DeleteBehavior.Restrict)
+>>>>>>> origin/dinh_nguyen
                         .IsRequired();
 
                     b.Navigation("Booking");
