@@ -1,0 +1,65 @@
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio cache/options
+.vs/
+
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# Rider
+.idea/
+*.sln.iml
+*.sln.DotSettings
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Nuget
+.nuget/
+*.nupkg
+*.snupkg
+*.symbols.nupkg
+packages/
+
+# Entity Framework
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Rider configuration
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Personal config
+appsettings.Development.json
+appsettings.*.json
+!appsettings.json
+
+# Test Results
+TestResults/
+*.trx
+*.coverage
