@@ -57,6 +57,7 @@ builder.Services.AddScoped<QuanTriKhachSanN5.Filters.AuditLogFilter>();
 // Room Service
 builder.Services.AddScoped<IRoomService, RoomService>();
 builder.Services.AddScoped<IRoomInventoryService, RoomInventoryService>();
+builder.Services.AddScoped<IRoomTypeService, RoomTypeService>();
 
 builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<ICMSService, CMSService>();
