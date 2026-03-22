@@ -4,20 +4,26 @@ using System.Security.Claims;
 
 namespace QuanTriKhachSanN5.Attributes
 {
-    public class PermissionAttribute : Attribute, IAuthorizationFilter
+public class PermissionAttribute : Attribute, IAuthorizationFilter
     {
-        private readonly string[] _roles;
+        private readonly string[] _permissions;
 
-        public PermissionAttribute(params string[] roles)
+        public PermissionAttribute(params string[] permissions)
         {
-            _roles = roles;
+            _permissions = permissions;
         }
 
         public void OnAuthorization(AuthorizationFilterContext context)
         {
-            var role = context.HttpContext.User.FindFirst(ClaimTypes.Role)?.Value;
+            // Check if user has ANY required permission claim from JWT
+            var userPermissions = context.HttpContext.User.Claims
+                .Where(c => c.Type == "permission")
+                .Select(c => c.Value)
+                .ToList();
 
-            if (role == null || !_roles.Contains(role))
+            bool hasPermission = userPermissions.Any(p => _permissions.Contains(p));
+
+            if (!hasPermission)
             {
                 context.Result = new ForbidResult();
             }

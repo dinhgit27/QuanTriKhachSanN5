@@ -1,19 +1,40 @@
-# TODO: Complete RoomType Management System
+# TODO: Hoàn thiện hệ thống Phân quyền RBAC
 
-Status: [In Progress]
+Status: [🚀 Started - Checking & Fixing]
 
-## Breakdown Steps (from approved plan):
+## Breakdown Steps (RBAC Review & Fix Plan):
 
-### 1. ✅ Create Services/RoomTypeService.cs (Full CRUD implementation)
-### 2. ✅ Update Interfaces/IRoomTypeService.cs (Define service methods)
-### 3. ✅ Create Controllers/RoomTypesController.cs (CRUD endpoints with auth)
-### 4. ✅ Create DTOs/RoomType/RoomTypeDTO.cs (Response DTO)
-### 5. ✅ Create DTOs/RoomType/CreateRoomTypeDTO.cs (Create DTO with validation)
-### 6. 🔄 Update Program.cs (Register DI: AddScoped<IRoomTypeService, RoomTypeService>)
-### 7. 🔄 [Optional] Enhance DTOs/Room/RoomDTO.cs (Add RoomType details)
-### 8. 🧪 Run `dotnet build` and fix issues
-### 9. 🧪 Test endpoints (POST /api/RoomTypes, GET /api/RoomTypes)
-### 10. ✅ Complete! Update status
+### 1. ✅ **Seed Permissions & Role_Permission data** (Program.cs)
+   - Add Permissions (MANAGE_ROOMS, VIEW_ROOMS, MANAGE_ROOMTYPES...)
+   - Link Role → Permissions (Admin full, Receptionist limited...)
+   
+### 2. ✅ **Fix PermissionAttribute.cs**
+   - ✅ Claim-based permission check (userPermissions.Any(_permissions))
+   - Multiple OR permissions supported
+   
+### 3. ✅ **Enable HRRBACController.cs**
+   - ✅ Namespace fixed + using Authorization
+   - ✅ [Authorize(Roles="Admin")]
+   - ✅ Build success
+   
+### 4. 🔄 **Enhance HRRBACService.cs**
+   - Add AssignRoleToUserAsync, AssignPermissionToRoleAsync
+   - Add controller endpoints
+   
+### 5. 🔄 **Protect Business Controllers**
+   - RoomTypesController.cs: Apply [Authorize(Policy=...)]
+   - BookingsController.cs, etc. (scan & fix)
+   
+### 6. 🧪 **Test Full Flow**
+   - dotnet ef migrations add SeedRBAC
+   - dotnet ef database update
+   - Login test users → jwt.io verify claims
+   - Call protected APIs
+   
+### 7. ✅ **Complete! Run dotnet run & demo Swagger**
 
-Next step: Test endpoints
+## Old Tasks (RoomType):
+- [x] Create DTOs/Services/Controllers
+- Next: Test endpoints
 
+**Current Step: 1/7 - Seeding data**

@@ -98,8 +98,12 @@ builder
 // ĐĂNG KÝ PHÂN QUYỀN NÂNG CAO (POLICY-BASED)
 builder.Services.AddAuthorization(options =>
 {
-    // Cấu hình: Ai muốn truy cập API có policy này, Token của họ BẮT BUỘC phải có Claim tên "Permission" = "MANAGE_ROOMS"
     options.AddPolicy("MANAGE_ROOMS", policy => policy.RequireClaim("Permission", "MANAGE_ROOMS"));
+    options.AddPolicy("VIEW_ROOMS", policy => policy.RequireClaim("Permission", "VIEW_ROOMS"));
+    options.AddPolicy("MANAGE_ROOMTYPES", policy => policy.RequireClaim("Permission", "MANAGE_ROOMTYPES"));
+    options.AddPolicy("VIEW_ROOMTYPES", policy => policy.RequireClaim("Permission", "VIEW_ROOMTYPES"));
+    options.AddPolicy("MANAGE_BOOKINGS", policy => policy.RequireClaim("Permission", "MANAGE_BOOKINGS"));
+    options.AddPolicy("MANAGE_USERS", policy => policy.RequireClaim("Permission", "MANAGE_USERS"));
 });
 
 builder.Services.AddEndpointsApiExplorer();
@@ -208,7 +212,60 @@ using (var scope = app.Services.CreateScope())
 
             context.SaveChanges();
 
+            // =========================================================================
+            // SEED PERMISSIONS & ROLE_PERMISSIONS (RBAC Full)
+            // =========================================================================
+            if (!context.Permissions.Any())
+            {
+                context.Permissions.AddRange(
+                    new Permission { Name = "MANAGE_ROOMS" },
+                    new Permission { Name = "VIEW_ROOMS" },
+                    new Permission { Name = "MANAGE_ROOMTYPES" },
+                    new Permission { Name = "VIEW_ROOMTYPES" },
+                    new Permission { Name = "MANAGE_BOOKINGS" },
+                    new Permission { Name = "VIEW_BOOKINGS" },
+                    new Permission { Name = "MANAGE_USERS" }
+                );
+                context.SaveChanges();
+            }
+
+            var permissions = context.Permissions.ToList();
+            var adminRole = roles.First(r => r.Name == "Admin");
+            var receptionistRole = roles.First(r => r.Name == "Receptionist");
+            var housekeepingRole = roles.First(r => r.Name == "Housekeeping");
+            var guestRole = roles.First(r => r.Name == "Guest");
+
+            if (!context.RolePermissions.Any())
+            {
+                context.RolePermissions.AddRange(
+                    // Admin: Full access
+                    new Role_Permission { RoleId = adminRole.Id, PermissionId = permissions.First(p => p.Name == "MANAGE_ROOMS").Id },
+                    new Role_Permission { RoleId = adminRole.Id, PermissionId = permissions.First(p => p.Name == "VIEW_ROOMS").Id },
+                    new Role_Permission { RoleId = adminRole.Id, PermissionId = permissions.First(p => p.Name == "MANAGE_ROOMTYPES").Id },
+                    new Role_Permission { RoleId = adminRole.Id, PermissionId = permissions.First(p => p.Name == "VIEW_ROOMTYPES").Id },
+                    new Role_Permission { RoleId = adminRole.Id, PermissionId = permissions.First(p => p.Name == "MANAGE_BOOKINGS").Id },
+                    new Role_Permission { RoleId = adminRole.Id, PermissionId = permissions.First(p => p.Name == "VIEW_BOOKINGS").Id },
+                    new Role_Permission { RoleId = adminRole.Id, PermissionId = permissions.First(p => p.Name == "MANAGE_USERS").Id },
+
+                    // Receptionist: Rooms & Bookings
+                    new Role_Permission { RoleId = receptionistRole.Id, PermissionId = permissions.First(p => p.Name == "VIEW_ROOMS").Id },
+                    new Role_Permission { RoleId = receptionistRole.Id, PermissionId = permissions.First(p => p.Name == "MANAGE_ROOMTYPES").Id },
+                    new Role_Permission { RoleId = receptionistRole.Id, PermissionId = permissions.First(p => p.Name == "VIEW_BOOKINGS").Id },
+                    new Role_Permission { RoleId = receptionistRole.Id, PermissionId = permissions.First(p => p.Name == "MANAGE_BOOKINGS").Id },
+
+                    // Housekeeping: View rooms only
+                    new Role_Permission { RoleId = housekeepingRole.Id, PermissionId = permissions.First(p => p.Name == "VIEW_ROOMS").Id },
+
+                    // Guest: Read-only rooms/bookings
+                    new Role_Permission { RoleId = guestRole.Id, PermissionId = permissions.First(p => p.Name == "VIEW_ROOMS").Id },
+                    new Role_Permission { RoleId = guestRole.Id, PermissionId = permissions.First(p => p.Name == "VIEW_ROOMTYPES").Id }
+                );
+                context.SaveChanges();
+                Console.WriteLine("✅ Seed Permissions & Role_Permissions thành công!");
+            }
+
             Console.WriteLine("Seed RBAC thành công!");
+
         }
     }
     catch (Exception ex)

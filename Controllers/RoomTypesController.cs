@@ -38,7 +38,7 @@ namespace QuanTriKhachSanN5.Controllers
         }
 
         // POST: api/RoomTypes - Tạo loại phòng mới (Admin only)
-        [Authorize(Roles = "Admin")]
+[Authorize(Policy = "MANAGE_ROOMTYPES")]
         [HttpPost]
         public async Task<ActionResult<RoomTypeDTO>> CreateRoomType([FromBody] CreateRoomTypeDTO dto)
         {
