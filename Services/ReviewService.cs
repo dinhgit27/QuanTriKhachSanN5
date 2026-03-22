@@ -17,8 +17,8 @@ namespace QuanTriKhachSanN5.Services
 
         public async Task<IEnumerable<ReviewDTO>> GetAllReviewsAsync()
         {
-            return await _context.Reviews
-                .Include(r => r.User)
+            return await _context
+                .Reviews.Include(r => r.User)
                 .Include(r => r.RoomType)
                 .Where(r => r.IsVerified)
                 .Select(r => new ReviewDTO
@@ -36,7 +36,7 @@ namespace QuanTriKhachSanN5.Services
                     ValueForMoney = r.ValueForMoney,
                     CreatedAt = r.CreatedAt,
                     UpdatedAt = r.UpdatedAt,
-                    IsVerified = r.IsVerified
+                    IsVerified = r.IsVerified,
                 })
                 .OrderByDescending(r => r.CreatedAt)
                 .ToListAsync();
@@ -44,8 +44,8 @@ namespace QuanTriKhachSanN5.Services
 
         public async Task<IEnumerable<ReviewDTO>> GetReviewsByRoomTypeAsync(int roomTypeId)
         {
-            return await _context.Reviews
-                .Include(r => r.User)
+            return await _context
+                .Reviews.Include(r => r.User)
                 .Include(r => r.RoomType)
                 .Where(r => r.RoomTypeId == roomTypeId && r.IsVerified)
                 .Select(r => new ReviewDTO
@@ -63,7 +63,7 @@ namespace QuanTriKhachSanN5.Services
                     ValueForMoney = r.ValueForMoney,
                     CreatedAt = r.CreatedAt,
                     UpdatedAt = r.UpdatedAt,
-                    IsVerified = r.IsVerified
+                    IsVerified = r.IsVerified,
                 })
                 .OrderByDescending(r => r.CreatedAt)
                 .ToListAsync();
@@ -71,8 +71,8 @@ namespace QuanTriKhachSanN5.Services
 
         public async Task<IEnumerable<ReviewDTO>> GetUserReviewsAsync(int userId)
         {
-            return await _context.Reviews
-                .Include(r => r.User)
+            return await _context
+                .Reviews.Include(r => r.User)
                 .Include(r => r.RoomType)
                 .Where(r => r.UserId == userId)
                 .Select(r => new ReviewDTO
@@ -90,7 +90,7 @@ namespace QuanTriKhachSanN5.Services
                     ValueForMoney = r.ValueForMoney,
                     CreatedAt = r.CreatedAt,
                     UpdatedAt = r.UpdatedAt,
-                    IsVerified = r.IsVerified
+                    IsVerified = r.IsVerified,
                 })
                 .OrderByDescending(r => r.CreatedAt)
                 .ToListAsync();
@@ -98,8 +98,8 @@ namespace QuanTriKhachSanN5.Services
 
         public async Task<ReviewDTO?> GetReviewByIdAsync(int id)
         {
-            var review = await _context.Reviews
-                .Include(r => r.User)
+            var review = await _context
+                .Reviews.Include(r => r.User)
                 .Include(r => r.RoomType)
                 .FirstOrDefaultAsync(r => r.Id == id);
 
@@ -121,7 +121,7 @@ namespace QuanTriKhachSanN5.Services
                 ValueForMoney = review.ValueForMoney,
                 CreatedAt = review.CreatedAt,
                 UpdatedAt = review.UpdatedAt,
-                IsVerified = review.IsVerified
+                IsVerified = review.IsVerified,
             };
         }
 
@@ -141,11 +141,14 @@ namespace QuanTriKhachSanN5.Services
             bool isVerified = false;
             if (dto.BookingId.HasValue)
             {
-                var booking = await _context.Bookings
-                    .Include(b => b.BookingDetails)
+                var booking = await _context
+                    .Bookings.Include(b => b.BookingDetails)
                     .FirstOrDefaultAsync(b => b.Id == dto.BookingId.Value && b.GuestId == userId);
 
-                if (booking != null && booking.BookingDetails.Any(bd => bd.RoomTypeId == dto.RoomTypeId))
+                if (
+                    booking != null
+                    && booking.BookingDetails.Any(bd => bd.RoomTypeId == dto.RoomTypeId)
+                )
                 {
                     isVerified = true;
                 }
@@ -163,7 +166,7 @@ namespace QuanTriKhachSanN5.Services
                 ServiceQuality = dto.ServiceQuality,
                 ValueForMoney = dto.ValueForMoney,
                 IsVerified = isVerified,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
             };
 
             _context.Reviews.Add(review);
@@ -173,7 +176,7 @@ namespace QuanTriKhachSanN5.Services
             {
                 Id = review.Id,
                 UserId = review.UserId,
-                Username = user.Username,
+                Username = user.FullName,
                 RoomTypeId = review.RoomTypeId,
                 RoomTypeName = roomType.Name,
                 Rating = review.Rating,
@@ -184,13 +187,15 @@ namespace QuanTriKhachSanN5.Services
                 ValueForMoney = review.ValueForMoney,
                 CreatedAt = review.CreatedAt,
                 UpdatedAt = review.UpdatedAt,
-                IsVerified = review.IsVerified
+                IsVerified = review.IsVerified,
             };
         }
 
         public async Task<bool> UpdateReviewAsync(int id, int userId, UpdateReviewDTO dto)
         {
-            var review = await _context.Reviews.FirstOrDefaultAsync(r => r.Id == id && r.UserId == userId);
+            var review = await _context.Reviews.FirstOrDefaultAsync(r =>
+                r.Id == id && r.UserId == userId
+            );
 
             if (review == null)
                 return false;
@@ -221,7 +226,9 @@ namespace QuanTriKhachSanN5.Services
 
         public async Task<bool> DeleteReviewAsync(int id, int userId)
         {
-            var review = await _context.Reviews.FirstOrDefaultAsync(r => r.Id == id && r.UserId == userId);
+            var review = await _context.Reviews.FirstOrDefaultAsync(r =>
+                r.Id == id && r.UserId == userId
+            );
 
             if (review == null)
                 return false;
@@ -233,8 +240,8 @@ namespace QuanTriKhachSanN5.Services
 
         public async Task<double> GetAverageRatingByRoomTypeAsync(int roomTypeId)
         {
-            var reviews = await _context.Reviews
-                .Where(r => r.RoomTypeId == roomTypeId && r.IsVerified)
+            var reviews = await _context
+                .Reviews.Where(r => r.RoomTypeId == roomTypeId && r.IsVerified)
                 .ToListAsync();
 
             if (!reviews.Any())
@@ -243,10 +250,14 @@ namespace QuanTriKhachSanN5.Services
             var totalRating = reviews.Sum(r =>
             {
                 var ratings = new List<int> { r.Rating };
-                if (r.Cleanliness.HasValue) ratings.Add(r.Cleanliness.Value);
-                if (r.Comfort.HasValue) ratings.Add(r.Comfort.Value);
-                if (r.ServiceQuality.HasValue) ratings.Add(r.ServiceQuality.Value);
-                if (r.ValueForMoney.HasValue) ratings.Add(r.ValueForMoney.Value);
+                if (r.Cleanliness.HasValue)
+                    ratings.Add(r.Cleanliness.Value);
+                if (r.Comfort.HasValue)
+                    ratings.Add(r.Comfort.Value);
+                if (r.ServiceQuality.HasValue)
+                    ratings.Add(r.ServiceQuality.Value);
+                if (r.ValueForMoney.HasValue)
+                    ratings.Add(r.ValueForMoney.Value);
                 return ratings.Average();
             });
 
