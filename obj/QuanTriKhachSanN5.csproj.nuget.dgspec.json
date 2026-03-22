@@ -1,31 +1,25 @@
 {
   "format": 1,
   "restore": {
-    "D:\\QuanTriKhachSanN5\\QuanTriKhachSanN5.csproj": {}
+    "C:\\QuanTriKhachSanN5\\QuanTriKhachSanN5.csproj": {}
   },
   "projects": {
-    "D:\\QuanTriKhachSanN5\\QuanTriKhachSanN5.csproj": {
+    "C:\\QuanTriKhachSanN5\\QuanTriKhachSanN5.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\QuanTriKhachSanN5\\QuanTriKhachSanN5.csproj",
+        "projectUniqueName": "C:\\QuanTriKhachSanN5\\QuanTriKhachSanN5.csproj",
         "projectName": "QuanTriKhachSanN5",
-        "projectPath": "D:\\QuanTriKhachSanN5\\QuanTriKhachSanN5.csproj",
-        "packagesPath": "C:\\Users\\Hi\\.nuget\\packages\\",
-        "outputPath": "D:\\QuanTriKhachSanN5\\obj\\",
+        "projectPath": "C:\\QuanTriKhachSanN5\\QuanTriKhachSanN5.csproj",
+        "packagesPath": "C:\\Users\\DINH\\.nuget\\packages\\",
+        "outputPath": "C:\\QuanTriKhachSanN5\\obj\\",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\Hi\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "C:\\Users\\DINH\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
