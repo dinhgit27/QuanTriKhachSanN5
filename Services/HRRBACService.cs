@@ -23,7 +23,10 @@ namespace QuanTriKhachSanN5.Services
 
         public async Task<User> GetUserByIdAsync(int id)
         {
-            return await _context.Users.Include(u => u.UserRoles).ThenInclude(ur => ur.Role).FirstOrDefaultAsync(u => u.Id == id);
+            return await _context
+                .Users.Include(u => u.UserRoles)
+                    .ThenInclude(ur => ur.Role)
+                .FirstOrDefaultAsync(u => u.Id == id);
         }
 
         public async Task<List<Role>> GetRolesAsync()
@@ -33,19 +36,32 @@ namespace QuanTriKhachSanN5.Services
 
         public async Task<List<Permission>> GetPermissionsByRoleAsync(int roleId)
         {
-            return await _context.RolePermissions.Where(rp => rp.RoleId == roleId)
-                .Select(rp => rp.Permission).ToListAsync();
+            return await _context
+                .RolePermissions.Where(rp => rp.RoleId == roleId)
+                .Select(rp => rp.Permission)
+                .ToListAsync();
         }
 
         public async Task<bool> HasPermissionAsync(int userId, string permissionName)
         {
-            var userRoles = await _context.UserRoles.Where(ur => ur.UserId == userId).Select(ur => ur.RoleId).ToListAsync();
-            var permissions = await _context.RolePermissions.Where(rp => userRoles.Contains(rp.RoleId))
-                .Select(rp => rp.Permission.Name).ToListAsync();
+            var userRoles = await _context
+                .UserRoles.Where(ur => ur.UserId == userId)
+                .Select(ur => ur.RoleId)
+                .ToListAsync();
+            var permissions = await _context
+                .RolePermissions.Where(rp => userRoles.Contains(rp.RoleId))
+                .Select(rp => rp.Permission.Name)
+                .ToListAsync();
             return permissions.Contains(permissionName);
         }
 
-        public async Task LogActionAsync(int userId, string action, string tableName, int recordId, string details)
+        public async Task LogActionAsync(
+            int userId,
+            string action,
+            string tableName,
+            int recordId,
+            string details
+        )
         {
             var log = new Audit_Log
             {
@@ -54,7 +70,7 @@ namespace QuanTriKhachSanN5.Services
                 TableName = tableName,
                 RecordId = recordId,
                 Details = details,
-                Timestamp = System.DateTime.Now
+                Timestamp = System.DateTime.Now,
             };
             _context.AuditLogs.Add(log);
             await _context.SaveChangesAsync();

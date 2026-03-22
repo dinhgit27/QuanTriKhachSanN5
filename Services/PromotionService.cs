@@ -18,19 +18,18 @@ namespace QuanTriKhachSanN5.Services
         {
             decimal totalDiscountPercent = 0;
 
-            
             if (!string.IsNullOrEmpty(dto.VoucherCode))
             {
-                var voucher = await _context.Vouchers
-                    .FirstOrDefaultAsync(v => v.Code == dto.VoucherCode && v.IsActive);
-                
+                var voucher = await _context.Vouchers.FirstOrDefaultAsync(v =>
+                    v.Code == dto.VoucherCode && v.IsActive
+                );
+
                 if (voucher != null)
                 {
                     totalDiscountPercent += voucher.DiscountPercent;
                 }
             }
 
-            
             if (dto.MembershipId.HasValue)
             {
                 var membership = await _context.Memberships.FindAsync(dto.MembershipId.Value);
@@ -40,8 +39,8 @@ namespace QuanTriKhachSanN5.Services
                 }
             }
 
-            
-            if (totalDiscountPercent > 100) totalDiscountPercent = 100;
+            if (totalDiscountPercent > 100)
+                totalDiscountPercent = 100;
 
             decimal discountAmount = dto.OriginalAmount * (totalDiscountPercent / 100);
             return dto.OriginalAmount - discountAmount;

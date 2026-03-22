@@ -1,11 +1,11 @@
+using BCrypt.Net;
+using Google.Apis.Auth;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using BCrypt.Net;
 using QuanTriKhachSanN5.Data;
 using QuanTriKhachSanN5.DTOs;
 using QuanTriKhachSanN5.Models;
 using QuanTriKhachSanN5.Services;
-using Google.Apis.Auth;
 
 namespace QuanTriKhachSanN5.Controllers
 {
@@ -25,22 +25,27 @@ namespace QuanTriKhachSanN5.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterDTO dto)
         {
-            var exist = await _context.Users
-                .FirstOrDefaultAsync(x => x.Email == dto.Email);
-
+            var exist = await _context.Users.FirstOrDefaultAsync(x => x.Email == dto.Email);
             if (exist != null)
                 return BadRequest("Email đã tồn tại!");
 
             var user = new User
             {
-                Username = dto.Username,
+                FullName = dto.Username,
                 Email = dto.Email,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-                Role = "Guest" // Cập nhật đúng Role theo thiết kế RBAC
             };
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
+
+            // Gán role Guest theo RBAC
+            var guestRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "Guest");
+            if (guestRole != null)
+            {
+                _context.UserRoles.Add(new User_Role { UserId = user.Id, RoleId = guestRole.Id });
+                await _context.SaveChangesAsync();
+            }
 
             return Ok("Đăng ký thành công!");
         }
@@ -48,8 +53,14 @@ namespace QuanTriKhachSanN5.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDTO dto)
         {
-            var user = await _context.Users
-                .FirstOrDefaultAsync(x => x.Email == dto.Email);
+            var user = await _context
+                .Users.Include(u => u.UserRoles)
+                    .ThenInclude(ur => ur.Role)
+                        .ThenInclude(r => r.RolePermissions)
+                            .ThenInclude(rp => rp.Permission)
+                .FirstOrDefaultAsync(u => u.Email == dto.Email);
+
+            var roles = user.UserRoles.Select(ur => ur.Role.Name).ToList();
 
             if (user == null)
                 return Unauthorized("Email không đúng!");
@@ -60,14 +71,13 @@ namespace QuanTriKhachSanN5.Controllers
                 return Unauthorized("Sai mật khẩu!");
 
             // TÍNH NĂNG NÂNG CAO: Lấy danh sách Permission từ CSDL của Role người dùng đang giữ
-            var permissions = await _context.UserRoles
-                .Where(ur => ur.UserId == user.Id)
-                .SelectMany(ur => ur.Role.RolePermissions)
+            var permissions = user
+                .UserRoles.SelectMany(ur => ur.Role.RolePermissions)
                 .Select(rp => rp.Permission.Name)
                 .Distinct()
-                .ToListAsync();
+                .ToList();
 
-            var token = _jwt.GenerateToken(user, permissions);
+            var token = _jwt.GenerateToken(user, roles, permissions);
 
             return Ok(new { token });
         }
@@ -77,31 +87,38 @@ namespace QuanTriKhachSanN5.Controllers
         {
             var payload = await GoogleJsonWebSignature.ValidateAsync(dto.IdToken);
 
-            var user = await _context.Users
-                .FirstOrDefaultAsync(x => x.Email == payload.Email);
+            var user = await _context.Users.FirstOrDefaultAsync(x => x.Email == payload.Email);
 
             if (user == null)
             {
-                user = new User
-                {
-                    Email = payload.Email,
-                    Username = payload.Name,
-                    Role = "Guest" // Cập nhật đúng Role theo thiết kế RBAC
-                };
-
+                user = new User { Email = payload.Email, FullName = payload.Name };
                 _context.Users.Add(user);
                 await _context.SaveChangesAsync();
+
+                // Gán role Guest
+                var guestRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "Guest");
+                if (guestRole != null)
+                {
+                    _context.UserRoles.Add(
+                        new User_Role { UserId = user.Id, RoleId = guestRole.Id }
+                    );
+                    await _context.SaveChangesAsync();
+                }
             }
 
-            // Truy vấn lấy danh sách Permission của user đăng nhập qua Google
-            var permissions = await _context.UserRoles
-                .Where(ur => ur.UserId == user.Id)
+            var roles = await _context
+                .UserRoles.Where(ur => ur.UserId == user.Id)
+                .Join(_context.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => r.Name)
+                .ToListAsync();
+
+            var permissions = await _context
+                .UserRoles.Where(ur => ur.UserId == user.Id)
                 .SelectMany(ur => ur.Role.RolePermissions)
                 .Select(rp => rp.Permission.Name)
                 .Distinct()
                 .ToListAsync();
 
-            var token = _jwt.GenerateToken(user, permissions);
+            var token = _jwt.GenerateToken(user, roles, permissions);
 
             return Ok(new { token });
         }
