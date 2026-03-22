@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+
 namespace QuanTriKhachSanN5.Controllers
 {
     [Route("api/[controller]")]

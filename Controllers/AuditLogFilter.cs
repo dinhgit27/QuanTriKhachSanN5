@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Filters;
 using QuanTriKhachSanN5.Data;
 using QuanTriKhachSanN5.Models;
@@ -13,7 +14,10 @@ namespace QuanTriKhachSanN5.Filters
             _context = context;
         }
 
-        public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
+        public async Task OnActionExecutionAsync(
+            ActionExecutingContext context,
+            ActionExecutionDelegate next
+        )
         {
             // 1. Trích xuất thông tin HTTP Request
             var method = context.HttpContext.Request.Method;
@@ -24,11 +28,15 @@ namespace QuanTriKhachSanN5.Filters
             var resultContext = await next();
 
             // 3. Nếu API chạy THÀNH CÔNG và LÀ THAO TÁC THAY ĐỔI DỮ LIỆU (CUD)
-            if (resultContext.Exception == null && (method == "POST" || method == "PUT" || method == "DELETE"))
+            if (
+                resultContext.Exception == null
+                && (method == "POST" || method == "PUT" || method == "DELETE")
+            )
             {
                 if (userId > 0) // Chỉ log nếu thao tác do user đã đăng nhập thực hiện
                 {
-                    var controllerName = context.RouteData.Values["controller"]?.ToString() ?? "Unknown";
+                    var controllerName =
+                        context.RouteData.Values["controller"]?.ToString() ?? "Unknown";
                     var recordIdStr = context.RouteData.Values["id"]?.ToString();
                     int.TryParse(recordIdStr, out int recordId);
 
@@ -39,7 +47,7 @@ namespace QuanTriKhachSanN5.Filters
                         TableName = controllerName, // Lấy tên Controller làm đại diện cho Entity
                         RecordId = recordId,
                         Timestamp = DateTime.UtcNow,
-                        Details = $"Thực thi API {method} thành công trên {controllerName}"
+                        Details = $"Thực thi API {method} thành công trên {controllerName}",
                     };
 
                     _context.AuditLogs.Add(auditLog);

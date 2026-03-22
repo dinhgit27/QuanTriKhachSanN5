@@ -2,9 +2,10 @@
 // MODULE 6: HR & RBAC - CONTROLLER
 // =========================================================================
 
-using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using QuanTriKhachSanN5.Interfaces;
 using QuanTriKhachSanN5.Models;
 
@@ -21,14 +22,17 @@ namespace QuanTriKhachSanN5.Controllers.Disabled
             _hrService = hrService;
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpGet("users/{id}")]
         public async Task<ActionResult<User>> GetUser(int id)
         {
             var user = await _hrService.GetUserByIdAsync(id);
-            if (user == null) return NotFound();
+            if (user == null)
+                return NotFound();
             return Ok(user);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpGet("roles")]
         public async Task<ActionResult<List<Role>>> GetRoles()
         {
@@ -36,6 +40,7 @@ namespace QuanTriKhachSanN5.Controllers.Disabled
             return Ok(roles);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpGet("roles/{roleId}/permissions")]
         public async Task<ActionResult<List<Permission>>> GetPermissions(int roleId)
         {
@@ -43,6 +48,7 @@ namespace QuanTriKhachSanN5.Controllers.Disabled
             return Ok(permissions);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpGet("users/{userId}/permissions/{permissionName}")]
         public async Task<IActionResult> CheckPermission(int userId, string permissionName)
         {
@@ -50,10 +56,17 @@ namespace QuanTriKhachSanN5.Controllers.Disabled
             return Ok(new { HasPermission = hasPermission });
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost("audit")]
         public async Task<IActionResult> LogAction([FromBody] AuditRequest request)
         {
-            await _hrService.LogActionAsync(request.UserId, request.Action, request.TableName, request.RecordId, request.Details);
+            await _hrService.LogActionAsync(
+                request.UserId,
+                request.Action,
+                request.TableName,
+                request.RecordId,
+                request.Details
+            );
             return Ok("Logged");
         }
     }

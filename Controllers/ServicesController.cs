@@ -11,9 +11,8 @@ namespace QuanTriKhachSanN5.Controllers
     public class ServicesController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
-        
-        public ServicesController(ApplicationDbContext context)
 
+        public ServicesController(ApplicationDbContext context)
         {
             _context = context;
         }
@@ -25,11 +24,9 @@ namespace QuanTriKhachSanN5.Controllers
         [AllowAnonymous] // Ai cũng xem được danh sách dịch vụ (Khách vãng lai trên web)
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Service>>> GetServices()
-    {
-        return await _context.Services
-        .Where(s => s.Status == 1)
-        .ToListAsync();
-    }
+        {
+            return await _context.Services.Where(s => s.Status == 1).ToListAsync();
+        }
 
         // ==============================
         // LẤY SERVICE THEO ID

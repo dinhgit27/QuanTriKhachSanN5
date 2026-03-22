@@ -1,10 +1,7 @@
-// =========================================================================
-// MODULE 1: CMS - CONTROLLER
-// =========================================================================
-
-using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using QuanTriKhachSanN5.Interfaces;
 using QuanTriKhachSanN5.Models;
 
@@ -32,7 +29,8 @@ namespace QuanTriKhachSanN5.Controllers.Disabled
         public async Task<ActionResult<Article>> GetArticle(int id)
         {
             var article = await _cmsService.GetArticleByIdAsync(id);
-            if (article == null) return NotFound();
+            if (article == null)
+                return NotFound();
             return Ok(article);
         }
 
