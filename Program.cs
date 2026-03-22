@@ -1,17 +1,21 @@
 global using LossAndDamage = QuanTriKhachSanN5.Models.Loss_And_Damage;
 global using OrderService = QuanTriKhachSanN5.Models.Order_Service;
 global using OrderServiceDetail = QuanTriKhachSanN5.Models.Order_Service_Detail;
+using System.Security.Claims;
 using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+// using Microsoft.OpenApi.Models;
 using QuanTriKhachSanN5.API.Services;
 using QuanTriKhachSanN5.Data;
 using QuanTriKhachSanN5.Interfaces;
 using QuanTriKhachSanN5.Models;
 using QuanTriKhachSanN5.Services;
+
+// using Swashbuckle.AspNetCore.SwaggerGen;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -73,6 +77,8 @@ builder
             IssuerSigningKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)
             ),
+
+            RoleClaimType = ClaimTypes.Role,
         };
     });
 
@@ -126,43 +132,41 @@ using (var scope = app.Services.CreateScope())
         {
             context.Roles.AddRange(
                 new Role { Name = "Admin" },
-                new Role { Name = "User" },
+                new Role { Name = "Guest" },
                 new Role { Name = "Receptionist" },
                 new Role { Name = "Housekeeping" }
             );
             context.SaveChanges();
-
-            context.SaveChanges();
             Console.WriteLine("Đã tạo thành công 4 tài khoản test!");
         }
 
-        if (!context.Users.Any(u => u.Email == "admin@test.com"))
+        if (!context.Users.Any(u => u.Email == "admin@hotel.com"))
         {
             var admin = new User
             {
                 FullName = "Admin",
-                Email = "admin@test.com",
+                Email = "admin@hotel.com",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
             };
 
             var user = new User
             {
-                FullName = "User",
-                Email = "user@test.com",
+                FullName = "Le Hoang Tuan",
+                Email = "leetuan0919@hotel.com",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
             };
 
             var receptionist = new User
             {
                 FullName = "Receptionist",
-                Email = "receptionist@test.com",
+                Email = "receptionist@hotel.com",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
             };
 
             var housekeeping = new User
             {
                 FullName = "Housekeeping",
-                Email = "housekeeping@test.com",
+                Email = "housekeeping@hotel.com",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
             };
 
@@ -176,7 +180,7 @@ using (var scope = app.Services.CreateScope())
                     UserId = admin.Id,
                     RoleId = roles.First(r => r.Name == "Admin").Id,
                 },
-                new User_Role { UserId = user.Id, RoleId = roles.First(r => r.Name == "User").Id },
+                new User_Role { UserId = user.Id, RoleId = roles.First(r => r.Name == "Guest").Id },
                 new User_Role
                 {
                     UserId = receptionist.Id,

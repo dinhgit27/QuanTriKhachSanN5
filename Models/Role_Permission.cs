@@ -4,8 +4,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 [Table("Role_Permissions")]
 public class Role_Permission
 {
-    public int Id { get; set; }
-
     [Column("role_id")]
     public int RoleId { get; set; }
     public Role Role { get; set; }

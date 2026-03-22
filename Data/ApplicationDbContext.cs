@@ -50,7 +50,21 @@ namespace QuanTriKhachSanN5.Data
                 .HasForeignKey(bd => bd.RoomTypeId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<User_Role>().HasKey(x => new { x.UserId, x.RoleId });
+            modelBuilder.Entity<User_Role>().ToTable("User_Roles");
+
+            modelBuilder.Entity<User_Role>().HasKey(ur => new { ur.UserId, ur.RoleId });
+
+            modelBuilder
+                .Entity<User_Role>()
+                .HasOne(ur => ur.User)
+                .WithMany(u => u.UserRoles)
+                .HasForeignKey(ur => ur.UserId);
+
+            modelBuilder
+                .Entity<User_Role>()
+                .HasOne(ur => ur.Role)
+                .WithMany(r => r.UserRoles)
+                .HasForeignKey(ur => ur.RoleId);
 
             modelBuilder.Entity<Role_Permission>().HasKey(x => new { x.RoleId, x.PermissionId });
             // 2. Giải quyết lỗi VÀNG: Định dạng tất cả kiểu thập phân thành decimal(18,2)

@@ -108,7 +108,7 @@ namespace QuanTriKhachSanN5.Controllers
 
             var roles = await _context
                 .UserRoles.Where(ur => ur.UserId == user.Id)
-                .Select(ur => ur.Role.Name)
+                .Join(_context.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => r.Name)
                 .ToListAsync();
 
             var permissions = await _context

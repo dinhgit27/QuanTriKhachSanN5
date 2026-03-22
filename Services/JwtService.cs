@@ -17,21 +17,31 @@ namespace QuanTriKhachSanN5.Services
 
         public string GenerateToken(User user, List<string> roles, List<string> permissions)
         {
-            var claims = new List<Claim> { new Claim(ClaimTypes.Email, user.Email) };
-
-            claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));
-            claims.AddRange(permissions.Select(p => new Claim("permission", p)));
-
-            foreach (var perm in permissions)
+            var claims = new List<Claim>
             {
-                claims.Add(new Claim("Permission", perm));
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Email, user.Email),
+            };
+
+            // ✅ THÊM ROLE
+            foreach (var role in roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
             }
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("your_secret_key"));
+            // ✅ (optional) thêm permission
+            foreach (var p in permissions)
+            {
+                claims.Add(new Claim("permission", p));
+            }
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
 
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
+                issuer: _config["Jwt:Issuer"],
+                audience: _config["Jwt:Audience"],
                 claims: claims,
                 expires: DateTime.Now.AddHours(2),
                 signingCredentials: creds
