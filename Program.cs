@@ -15,6 +15,18 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// ==========================================
+// 1. CẤU HÌNH CORS CHO REACT Ở ĐÂY
+// ==========================================
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReactApp", policy => 
+        policy.WithOrigins("http://localhost:5173")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials());
+});
+
 // Đăng ký AuditLogFilter cho toàn bộ các Controllers
 // Controllers
 builder.Services.AddControllers(options => 
@@ -145,6 +157,11 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// ==========================================
+// 2. KÍCH HOẠT CORS TRƯỚC KHI AUTHENTICATION
+// ==========================================
+app.UseCors("AllowReactApp");
 
 // IMPORTANT
 app.UseAuthentication();
