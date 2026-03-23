@@ -1,9 +1,9 @@
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuanTriKhachSanN5.Data;
 using QuanTriKhachSanN5.Models;
-using System.Collections.Generic;
 
 namespace QuanTriKhachSanN5.Controllers
 {
@@ -37,79 +37,82 @@ namespace QuanTriKhachSanN5.Controllers
         [Authorize(Roles = "Admin,Receptionist")] // Chỉ Lễ tân/Quản lý mới xem danh sách phạt để tính tiền khách
         [HttpGet]
         public async Task<ActionResult<IEnumerable<LossAndDamage>>> GetAll()
-    {
-        return await _context.LossAndDamages.ToListAsync();
-    }
+        {
+            return await _context.LossAndDamages.ToListAsync();
+        }
 
         // ======================
         // PUT
         // ======================
         [Authorize(Roles = "Admin,Receptionist")]
         [HttpPut("{id}")]
-public async Task<IActionResult> Update(int id, LossAndDamage model)
-{
-    var data = await _context.LossAndDamages.FindAsync(id);
+        public async Task<IActionResult> Update(int id, LossAndDamage model)
+        {
+            var data = await _context.LossAndDamages.FindAsync(id);
 
-    if (data == null)
-    {
-        return NotFound();
-    }
+            if (data == null)
+            {
+                return NotFound();
+            }
 
-    data.BookingDetailId = model.BookingDetailId;
-    data.RoomInventoryId = model.RoomInventoryId;
-    data.Quantity = model.Quantity;
-    data.FineAmount = model.FineAmount;
-    data.Description = model.Description;
-    data.ReportedDate = model.ReportedDate;
+            data.BookingDetailId = model.BookingDetailId;
+            data.RoomInventoryId = model.RoomInventoryId;
+            data.Quantity = model.Quantity;
+            data.FineAmount = model.FineAmount;
+            data.Description = model.Description;
+            data.ReportedDate = model.ReportedDate;
 
-    await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
 
-    return Ok(data);
-}
-[Authorize(Roles = "Admin")] // Hủy biên bản phạt là việc nhạy cảm, chỉ Quản lý được làm
-[HttpDelete("{id}")]
-public async Task<IActionResult> Disable(int id)
-{
-    var data = await _context.LossAndDamages.FindAsync(id);
+            return Ok(data);
+        }
 
-    if (data == null)
-        return NotFound();
+        [Authorize(Roles = "Admin")] // Hủy biên bản phạt là việc nhạy cảm, chỉ Quản lý được làm
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Disable(int id)
+        {
+            var data = await _context.LossAndDamages.FindAsync(id);
 
-    data.Status = "đã hủy";
+            if (data == null)
+                return NotFound();
 
-    await _context.SaveChangesAsync();
+            data.Status = "đã hủy";
 
-    return Ok("Disabled");
-}
-[Authorize(Roles = "Admin")]
-[HttpPut("enable/{id}")]
-public async Task<IActionResult> Enable(int id)
-{
-    var data = await _context.LossAndDamages.FindAsync(id);
+            await _context.SaveChangesAsync();
 
-    if (data == null)
-        return NotFound();
+            return Ok("Disabled");
+        }
 
-    data.Status = "đã ghi nhận";
+        [Authorize(Roles = "Admin")]
+        [HttpPut("enable/{id}")]
+        public async Task<IActionResult> Enable(int id)
+        {
+            var data = await _context.LossAndDamages.FindAsync(id);
 
-    await _context.SaveChangesAsync();
+            if (data == null)
+                return NotFound();
 
-    return Ok("Enabled");
-}
-[Authorize(Roles = "Admin,Receptionist")] // Lễ tân cập nhật trạng thái khi khách đã đền tiền
-[HttpPut("status/{id}")]
-public async Task<IActionResult> UpdateStatus(int id, string status)
-{
-    var data = await _context.LossAndDamages.FindAsync(id);
+            data.Status = "đã ghi nhận";
 
-    if (data == null)
-        return NotFound();
+            await _context.SaveChangesAsync();
 
-    data.Status = status;
+            return Ok("Enabled");
+        }
 
-    await _context.SaveChangesAsync();
+        [Authorize(Roles = "Admin,Receptionist")] // Lễ tân cập nhật trạng thái khi khách đã đền tiền
+        [HttpPut("status/{id}")]
+        public async Task<IActionResult> UpdateStatus(int id, string status)
+        {
+            var data = await _context.LossAndDamages.FindAsync(id);
 
-    return Ok(data);
-}
+            if (data == null)
+                return NotFound();
+
+            data.Status = status;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(data);
+        }
     }
 }

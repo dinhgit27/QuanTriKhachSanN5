@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QuanTriKhachSanN5.DTOs;
 using QuanTriKhachSanN5.Services;
@@ -16,7 +17,9 @@ namespace QuanTriKhachSanN5.Controllers.Disabled
         }
 
         [HttpPost("generate-invoice")]
-        public async Task<IActionResult> GenerateInvoice([FromBody] GenerateInvoiceRequestDto request)
+        public async Task<IActionResult> GenerateInvoice(
+            [FromBody] GenerateInvoiceRequestDto request
+        )
         {
             try
             {
@@ -25,7 +28,10 @@ namespace QuanTriKhachSanN5.Controllers.Disabled
             }
             catch (HttpRequestException ex)
             {
-                return StatusCode(503, new { Error = "Lỗi khi gọi API Module 2 hoặc 4", Details = ex.Message });
+                return StatusCode(
+                    503,
+                    new { Error = "Lỗi khi gọi API Module 2 hoặc 4", Details = ex.Message }
+                );
             }
             catch (Exception ex)
             {

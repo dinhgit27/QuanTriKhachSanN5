@@ -2,10 +2,10 @@
 // MODULE 3: ROOM INVENTORY - CONTROLLER
 // =========================================================================
 
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using QuanTriKhachSanN5.Interfaces;
 using QuanTriKhachSanN5.Models;
 
@@ -35,7 +35,8 @@ namespace QuanTriKhachSanN5.Controllers
         public async Task<ActionResult<Room>> GetRoom(int id)
         {
             var room = await _roomService.GetRoomByIdAsync(id);
-            if (room == null) return NotFound();
+            if (room == null)
+                return NotFound();
             return Ok(room);
         }
 
@@ -60,15 +61,20 @@ namespace QuanTriKhachSanN5.Controllers
         // =========================================================
         [Authorize(Roles = "Admin")] // Việc thiết lập vật tư ban đầu do Quản lý làm
         [HttpPost("rooms/{roomId}/inventory")]
-        public async Task<IActionResult> AssignAmenityToRoom(int roomId, [FromBody] Room_Inventory inventory)
+        public async Task<IActionResult> AssignAmenityToRoom(
+            int roomId,
+            [FromBody] Room_Inventory inventory
+        )
         {
             if (roomId != inventory.RoomId)
                 return BadRequest("ID phòng không khớp.");
 
             // Lưu ý: Nhớ thêm hàm AddRoomInventoryAsync vào IRoomInventoryService và RoomInventoryService của bạn
             // await _roomService.AddRoomInventoryAsync(inventory);
-            
-            return Ok(new { Message = "Đã gán vật tư/tiện ích cho phòng thành công!", Data = inventory });
+
+            return Ok(
+                new { Message = "Đã gán vật tư/tiện ích cho phòng thành công!", Data = inventory }
+            );
         }
 
         [Authorize(Roles = "Admin,Receptionist,Housekeeping")] // Buồng phòng kiểm tra vật tư (khăn, nước) trong phòng
@@ -88,7 +94,7 @@ namespace QuanTriKhachSanN5.Controllers
         {
             // Lưu ý: Nhớ thêm hàm AddRoomImageAsync vào IRoomInventoryService và RoomInventoryService của bạn
             // await _roomService.AddRoomImageAsync(image);
-            
+
             return Ok(new { Message = "Đã thêm hình ảnh phòng thành công!", Data = image });
         }
     }

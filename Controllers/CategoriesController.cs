@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QuanTriKhachSanN5.DTOs.Category;
 using QuanTriKhachSanN5.Interfaces;

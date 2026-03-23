@@ -2,8 +2,9 @@
 // MODULE 4: RECEPTION - CONTROLLER
 // =========================================================================
 
-using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using QuanTriKhachSanN5.DTOs;
 using QuanTriKhachSanN5.Interfaces;
 using QuanTriKhachSanN5.Models;
@@ -29,16 +30,28 @@ namespace QuanTriKhachSanN5.Controllers.Disabled
         }
 
         [HttpPost("services")]
-        public async Task<ActionResult<Order_Service>> OrderService([FromBody] OrderServiceRequest request)
+        public async Task<ActionResult<Order_Service>> OrderService(
+            [FromBody] OrderServiceRequest request
+        )
         {
-            var order = await _receptionService.OrderServiceAsync(request.BookingId, request.ServiceId, request.Quantity);
+            var order = await _receptionService.OrderServiceAsync(
+                request.BookingId,
+                request.ServiceId,
+                request.Quantity
+            );
             return Ok(order);
         }
 
         [HttpPost("damages")]
-        public async Task<ActionResult<Loss_And_Damage>> ReportDamage([FromBody] DamageRequest request)
+        public async Task<ActionResult<Loss_And_Damage>> ReportDamage(
+            [FromBody] DamageRequest request
+        )
         {
-            var damage = await _receptionService.ReportDamageAsync(request.BookingId, request.Description, request.FineAmount);
+            var damage = await _receptionService.ReportDamageAsync(
+                request.BookingId,
+                request.Description,
+                request.FineAmount
+            );
             return Ok(damage);
         }
 
