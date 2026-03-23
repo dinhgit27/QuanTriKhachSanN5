@@ -2,11 +2,8 @@
 // MODULE 6: HR & RBAC - CONTROLLER
 // =========================================================================
 
-<<<<<<< HEAD
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-=======
->>>>>>> origin/tuan
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;

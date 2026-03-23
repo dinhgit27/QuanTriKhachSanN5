@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 namespace QuanTriKhachSanN5.DTOs.Room
 {
     public class RoomDTO
@@ -10,5 +9,3 @@ namespace QuanTriKhachSanN5.DTOs.Room
         public decimal? RoomTypeBasePrice { get; set; }
     }
 }
-=======
->>>>>>> origin/tuan

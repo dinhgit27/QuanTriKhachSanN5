@@ -134,6 +134,17 @@ builder.Services.AddSwaggerGen(c =>
         [new OpenApiSecuritySchemeReference("Bearer")] = new List<string>(),
     });
 });
+// Thêm đoạn này để cấu hình CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReactApp",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:5173", "http://localhost:5174") // Cho phép React ở cổng 5173 hoặc 5174 gọi vào
+                  .AllowAnyMethod()
+                  .AllowAnyHeader();
+        });
+});
 
 var app = builder.Build();
 

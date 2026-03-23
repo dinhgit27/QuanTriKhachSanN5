@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace QuanTriKhachSanN5.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class AddIsActiveColumn : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -109,6 +109,19 @@ namespace QuanTriKhachSanN5.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Permission",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Permission", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Permissions",
                 columns: table => new
                 {
@@ -119,6 +132,19 @@ namespace QuanTriKhachSanN5.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Permissions", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Role",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Role", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -165,7 +191,7 @@ namespace QuanTriKhachSanN5.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Users",
+                name: "User",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -178,7 +204,23 @@ namespace QuanTriKhachSanN5.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Users", x => x.Id);
+                    table.PrimaryKey("PK_User", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Users",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    full_name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    email = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    password_hash = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Users", x => x.id);
                 });
 
             migrationBuilder.CreateTable(
@@ -243,7 +285,7 @@ namespace QuanTriKhachSanN5.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "RolePermissions",
+                name: "Role_Permission",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -253,16 +295,40 @@ namespace QuanTriKhachSanN5.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_RolePermissions", x => x.Id);
+                    table.PrimaryKey("PK_Role_Permission", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_RolePermissions_Permissions_PermissionId",
+                        name: "FK_Role_Permission_Permission_PermissionId",
                         column: x => x.PermissionId,
+                        principalTable: "Permission",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Role_Permission_Role_RoleId",
+                        column: x => x.RoleId,
+                        principalTable: "Role",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Role_Permissions",
+                columns: table => new
+                {
+                    role_id = table.Column<int>(type: "int", nullable: false),
+                    permission_id = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Role_Permissions", x => new { x.role_id, x.permission_id });
+                    table.ForeignKey(
+                        name: "FK_Role_Permissions_Permissions_permission_id",
+                        column: x => x.permission_id,
                         principalTable: "Permissions",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_RolePermissions_Roles_RoleId",
-                        column: x => x.RoleId,
+                        name: "FK_Role_Permissions_Roles_role_id",
+                        column: x => x.role_id,
                         principalTable: "Roles",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -330,9 +396,9 @@ namespace QuanTriKhachSanN5.Migrations
                 {
                     table.PrimaryKey("PK_AuditLogs", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_AuditLogs_Users_UserId",
+                        name: "FK_AuditLogs_User_UserId",
                         column: x => x.UserId,
-                        principalTable: "Users",
+                        principalTable: "User",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -352,15 +418,15 @@ namespace QuanTriKhachSanN5.Migrations
                 {
                     table.PrimaryKey("PK_Memberships", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Memberships_Users_UserId",
+                        name: "FK_Memberships_User_UserId",
                         column: x => x.UserId,
-                        principalTable: "Users",
+                        principalTable: "User",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "UserRoles",
+                name: "User_Role",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -370,18 +436,42 @@ namespace QuanTriKhachSanN5.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_UserRoles", x => x.Id);
+                    table.PrimaryKey("PK_User_Role", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_UserRoles_Roles_RoleId",
+                        name: "FK_User_Role_Role_RoleId",
                         column: x => x.RoleId,
+                        principalTable: "Role",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_User_Role_User_UserId",
+                        column: x => x.UserId,
+                        principalTable: "User",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "User_Roles",
+                columns: table => new
+                {
+                    user_id = table.Column<int>(type: "int", nullable: false),
+                    role_id = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_User_Roles", x => new { x.user_id, x.role_id });
+                    table.ForeignKey(
+                        name: "FK_User_Roles_Roles_role_id",
+                        column: x => x.role_id,
                         principalTable: "Roles",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_UserRoles_Users_UserId",
-                        column: x => x.UserId,
+                        name: "FK_User_Roles_Users_user_id",
+                        column: x => x.user_id,
                         principalTable: "Users",
-                        principalColumn: "Id",
+                        principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -409,9 +499,9 @@ namespace QuanTriKhachSanN5.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Bookings_Users_GuestId",
+                        name: "FK_Bookings_User_GuestId",
                         column: x => x.GuestId,
-                        principalTable: "Users",
+                        principalTable: "User",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -583,9 +673,9 @@ namespace QuanTriKhachSanN5.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Reviews_Users_UserId",
+                        name: "FK_Reviews_User_UserId",
                         column: x => x.UserId,
-                        principalTable: "Users",
+                        principalTable: "User",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -699,14 +789,19 @@ namespace QuanTriKhachSanN5.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_RolePermissions_PermissionId",
-                table: "RolePermissions",
+                name: "IX_Role_Permission_PermissionId",
+                table: "Role_Permission",
                 column: "PermissionId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_RolePermissions_RoleId",
-                table: "RolePermissions",
+                name: "IX_Role_Permission_RoleId",
+                table: "Role_Permission",
                 column: "RoleId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Role_Permissions_permission_id",
+                table: "Role_Permissions",
+                column: "permission_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_RoomImages_RoomId",
@@ -734,14 +829,19 @@ namespace QuanTriKhachSanN5.Migrations
                 column: "CategoryId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_UserRoles_RoleId",
-                table: "UserRoles",
+                name: "IX_User_Role_RoleId",
+                table: "User_Role",
                 column: "RoleId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_UserRoles_UserId",
-                table: "UserRoles",
+                name: "IX_User_Role_UserId",
+                table: "User_Role",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_User_Roles_role_id",
+                table: "User_Roles",
+                column: "role_id");
         }
 
         /// <inheritdoc />
@@ -781,7 +881,10 @@ namespace QuanTriKhachSanN5.Migrations
                 name: "Reviews");
 
             migrationBuilder.DropTable(
-                name: "RolePermissions");
+                name: "Role_Permission");
+
+            migrationBuilder.DropTable(
+                name: "Role_Permissions");
 
             migrationBuilder.DropTable(
                 name: "RoomImages");
@@ -790,7 +893,10 @@ namespace QuanTriKhachSanN5.Migrations
                 name: "RoomInventories");
 
             migrationBuilder.DropTable(
-                name: "UserRoles");
+                name: "User_Role");
+
+            migrationBuilder.DropTable(
+                name: "User_Roles");
 
             migrationBuilder.DropTable(
                 name: "Vouchers");
@@ -808,13 +914,22 @@ namespace QuanTriKhachSanN5.Migrations
                 name: "Categories");
 
             migrationBuilder.DropTable(
+                name: "Permission");
+
+            migrationBuilder.DropTable(
                 name: "Permissions");
 
             migrationBuilder.DropTable(
                 name: "Amenities");
 
             migrationBuilder.DropTable(
+                name: "Role");
+
+            migrationBuilder.DropTable(
                 name: "Roles");
+
+            migrationBuilder.DropTable(
+                name: "Users");
 
             migrationBuilder.DropTable(
                 name: "Bookings");
@@ -826,7 +941,7 @@ namespace QuanTriKhachSanN5.Migrations
                 name: "Rooms");
 
             migrationBuilder.DropTable(
-                name: "Users");
+                name: "User");
 
             migrationBuilder.DropTable(
                 name: "RoomTypes");

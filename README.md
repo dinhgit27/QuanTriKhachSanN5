@@ -1,5 +1,5 @@
 # QuanTriKhachSanN6
-Admin	        admin@test.com	        123456
-User	        user@test.com	        123456
-Receptionist	receptionist@test.com	123456
-Housekeeping	housekeeping@test.com	123456
+Admin	        admin@hotel.com	        123456
+User	        user@hotel.com	        123456
+Receptionist	receptionist@hotel.com	123456
+Housekeeping	housekeeping@hotel.com	123456

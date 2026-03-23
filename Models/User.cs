@@ -1,8 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
+
 public class User
 {
+    public bool IsActive { get; set; } = true; 
+    
     [Column("id")]
     public int Id { get; set; }
 

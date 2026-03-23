@@ -28,7 +28,8 @@ namespace QuanTriKhachSanN5.Controllers
         {
             var exist = await _context.Users.FirstOrDefaultAsync(x => x.Email == dto.Email);
             if (exist != null)
-                return BadRequest("Email đã tồn tại!");
+                // Trả về dạng JSON (new { message = ... }) để Frontend React dễ bắt lỗi
+                return BadRequest(new { message = "Email đã tồn tại!" }); 
 
             var user = new User
             {
@@ -48,7 +49,7 @@ namespace QuanTriKhachSanN5.Controllers
                 await _context.SaveChangesAsync();
             }
 
-            return Ok("Đăng ký thành công!");
+            return Ok(new { message = "Đăng ký thành công!" });
         }
 
         [HttpPost("login")]
@@ -61,26 +62,42 @@ namespace QuanTriKhachSanN5.Controllers
                             .ThenInclude(rp => rp.Permission)
                 .FirstOrDefaultAsync(u => u.Email == dto.Email);
 
+            // 1. TRẠM KIỂM SOÁT 1: Bắt buộc phải kiểm tra null ĐẦU TIÊN
+            if (user == null)
+                return Unauthorized(new { message = "Tài khoản hoặc mật khẩu không đúng!" });
+
+            // 2. TRẠM KIỂM SOÁT 2: Kiểm tra mật khẩu
+            bool check = BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash);
+            if (!check)
+                return Unauthorized(new { message = "Tài khoản hoặc mật khẩu không đúng!" });
+
+            // (Tùy chọn) TRẠM KIỂM SOÁT 3: Kiểm tra trạng thái tài khoản (Soft Delete)
+            // if (user.IsActive == false) 
+            //     return Unauthorized(new { message = "Tài khoản của bạn đã bị khóa!" });
+
+            // 3. Vượt qua hết mới bắt đầu lấy dữ liệu Role và Permission
             var roles = user.UserRoles.Select(ur => ur.Role.Name).ToList();
 
-            if (user == null)
-                return Unauthorized("Email không đúng!");
-
-            bool check = BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash);
-
-            if (!check)
-                return Unauthorized("Sai mật khẩu!");
-
-            // TÍNH NĂNG NÂNG CAO: Lấy danh sách Permission từ CSDL của Role người dùng đang giữ
             var permissions = user
                 .UserRoles.SelectMany(ur => ur.Role.RolePermissions)
                 .Select(rp => rp.Permission.Name)
                 .Distinct()
                 .ToList();
 
+            // 4. Sinh Token
             var token = _jwt.GenerateToken(user, roles, permissions);
 
-            return Ok(new { token });
+            // 5. Trả về đúng cấu trúc mà React Frontend đang chờ để lưu vào Zustand store
+            return Ok(new 
+            { 
+                token = token,
+                user = new { 
+                    id = user.Id, 
+                    email = user.Email, 
+                    fullName = user.FullName 
+                },
+                permissions = permissions
+            });
         }
 
         [HttpPost("google-login")]
@@ -121,7 +138,17 @@ namespace QuanTriKhachSanN5.Controllers
 
             var token = _jwt.GenerateToken(user, roles, permissions);
 
-            return Ok(new { token });
+            // Đồng bộ Response trả về giống hàm Login thường
+            return Ok(new 
+            { 
+                token = token,
+                user = new { 
+                    id = user.Id, 
+                    email = user.Email, 
+                    fullName = user.FullName 
+                },
+                permissions = permissions
+            });
         }
     }
 }
