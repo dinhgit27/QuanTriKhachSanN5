@@ -29,10 +29,10 @@ namespace QuanTriKhachSanN5.Services
                 claims.Add(new Claim(ClaimTypes.Role, role));
             }
 
-            // ✅ (optional) thêm permission
+            // ✅ Thêm permission claims (PascalCase khớp policy)
             foreach (var p in permissions)
             {
-                claims.Add(new Claim("permission", p));
+                claims.Add(new Claim("Permission", p));
             }
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
