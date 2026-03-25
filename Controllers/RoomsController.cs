@@ -39,7 +39,8 @@ namespace QuanTriKhachSanN5.Controllers
         public async Task<ActionResult<Room>> GetRoom(int id)
         {
             var room = await _roomService.GetRoomByIdAsync(id);
-            if (room == null) return NotFound();
+            if (room == null)
+                return NotFound();
             return Ok(room);
         }
 

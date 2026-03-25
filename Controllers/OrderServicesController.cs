@@ -47,57 +47,58 @@ namespace QuanTriKhachSanN5.Controllers
         // =========================
         [Authorize(Roles = "Guest,Receptionist,Admin")] // Khách hàng tự đặt hoặc Lễ tân đặt hộ
         [HttpPost("order")]
-public IActionResult CreateOrder([FromBody] OrderRequest request)
-{
-    // 0. Lấy thông tin BookingId từ BookingDetail
-    var bookingDetail = _context.BookingDetails.Find(request.BookingDetailId);
-    
-    if (bookingDetail == null)
-        return BadRequest("Chi tiết đặt phòng (BookingDetail) không tồn tại.");
-
-    // 1. tạo order
-    var order = new OrderService
-    {
-        BookingDetailId = request.BookingDetailId,
-        BookingId = bookingDetail.BookingId, // Bắt buộc phải có khóa ngoại này
-        OrderDate = DateTime.Now,
-        Status = "Pending",
-        TotalAmount = 0
-    };
-
-
-    decimal total = 0;
-    var details = new List<OrderServiceDetail>();
-
-    // 2. lưu từng món
-    if (request.Items != null)
-    {
-        foreach (var item in request.Items)
+        public IActionResult CreateOrder([FromBody] OrderRequest request)
         {
-            var service = _context.Services.Find(item.ServiceId);
+            // 0. Lấy thông tin BookingId từ BookingDetail
+            var bookingDetail = _context.BookingDetails.Find(request.BookingDetailId);
 
-            if (service == null)
-                return BadRequest($"Service với ID {item.ServiceId} không tồn tại");
+            if (bookingDetail == null)
+                return BadRequest("Chi tiết đặt phòng (BookingDetail) không tồn tại.");
 
-            details.Add(new OrderServiceDetail
+            // 1. tạo order
+            var order = new OrderService
             {
-                ServiceId = item.ServiceId,
-                Quantity = item.Quantity,
-                UnitPrice = service.Price
-            });
+                BookingDetailId = request.BookingDetailId,
+                BookingId = bookingDetail.BookingId, // Bắt buộc phải có khóa ngoại này
+                OrderDate = DateTime.Now,
+                Status = "Pending",
+                TotalAmount = 0,
+            };
 
-            total += item.Quantity * service.Price;
+            decimal total = 0;
+            var details = new List<OrderServiceDetail>();
+
+            // 2. lưu từng món
+            if (request.Items != null)
+            {
+                foreach (var item in request.Items)
+                {
+                    var service = _context.Services.Find(item.ServiceId);
+
+                    if (service == null)
+                        return BadRequest($"Service với ID {item.ServiceId} không tồn tại");
+
+                    details.Add(
+                        new OrderServiceDetail
+                        {
+                            ServiceId = item.ServiceId,
+                            Quantity = item.Quantity,
+                            UnitPrice = service.Price,
+                        }
+                    );
+
+                    total += item.Quantity * service.Price;
+                }
+            }
+
+            // 3. update total
+            order.TotalAmount = total;
+            order.Details = details; // EF Core sẽ tự động nối OrderServiceId
+            _context.OrderServices.Add(order);
+            _context.SaveChanges();
+
+            return Ok(order);
         }
-    }
-
-    // 3. update total
-    order.TotalAmount = total;
-    order.Details = details; // EF Core sẽ tự động nối OrderServiceId
-    _context.OrderServices.Add(order);
-    _context.SaveChanges();
-
-    return Ok(order);
-}
 
         // =========================
         // CẬP NHẬT TRẠNG THÁI
@@ -117,7 +118,7 @@ public IActionResult CreateOrder([FromBody] OrderRequest request)
 
             return Ok("Cập nhật trạng thái thành công");
         }
-        
+
         [Authorize(Roles = "Admin,Receptionist")] // Chỉ nhân viên mới được hủy đơn
         [HttpDelete("{id}")]
         public async Task<IActionResult> Cancel(int id)
@@ -125,7 +126,7 @@ public IActionResult CreateOrder([FromBody] OrderRequest request)
             var order = await _context.OrderServices.FindAsync(id);
 
             if (order == null)
-            return NotFound();
+                return NotFound();
 
             order.Status = "Cancelled";
 

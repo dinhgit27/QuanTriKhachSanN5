@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 public class User
 {
+    [Column("status")]
     public bool IsActive { get; set; } = true; 
     
     [Column("id")]

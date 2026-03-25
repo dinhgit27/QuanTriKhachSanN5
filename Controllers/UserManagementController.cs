@@ -1,8 +1,8 @@
+using BCrypt.Net;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuanTriKhachSanN5.Data;
 using QuanTriKhachSanN5.Models;
-using BCrypt.Net;
 
 namespace QuanTriKhachSanN5.Controllers
 {
@@ -21,16 +21,18 @@ namespace QuanTriKhachSanN5.Controllers
         [HttpGet]
         public async Task<IActionResult> GetUsers()
         {
-            var users = await _context.Users
-                .Include(u => u.UserRoles)
+            var users = await _context
+                .Users.Include(u => u.UserRoles)
                     .ThenInclude(ur => ur.Role)
                 .Select(u => new
                 {
                     id = u.Id,
                     fullName = u.FullName,
                     email = u.Email,
-                    roleName = u.UserRoles.FirstOrDefault() != null ? u.UserRoles.FirstOrDefault().Role.Name : "Chưa cấp quyền",
-                    isActive = true // Tạm thời cho True (Hoặc u.IsActive nếu DB ní có cột này)
+                    roleName = u.UserRoles.FirstOrDefault() != null
+                        ? u.UserRoles.FirstOrDefault().Role.Name
+                        : "Chưa cấp quyền",
+                    isActive = true, // Tạm thời cho True (Hoặc u.IsActive nếu DB ní có cột này)
                 })
                 .ToListAsync();
 
@@ -42,14 +44,14 @@ namespace QuanTriKhachSanN5.Controllers
         public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request)
         {
             var exist = await _context.Users.AnyAsync(u => u.Email == request.Email);
-            if (exist) 
+            if (exist)
                 return BadRequest(new { message = "Email này đã được sử dụng!" });
 
             var user = new User
             {
                 FullName = request.FullName,
                 Email = request.Email,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456") 
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
             };
 
             _context.Users.Add(user);
@@ -57,11 +59,7 @@ namespace QuanTriKhachSanN5.Controllers
 
             if (request.RoleId > 0)
             {
-                _context.UserRoles.Add(new User_Role 
-                { 
-                    UserId = user.Id, 
-                    RoleId = request.RoleId 
-                });
+                _context.UserRoles.Add(new User_Role { UserId = user.Id, RoleId = request.RoleId });
                 await _context.SaveChangesAsync();
             }
 
@@ -74,20 +72,20 @@ namespace QuanTriKhachSanN5.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserRequest request)
         {
-            var user = await _context.Users
-                .Include(u => u.UserRoles)
+            var user = await _context
+                .Users.Include(u => u.UserRoles)
                 .FirstOrDefaultAsync(u => u.Id == id);
-                
-            if (user == null) 
+
+            if (user == null)
                 return NotFound(new { message = "Không tìm thấy người dùng!" });
 
             // 1. Cập nhật thông tin cơ bản
             user.FullName = request.FullName;
-            // user.PhoneNumber = request.PhoneNumber; 
+            // user.PhoneNumber = request.PhoneNumber;
 
             // 2. Cập nhật chức vụ (Role) theo đúng luật EF Core: Xóa cũ -> Thêm mới
             var currentRole = user.UserRoles.FirstOrDefault();
-            
+
             // Bước A: Nếu có role cũ thì xóa nó đi
             if (currentRole != null)
             {
@@ -111,7 +109,7 @@ namespace QuanTriKhachSanN5.Controllers
         public async Task<IActionResult> ToggleStatus(int id)
         {
             var user = await _context.Users.FindAsync(id);
-            if (user == null) 
+            if (user == null)
                 return NotFound(new { message = "Không tìm thấy người dùng!" });
 
             user.IsActive = !user.IsActive;
@@ -119,7 +117,7 @@ namespace QuanTriKhachSanN5.Controllers
 
             return Ok(new { message = "Cập nhật trạng thái thành công!" });
         }
-    } 
+    }
 
     // Các class phụ trợ nằm ngoài Controller nhưng vẫn trong Namespace
     public class CreateUserRequest

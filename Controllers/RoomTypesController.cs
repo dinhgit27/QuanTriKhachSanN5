@@ -1,9 +1,9 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using QuanTriKhachSanN5.Interfaces;
 using QuanTriKhachSanN5.DTOs.RoomType;
-using System.Collections.Generic;
+using QuanTriKhachSanN5.Interfaces;
 
 namespace QuanTriKhachSanN5.Controllers
 {
@@ -33,14 +33,17 @@ namespace QuanTriKhachSanN5.Controllers
         public async Task<ActionResult<RoomTypeDTO>> GetRoomType(int id)
         {
             var roomType = await _roomTypeService.GetRoomTypeByIdAsync(id);
-            if (roomType == null) return NotFound();
+            if (roomType == null)
+                return NotFound();
             return Ok(roomType);
         }
 
         // POST: api/RoomTypes - Tạo loại phòng mới (Admin only)
-[Authorize(Policy = "MANAGE_ROOMTYPES")]
+        [Authorize(Policy = "MANAGE_ROOMTYPES")]
         [HttpPost]
-        public async Task<ActionResult<RoomTypeDTO>> CreateRoomType([FromBody] CreateRoomTypeDTO dto)
+        public async Task<ActionResult<RoomTypeDTO>> CreateRoomType(
+            [FromBody] CreateRoomTypeDTO dto
+        )
         {
             try
             {
@@ -59,7 +62,8 @@ namespace QuanTriKhachSanN5.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateRoomType(int id, [FromBody] RoomTypeDTO dto)
         {
-            if (id != dto.Id) return BadRequest("ID không khớp");
+            if (id != dto.Id)
+                return BadRequest("ID không khớp");
 
             try
             {
@@ -89,4 +93,3 @@ namespace QuanTriKhachSanN5.Controllers
         }
     }
 }
-
