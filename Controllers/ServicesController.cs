@@ -1,137 +1,57 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using QuanTriKhachSanN5.Data;
+using QuanTriKhachSanN5.Interfaces;
 using QuanTriKhachSanN5.Models;
 
-namespace QuanTriKhachSanN5.Controllers
-{
+namespace QuanTriKhachSanN5.Controllers;
+
 [Route("api/[controller]")]
-    [ApiController]
-    [Authorize(Policy = "ManageServices")]
-    public class ServicesController : ControllerBase
-    {
-        private readonly ApplicationDbContext _context;
-        
-        public ServicesController(ApplicationDbContext context)
+[ApiController]
+[Authorize(Policy = "ManageServices")]
+public class ServicesController : ControllerBase
+{
+    private readonly IServiceService _service;
 
-        {
-            _context = context;
-        }
-
-        // ==============================
-        // LẤY DANH SÁCH SERVICES
-        // ==============================
-        // GET: api/services
-        [AllowAnonymous] // Ai cũng xem được danh sách dịch vụ (Khách vãng lai trên web)
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Service>>> GetServices()
+    public ServicesController(IServiceService service)
     {
-        return await _context.Services
-        .Where(s => s.Status == 1)
-        .ToListAsync();
+        _service = service;
     }
 
-        // ==============================
-        // LẤY SERVICE THEO ID
-        // ==============================
-        // GET: api/services/5
-        [AllowAnonymous]
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Service>> GetService(int id)
-        {
-            var service = await _context.Services.FindAsync(id);
+[AllowAnonymous]
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<Service>>> GetServices()
+    {
+        return await _service.GetServicesAsync();
+    }
 
-            if (service == null)
-            {
-                return NotFound();
-            }
+[AllowAnonymous]
+    [HttpGet("{id}")]
+    public async Task<ActionResult<Service>> GetService(int id)
+    {
+        return await _service.GetServiceAsync(id);
+    }
 
-            return service;
-        }
+[HttpPost]
+    public async Task<ActionResult<Service>> PostService(Service service)
+    {
+        return await _service.PostServiceAsync(service);
+    }
 
-        // ==============================
-        // THÊM SERVICE
-        // ==============================
-        // POST: api/services
-        [Authorize(Roles = "Admin")] // Chỉ Quản lý mới được tạo dịch vụ mới
-        [HttpPost]
-        public async Task<ActionResult<Service>> PostService(Service service)
-        {
-            // thêm dịch vụ vào database
-            _context.Services.Add(service);
+    [HttpPut("{id}")]
+    public async Task<IActionResult> PutService(int id, Service service)
+    {
+        return await _service.PutServiceAsync(id, service);
+    }
 
-            await _context.SaveChangesAsync();
+[HttpDelete("{id}")]
+    public async Task<IActionResult> DisableService(int id)
+    {
+        return await _service.DisableServiceAsync(id);
+    }
 
-            return CreatedAtAction(nameof(GetService), new { id = service.Id }, service);
-        }
-
-        // ==============================
-        // SỬA SERVICE
-        // ==============================
-        // PUT: api/services/5
-        [Authorize(Roles = "Admin")] // Chỉ Quản lý mới được sửa cấu hình
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutService(int id, Service service)
-        {
-            if (id != service.Id)
-            {
-                return BadRequest();
-            }
-
-            // cập nhật dữ liệu
-            _context.Entry(service).State = EntityState.Modified;
-
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        // ==============================
-        // DISABLE SERVICE (KHÔNG XOÁ)
-        // ==============================
-        // DELETE: api/services/5
-        [Authorize(Roles = "Admin")]
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DisableService(int id)
-        {
-            var service = await _context.Services.FindAsync(id);
-
-            if (service == null)
-            {
-                return NotFound();
-            }
-
-            // Không xoá dữ liệu
-            // Chỉ chuyển trạng thái sang disable
-            service.Status = 0;
-
-            await _context.SaveChangesAsync();
-
-            return Ok("Service đã được disable");
-        }
-
-        // ==============================
-        // ENABLE SERVICE
-        // ==============================
-        // PUT: api/services/enable/5
-        [Authorize(Roles = "Admin")]
-        [HttpPut("enable/{id}")]
-        public async Task<IActionResult> EnableService(int id)
-        {
-            var service = await _context.Services.FindAsync(id);
-
-            if (service == null)
-            {
-                return NotFound();
-            }
-
-            // bật lại dịch vụ
-            service.Status = 1;
-
-            await _context.SaveChangesAsync();
-
-            return Ok("Service đã được enable");
-        }
+[HttpPut("enable/{id}")]
+    public async Task<IActionResult> EnableService(int id)
+    {
+        return await _service.EnableServiceAsync(id);
     }
 }

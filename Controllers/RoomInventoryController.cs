@@ -23,7 +23,7 @@ namespace QuanTriKhachSanN5.Controllers
             _roomService = roomService;
         }
 
-[Authorize(Roles = "Admin,Receptionist,Housekeeping", Policy = "ViewRooms")]
+[Authorize(Policy = "ViewInventory")]
         [HttpGet("rooms")]
         public async Task<ActionResult<List<Room>>> GetRooms()
         {
@@ -31,7 +31,7 @@ namespace QuanTriKhachSanN5.Controllers
             return Ok(rooms);
         }
 
-        [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
+        [Authorize(Policy = "ViewInventory")]
         [HttpGet("rooms/{id}")]
         public async Task<ActionResult<Room>> GetRoom(int id)
         {
@@ -40,7 +40,7 @@ namespace QuanTriKhachSanN5.Controllers
             return Ok(room);
         }
 
-[Authorize(Roles = "Admin,Receptionist,Housekeeping", Policy = "UpdateRoomStatus")]
+        [Authorize(Policy = "UpdateInventory")]
         [HttpPut("rooms/{id}/status")]
         public async Task<IActionResult> UpdateRoomStatus(int id, [FromBody] string status)
         {
@@ -48,7 +48,7 @@ namespace QuanTriKhachSanN5.Controllers
             return NoContent();
         }
 
-        [Authorize(Roles = "Admin,Receptionist")]
+        [Authorize(Policy = "ViewInventory")]
         [HttpGet("amenities")]
         public async Task<ActionResult<List<Amenity>>> GetAmenities()
         {

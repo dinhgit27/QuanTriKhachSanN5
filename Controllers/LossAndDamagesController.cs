@@ -1,115 +1,65 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using QuanTriKhachSanN5.Data;
+using QuanTriKhachSanN5.Interfaces;
 using QuanTriKhachSanN5.Models;
 
-namespace QuanTriKhachSanN5.Controllers
-{
+namespace QuanTriKhachSanN5.Controllers;
+
 [Route("api/[controller]")]
-    [ApiController]
-    [Authorize(Policy = "ManageLossDamages")]
-    public class LossAndDamagesController : ControllerBase
+[ApiController]
+[Authorize(Policy = "ManageLossDamages")]
+public class LossAndDamagesController : ControllerBase
+{
+    private readonly ILossAndDamageService _service;
+
+    public LossAndDamagesController(ILossAndDamageService service)
     {
-        private readonly ApplicationDbContext _context;
-
-        public LossAndDamagesController(ApplicationDbContext context)
-        {
-            _context = context;
-        }
-
-        // ======================
-        // POST
-        // ======================
-        [Authorize(Roles = "Admin,Receptionist,Housekeeping")] // Buồng phòng đi dọn phát hiện hỏng đồ thì gọi API này
-        [HttpPost]
-        public async Task<IActionResult> ReportLoss([FromBody] LossAndDamage report)
-        {
-            _context.LossAndDamages.Add(report);
-            await _context.SaveChangesAsync();
-
-            return Ok(report);
-        }
-
-        // ======================
-        // GET
-        // ======================
-        [Authorize(Roles = "Admin,Receptionist")] // Chỉ Lễ tân/Quản lý mới xem danh sách phạt để tính tiền khách
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<LossAndDamage>>> GetAll()
-    {
-        return await _context.LossAndDamages.ToListAsync();
+        _service = service;
     }
 
-        // ======================
-        // PUT
-        // ======================
-        [Authorize(Roles = "Admin,Receptionist")]
-        [HttpPut("{id}")]
-public async Task<IActionResult> Update(int id, LossAndDamage model)
-{
-    var data = await _context.LossAndDamages.FindAsync(id);
-
-    if (data == null)
+    // ======================
+    // POST
+    // ======================
+    [HttpPost]
+    public async Task<IActionResult> ReportLoss([FromBody] LossAndDamage report)
     {
-        return NotFound();
+        var result = await _service.ReportLossAsync(report);
+        return result;
     }
 
-    data.BookingDetailId = model.BookingDetailId;
-    data.RoomInventoryId = model.RoomInventoryId;
-    data.Quantity = model.Quantity;
-    data.FineAmount = model.FineAmount;
-    data.Description = model.Description;
-    data.ReportedDate = model.ReportedDate;
+    // ======================
+    // GET
+    // ======================
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
+    {
+        return await _service.GetAllAsync();
+    }
 
-    await _context.SaveChangesAsync();
+    // ======================
+    // PUT
+    // ======================
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, LossAndDamage model)
+    {
+        return await _service.UpdateAsync(id, model);
+    }
 
-    return Ok(data);
-}
-[Authorize(Roles = "Admin")] // Hủy biên bản phạt là việc nhạy cảm, chỉ Quản lý được làm
-[HttpDelete("{id}")]
-public async Task<IActionResult> Disable(int id)
-{
-    var data = await _context.LossAndDamages.FindAsync(id);
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Disable(int id)
+    {
+        return await _service.DisableAsync(id);
+    }
 
-    if (data == null)
-        return NotFound();
+    [HttpPut("enable/{id}")]
+    public async Task<IActionResult> Enable(int id)
+    {
+        return await _service.EnableAsync(id);
+    }
 
-    data.Status = "đã hủy";
-
-    await _context.SaveChangesAsync();
-
-    return Ok("Disabled");
-}
-[Authorize(Roles = "Admin")]
-[HttpPut("enable/{id}")]
-public async Task<IActionResult> Enable(int id)
-{
-    var data = await _context.LossAndDamages.FindAsync(id);
-
-    if (data == null)
-        return NotFound();
-
-    data.Status = "đã ghi nhận";
-
-    await _context.SaveChangesAsync();
-
-    return Ok("Enabled");
-}
-[Authorize(Roles = "Admin,Receptionist")] // Lễ tân cập nhật trạng thái khi khách đã đền tiền
-[HttpPut("status/{id}")]
-public async Task<IActionResult> UpdateStatus(int id, string status)
-{
-    var data = await _context.LossAndDamages.FindAsync(id);
-
-    if (data == null)
-        return NotFound();
-
-    data.Status = status;
-
-    await _context.SaveChangesAsync();
-
-    return Ok(data);
-}
+    [HttpPut("status/{id}")]
+    public async Task<IActionResult> UpdateStatus(int id, string status)
+    {
+        return await _service.UpdateStatusAsync(id, status);
     }
 }

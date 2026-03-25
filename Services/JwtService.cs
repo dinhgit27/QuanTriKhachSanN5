@@ -44,9 +44,8 @@ namespace QuanTriKhachSanN5.Services
                 claims.Add(new Claim("Permission", perm));
             }
 
-            var key = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(_config["Jwt:Key"]!)
-            );
+var jwtKey = _config["Jwt:Key"]!;
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
 
             var creds = new SigningCredentials(
                 key,
@@ -54,8 +53,8 @@ namespace QuanTriKhachSanN5.Services
             );
 
             var token = new JwtSecurityToken(
-                issuer: _config["Jwt:Issuer"],
-                audience: _config["Jwt:Audience"],
+                issuer: _config["Jwt:Issuer"] ?? throw new InvalidOperationException("JWT Issuer missing"),
+                audience: _config["Jwt:Audience"] ?? throw new InvalidOperationException("JWT Audience missing"),
                 claims: claims,
                 expires: DateTime.Now.AddDays(7),
                 signingCredentials: creds

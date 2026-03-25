@@ -1,7 +1,6 @@
 global using LossAndDamage = QuanTriKhachSanN5.Models.Loss_And_Damage;
 global using OrderService = QuanTriKhachSanN5.Models.Order_Service;
 global using OrderServiceDetail = QuanTriKhachSanN5.Models.Order_Service_Detail;
-
 using Microsoft.EntityFrameworkCore;
 using QuanTriKhachSanN5.Data;
 using QuanTriKhachSanN5.Services;
@@ -9,9 +8,9 @@ using QuanTriKhachSanN5.Interfaces;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Text;
-using QuanTriKhachSanN5.Models;
 using Microsoft.OpenApi.Models;
 using System.Text.Json.Serialization;
+using QuanTriKhachSanN5.Models;
 using Microsoft.Extensions.Logging;  // Added for logger
 
 var builder = WebApplication.CreateBuilder(args);
@@ -40,7 +39,7 @@ builder.Services.AddScoped<IRoomInventoryService, RoomInventoryService>();
 builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<ICMSService, CMSService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
-builder.Services.AddScoped<IReceptionService, ReceptionService>();
+builder.Services.AddScoped<IReceptionService, ReceptionService>(); 
 builder.Services.AddScoped<IPromotionService, PromotionService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IPostService, PostService>();
@@ -50,6 +49,9 @@ builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
 builder.Services.AddHttpClient<IGoogleMapsService, GoogleMapsService>();
 builder.Services.AddScoped<IGoogleMapsService, GoogleMapsService>();
 builder.Services.AddScoped<CheckoutService>();
+builder.Services.AddScoped<ILossAndDamageService, LossAndDamageService>();
+builder.Services.AddScoped<IServiceService, ServiceService>();
+
 
 // Authentication with logging
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -124,11 +126,17 @@ builder.Services.AddSwaggerGen(c =>
 
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
-        [new OpenApiSecuritySchemeReference 
         {
-            Type = SecuritySchemeType.Http,
-            Scheme = "bearer"
-        }] = new List<string>()
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference 
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
     });
 });
 
