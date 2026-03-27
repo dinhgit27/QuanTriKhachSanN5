@@ -10,10 +10,10 @@ namespace QuanTriKhachSanN5.Services
     public class CheckoutService
     {
         // Nhớ kiểm tra lại tên QlyKhachSanContext xem đã đúng với tên file DB Context của bạn chưa nhé
-        private readonly QlyKhachSanContext _dbContext;
+        private readonly ApplicationDbContext _dbContext;
         private readonly HttpClient _httpClient;
 
-        public CheckoutService(QlyKhachSanContext dbContext, HttpClient httpClient)
+        public CheckoutService(ApplicationDbContext dbContext, HttpClient httpClient)
         {
             _dbContext = dbContext;
             _httpClient = httpClient;

@@ -24,11 +24,15 @@ var builder = WebApplication.CreateBuilder(args);
 // ==========================================
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowReactApp", policy => 
-        policy.WithOrigins("http://localhost:5173")
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials());
+    options.AddPolicy(
+        "AllowReactApp",
+        policy =>
+            policy
+                .WithOrigins("http://localhost:5173")
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials()
+    );
 });
 
 // Đăng ký AuditLogFilter cho toàn bộ các Controllers
@@ -47,6 +51,8 @@ builder
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
+
+builder.Services.AddHttpClient<CheckoutService>();
 
 // JWT Service
 builder.Services.AddScoped<JwtService>();
@@ -100,9 +106,18 @@ builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("MANAGE_ROOMS", policy => policy.RequireClaim("Permission", "MANAGE_ROOMS"));
     options.AddPolicy("VIEW_ROOMS", policy => policy.RequireClaim("Permission", "VIEW_ROOMS"));
-    options.AddPolicy("MANAGE_ROOMTYPES", policy => policy.RequireClaim("Permission", "MANAGE_ROOMTYPES"));
-    options.AddPolicy("VIEW_ROOMTYPES", policy => policy.RequireClaim("Permission", "VIEW_ROOMTYPES"));
-    options.AddPolicy("MANAGE_BOOKINGS", policy => policy.RequireClaim("Permission", "MANAGE_BOOKINGS"));
+    options.AddPolicy(
+        "MANAGE_ROOMTYPES",
+        policy => policy.RequireClaim("Permission", "MANAGE_ROOMTYPES")
+    );
+    options.AddPolicy(
+        "VIEW_ROOMTYPES",
+        policy => policy.RequireClaim("Permission", "VIEW_ROOMTYPES")
+    );
+    options.AddPolicy(
+        "MANAGE_BOOKINGS",
+        policy => policy.RequireClaim("Permission", "MANAGE_BOOKINGS")
+    );
     options.AddPolicy("MANAGE_USERS", policy => policy.RequireClaim("Permission", "MANAGE_USERS"));
 });
 
@@ -134,16 +149,20 @@ builder.Services.AddSwaggerGen(c =>
         [new OpenApiSecuritySchemeReference("Bearer")] = new List<string>(),
     });
 });
+
 // Thêm đoạn này để cấu hình CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowReactApp",
+    options.AddPolicy(
+        "AllowReactApp",
         policy =>
         {
-            policy.WithOrigins("http://localhost:5173", "http://localhost:5174") // Cho phép React ở cổng 5173 hoặc 5174 gọi vào
-                  .AllowAnyMethod()
-                  .AllowAnyHeader();
-        });
+            policy
+                .WithOrigins("http://localhost:5173", "http://localhost:5174") // Cho phép React ở cổng 5173 hoặc 5174 gọi vào
+                .AllowAnyMethod()
+                .AllowAnyHeader();
+        }
+    );
 });
 
 var app = builder.Build();
@@ -250,33 +269,85 @@ using (var scope = app.Services.CreateScope())
             {
                 context.RolePermissions.AddRange(
                     // Admin: Full access
-                    new Role_Permission { RoleId = adminRole.Id, PermissionId = permissions.First(p => p.Name == "MANAGE_ROOMS").Id },
-                    new Role_Permission { RoleId = adminRole.Id, PermissionId = permissions.First(p => p.Name == "VIEW_ROOMS").Id },
-                    new Role_Permission { RoleId = adminRole.Id, PermissionId = permissions.First(p => p.Name == "MANAGE_ROOMTYPES").Id },
-                    new Role_Permission { RoleId = adminRole.Id, PermissionId = permissions.First(p => p.Name == "VIEW_ROOMTYPES").Id },
-                    new Role_Permission { RoleId = adminRole.Id, PermissionId = permissions.First(p => p.Name == "MANAGE_BOOKINGS").Id },
-                    new Role_Permission { RoleId = adminRole.Id, PermissionId = permissions.First(p => p.Name == "VIEW_BOOKINGS").Id },
-                    new Role_Permission { RoleId = adminRole.Id, PermissionId = permissions.First(p => p.Name == "MANAGE_USERS").Id },
-
+                    new Role_Permission
+                    {
+                        RoleId = adminRole.Id,
+                        PermissionId = permissions.First(p => p.Name == "MANAGE_ROOMS").Id,
+                    },
+                    new Role_Permission
+                    {
+                        RoleId = adminRole.Id,
+                        PermissionId = permissions.First(p => p.Name == "VIEW_ROOMS").Id,
+                    },
+                    new Role_Permission
+                    {
+                        RoleId = adminRole.Id,
+                        PermissionId = permissions.First(p => p.Name == "MANAGE_ROOMTYPES").Id,
+                    },
+                    new Role_Permission
+                    {
+                        RoleId = adminRole.Id,
+                        PermissionId = permissions.First(p => p.Name == "VIEW_ROOMTYPES").Id,
+                    },
+                    new Role_Permission
+                    {
+                        RoleId = adminRole.Id,
+                        PermissionId = permissions.First(p => p.Name == "MANAGE_BOOKINGS").Id,
+                    },
+                    new Role_Permission
+                    {
+                        RoleId = adminRole.Id,
+                        PermissionId = permissions.First(p => p.Name == "VIEW_BOOKINGS").Id,
+                    },
+                    new Role_Permission
+                    {
+                        RoleId = adminRole.Id,
+                        PermissionId = permissions.First(p => p.Name == "MANAGE_USERS").Id,
+                    },
                     // Receptionist: Rooms & Bookings
-                    new Role_Permission { RoleId = receptionistRole.Id, PermissionId = permissions.First(p => p.Name == "VIEW_ROOMS").Id },
-                    new Role_Permission { RoleId = receptionistRole.Id, PermissionId = permissions.First(p => p.Name == "MANAGE_ROOMTYPES").Id },
-                    new Role_Permission { RoleId = receptionistRole.Id, PermissionId = permissions.First(p => p.Name == "VIEW_BOOKINGS").Id },
-                    new Role_Permission { RoleId = receptionistRole.Id, PermissionId = permissions.First(p => p.Name == "MANAGE_BOOKINGS").Id },
-
+                    new Role_Permission
+                    {
+                        RoleId = receptionistRole.Id,
+                        PermissionId = permissions.First(p => p.Name == "VIEW_ROOMS").Id,
+                    },
+                    new Role_Permission
+                    {
+                        RoleId = receptionistRole.Id,
+                        PermissionId = permissions.First(p => p.Name == "MANAGE_ROOMTYPES").Id,
+                    },
+                    new Role_Permission
+                    {
+                        RoleId = receptionistRole.Id,
+                        PermissionId = permissions.First(p => p.Name == "VIEW_BOOKINGS").Id,
+                    },
+                    new Role_Permission
+                    {
+                        RoleId = receptionistRole.Id,
+                        PermissionId = permissions.First(p => p.Name == "MANAGE_BOOKINGS").Id,
+                    },
                     // Housekeeping: View rooms only
-                    new Role_Permission { RoleId = housekeepingRole.Id, PermissionId = permissions.First(p => p.Name == "VIEW_ROOMS").Id },
-
+                    new Role_Permission
+                    {
+                        RoleId = housekeepingRole.Id,
+                        PermissionId = permissions.First(p => p.Name == "VIEW_ROOMS").Id,
+                    },
                     // Guest: Read-only rooms/bookings
-                    new Role_Permission { RoleId = guestRole.Id, PermissionId = permissions.First(p => p.Name == "VIEW_ROOMS").Id },
-                    new Role_Permission { RoleId = guestRole.Id, PermissionId = permissions.First(p => p.Name == "VIEW_ROOMTYPES").Id }
+                    new Role_Permission
+                    {
+                        RoleId = guestRole.Id,
+                        PermissionId = permissions.First(p => p.Name == "VIEW_ROOMS").Id,
+                    },
+                    new Role_Permission
+                    {
+                        RoleId = guestRole.Id,
+                        PermissionId = permissions.First(p => p.Name == "VIEW_ROOMTYPES").Id,
+                    }
                 );
                 context.SaveChanges();
                 Console.WriteLine("✅ Seed Permissions & Role_Permissions thành công!");
             }
 
             Console.WriteLine("Seed RBAC thành công!");
-
         }
     }
     catch (Exception ex)

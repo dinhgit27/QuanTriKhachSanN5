@@ -4,9 +4,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using QuanTriKhachSanN5.Data;
+using QuanTriKhachSanN5.DTOs.RoomType;
 using QuanTriKhachSanN5.Interfaces;
 using QuanTriKhachSanN5.Models;
-using QuanTriKhachSanN5.DTOs.RoomType;
 
 namespace QuanTriKhachSanN5.Services
 {
@@ -21,9 +21,7 @@ namespace QuanTriKhachSanN5.Services
 
         public async Task<IEnumerable<RoomTypeDTO>> GetAllRoomTypesAsync()
         {
-            var roomTypes = await _context.RoomTypes
-                .Include(rt => rt.Rooms)
-                .ToListAsync();
+            var roomTypes = await _context.RoomTypes.Include(rt => rt.Rooms).ToListAsync();
 
             return roomTypes.Select(rt => new RoomTypeDTO
             {
@@ -33,17 +31,18 @@ namespace QuanTriKhachSanN5.Services
                 BasePrice = rt.BasePrice,
                 CapacityAdults = rt.CapacityAdults,
                 CapacityChildren = rt.CapacityChildren,
-                TotalRooms = rt.Rooms?.Count(r => r.Status != "Maintenance") ?? 0
+                TotalRooms = rt.Rooms?.Count(r => r.Status != "Maintenance") ?? 0,
             });
         }
 
         public async Task<RoomTypeDTO?> GetRoomTypeByIdAsync(int id)
         {
-            var roomType = await _context.RoomTypes
-                .Include(rt => rt.Rooms)
+            var roomType = await _context
+                .RoomTypes.Include(rt => rt.Rooms)
                 .FirstOrDefaultAsync(rt => rt.Id == id);
 
-            if (roomType == null) return null;
+            if (roomType == null)
+                return null;
 
             return new RoomTypeDTO
             {
@@ -53,7 +52,7 @@ namespace QuanTriKhachSanN5.Services
                 BasePrice = roomType.BasePrice,
                 CapacityAdults = roomType.CapacityAdults,
                 CapacityChildren = roomType.CapacityChildren,
-                TotalRooms = roomType.Rooms?.Count(r => r.Status != "Maintenance") ?? 0
+                TotalRooms = roomType.Rooms?.Count(r => r.Status != "Maintenance") ?? 0,
             };
         }
 
@@ -71,7 +70,7 @@ namespace QuanTriKhachSanN5.Services
                 Description = dto.Description,
                 BasePrice = dto.BasePrice,
                 CapacityAdults = dto.CapacityAdults,
-                CapacityChildren = dto.CapacityChildren
+                CapacityChildren = dto.CapacityChildren,
             };
 
             _context.RoomTypes.Add(roomType);
@@ -122,4 +121,3 @@ namespace QuanTriKhachSanN5.Services
         }
     }
 }
-

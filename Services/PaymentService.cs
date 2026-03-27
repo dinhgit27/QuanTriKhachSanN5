@@ -27,9 +27,8 @@ namespace QuanTriKhachSanN5.Services
             var invoice = new Invoice
             {
                 BookingId = bookingId,
-                TotalAmount = 0, // Sẽ tính sau
+                FinalTotal = 0, // Sẽ tính sau
                 Status = "Pending",
-                CreatedAt = System.DateTime.Now
             };
             _context.Invoices.Add(invoice);
             await _context.SaveChangesAsync();
@@ -43,9 +42,8 @@ namespace QuanTriKhachSanN5.Services
                 InvoiceId = invoiceId,
                 AmountPaid = amount,
                 PaymentMethod = method,
-                TransactionId = Guid.NewGuid().ToString(),
-                CreatedAt = System.DateTime.Now,
-                Status = "Completed"
+                TransactionCode = Guid.NewGuid().ToString(),
+                PaymentDate = System.DateTime.Now,
             };
             _context.Payments.Add(payment);
 
