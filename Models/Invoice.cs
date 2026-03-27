@@ -8,17 +8,15 @@ namespace QuanTriKhachSanN5.Models
     {
         [Key]
         public int Id { get; set; }
-        public int BookingId { get; set; }
-        public decimal RoomTotalCost { get; set; }
-        public decimal ServicesCost { get; set; }
-        public decimal DamageFee { get; set; }
-        public decimal VoucherDiscount { get; set; }
-        public decimal TotalAmount { get; set; }
-        
+
+        public int? BookingId { get; set; }
+        public decimal? TotalRoomAmount { get; set; }
+        public decimal? TotalServiceAmount { get; set; }
+        public decimal? DiscountAmount { get; set; }
+        public decimal? TaxAmount { get; set; }
+        public decimal? FinalTotal { get; set; }
+
         [StringLength(50)]
-        public string Status { get; set; } = "Pending"; 
-        
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        public string? Status { get; set; } = "Unpaid";
     }
 }

@@ -8,18 +8,17 @@ namespace QuanTriKhachSanN5.Models
     {
         [Key]
         public int Id { get; set; }
-        public int InvoiceId { get; set; }
-        
+
+        public int? InvoiceId { get; set; }
+
         [StringLength(50)]
-        public string PaymentMethod { get; set; } = null!;
+        public string? PaymentMethod { get; set; }
+
         public decimal AmountPaid { get; set; }
-        
+
         [StringLength(100)]
-        public string TransactionId { get; set; }
-        
-        [StringLength(50)]
-        public string Status { get; set; } = "Success";
-        
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public string? TransactionCode { get; set; }
+
+        public DateTime? PaymentDate { get; set; } = DateTime.Now;
     }
 }
