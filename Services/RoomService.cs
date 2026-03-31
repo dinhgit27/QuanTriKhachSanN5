@@ -42,5 +42,21 @@ namespace QuanTriKhachSanN5.Services
                 await _context.SaveChangesAsync();
             }
         }
+        public async Task UpdateRoomAsync(Room room)
+        {
+            _context.Rooms.Update(room);
+            await _context.SaveChangesAsync();
+        }
+
+        // Hàm xử lý logic Xóa phòng
+        public async Task DeleteRoomAsync(int id)
+        {
+            var room = await _context.Rooms.FindAsync(id);
+            if (room != null)
+            {
+                _context.Rooms.Remove(room);
+                await _context.SaveChangesAsync();
+            }
+        }
     }
 }
