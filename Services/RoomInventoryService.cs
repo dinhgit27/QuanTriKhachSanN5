@@ -1,5 +1,5 @@
 // =========================================================================
-// MODULE 3: ROOM INVENTORY - SERVICE
+// MODULE 3: ROOM INVENTORY - SERVICE (BẢN FULL OPTION)
 // =========================================================================
 
 using System.Collections.Generic;
@@ -48,7 +48,52 @@ namespace QuanTriKhachSanN5.Services
 
         public async Task<List<Room_Inventory>> GetRoomInventoryAsync(int roomId)
         {
-            return await _context.RoomInventories.Where(ri => ri.RoomId == roomId).Include(ri => ri.Amenity).ToListAsync();
+            return await _context.RoomInventories
+                .Where(ri => ri.RoomId == roomId)
+                .Include(ri => ri.Amenity)
+                .ToListAsync();
+        }
+
+        // =========================================================
+        // CÁC HÀM MỚI BỔ SUNG ĐỂ REACT KHÔNG BỊ LỖI 404/500
+        // =========================================================
+
+        public async Task<List<Room_Inventory>> GetAllInventoriesAsync()
+        {
+            // Lấy tất cả vật tư, nhớ Include để React lấy được tên Phòng và tên Vật tư
+            return await _context.RoomInventories
+                .Include(ri => ri.Room)
+                .Include(ri => ri.Amenity)
+                .ToListAsync();
+        }
+
+        public async Task AddRoomInventoryAsync(Room_Inventory inventory)
+        {
+            _context.RoomInventories.Add(inventory);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdateRoomInventoryAsync(Room_Inventory inventory)
+        {
+            _context.RoomInventories.Update(inventory);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteRoomInventoryAsync(int id)
+        {
+            var inventory = await _context.RoomInventories.FindAsync(id);
+            if (inventory != null)
+            {
+                _context.RoomInventories.Remove(inventory);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task AddRoomImageAsync(Room_Image image)
+        {
+            // Lưu ý: Trong file ApplicationDbContext.cs của ní phải có public DbSet<Room_Image> RoomImages { get; set; } nha
+            _context.Add(image); 
+            await _context.SaveChangesAsync();
         }
     }
 }

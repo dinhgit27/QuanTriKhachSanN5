@@ -1,7 +1,3 @@
-// =========================================================================
-// MODULE 3: ROOM INVENTORY - CONTROLLER
-// =========================================================================
-
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
@@ -22,6 +18,41 @@ namespace QuanTriKhachSanN5.Controllers
             _roomService = roomService;
         }
 
+        // =========================================================
+        // 0. API LẤY TẤT CẢ VẬT TƯ (Bơm máu cho bảng React)
+        // =========================================================
+        [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
+        [HttpGet]
+        public async Task<ActionResult<List<Room_Inventory>>> GetAllInventories()
+        {
+            // (Nếu Service của ní chưa có hàm này thì phải qua Service viết thêm nhé)
+            var inventories = await _roomService.GetAllInventoriesAsync();
+            return Ok(inventories);
+        }
+
+        // Bổ sung API Sửa vật tư (Cho nút Sửa bên React)
+        [Authorize(Roles = "Admin")]
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateInventory(int id, [FromBody] Room_Inventory inventory)
+        {
+            if (id != inventory.Id) return BadRequest(new { message = "ID không khớp!" });
+            await _roomService.UpdateRoomInventoryAsync(inventory);
+            return NoContent();
+        }
+
+        // Bổ sung API Xóa vật tư (Cho nút Xóa bên React)
+        [Authorize(Roles = "Admin")]
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteInventory(int id)
+        {
+            await _roomService.DeleteRoomInventoryAsync(id);
+            return NoContent();
+        }
+
+        // =========================================================
+        // CÁC API CŨ CỦA NÍ ĐÃ ĐƯỢC CHUẨN HÓA LẠI
+        // =========================================================
+
         [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
         [HttpGet("rooms")]
         public async Task<ActionResult<List<Room>>> GetRooms()
@@ -40,7 +71,7 @@ namespace QuanTriKhachSanN5.Controllers
             return Ok(room);
         }
 
-        [Authorize(Roles = "Admin,Receptionist,Housekeeping")] // Buồng phòng dọn xong gọi API này đổi từ Dirty sang Clean
+        [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
         [HttpPut("rooms/{id}/status")]
         public async Task<IActionResult> UpdateRoomStatus(int id, [FromBody] string status)
         {
@@ -59,25 +90,20 @@ namespace QuanTriKhachSanN5.Controllers
         // =========================================================
         // 1. GÁN VẬT TƯ / TIỆN ÍCH CHO PHÒNG
         // =========================================================
-        [Authorize(Roles = "Admin")] // Việc thiết lập vật tư ban đầu do Quản lý làm
+        [Authorize(Roles = "Admin")]
         [HttpPost("rooms/{roomId}/inventory")]
-        public async Task<IActionResult> AssignAmenityToRoom(
-            int roomId,
-            [FromBody] Room_Inventory inventory
-        )
+        public async Task<IActionResult> AssignAmenityToRoom(int roomId, [FromBody] Room_Inventory inventory)
         {
             if (roomId != inventory.RoomId)
-                return BadRequest("ID phòng không khớp.");
+                return BadRequest(new { message = "ID phòng không khớp." });
 
-            // Lưu ý: Nhớ thêm hàm AddRoomInventoryAsync vào IRoomInventoryService và RoomInventoryService của bạn
-            // await _roomService.AddRoomInventoryAsync(inventory);
+            // ĐÃ MỞ COMMENT ĐỂ LƯU THẬT XUỐNG SQL
+            await _roomService.AddRoomInventoryAsync(inventory);
 
-            return Ok(
-                new { Message = "Đã gán vật tư/tiện ích cho phòng thành công!", Data = inventory }
-            );
+            return Ok(new { Message = "Đã gán vật tư cho phòng thành công!", Data = inventory });
         }
 
-        [Authorize(Roles = "Admin,Receptionist,Housekeeping")] // Buồng phòng kiểm tra vật tư (khăn, nước) trong phòng
+        [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
         [HttpGet("rooms/{roomId}/inventory")]
         public async Task<ActionResult<List<Room_Inventory>>> GetRoomInventory(int roomId)
         {
@@ -86,16 +112,19 @@ namespace QuanTriKhachSanN5.Controllers
         }
 
         // =========================================================
-        // 2. THÊM HÌNH ẢNH CHO PHÒNG
+        // 2. THÊM HÌNH ẢNH (Đã sửa lại thành RoomTypeId cho khớp Model và SQL)
         // =========================================================
         [Authorize(Roles = "Admin")]
-        [HttpPost("rooms/{roomId}/images")]
-        public async Task<IActionResult> AddRoomImage(int roomId, [FromBody] Room_Image image)
+        [HttpPost("roomtypes/{roomTypeId}/images")] 
+        public async Task<IActionResult> AddRoomImage(int roomTypeId, [FromBody] Room_Image image)
         {
-            // Lưu ý: Nhớ thêm hàm AddRoomImageAsync vào IRoomInventoryService và RoomInventoryService của bạn
-            // await _roomService.AddRoomImageAsync(image);
+            if (roomTypeId != image.RoomTypeId)
+                return BadRequest(new { message = "ID loại phòng không khớp." });
 
-            return Ok(new { Message = "Đã thêm hình ảnh phòng thành công!", Data = image });
+            // ĐÃ MỞ COMMENT ĐỂ LƯU THẬT XUỐNG SQL
+            await _roomService.AddRoomImageAsync(image);
+
+            return Ok(new { Message = "Đã thêm hình ảnh loại phòng thành công!", Data = image });
         }
     }
 }
