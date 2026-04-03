@@ -45,10 +45,8 @@ namespace QuanTriKhachSanN5.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+            
 
-            // =================================================================
-            // ÉP EF CORE TÌM ĐÚNG TÊN BẢNG TRONG SQL (DỨT ĐIỂM LỖI 400/500)
-            // =================================================================
             modelBuilder.Entity<RoomType>().ToTable("Room_Types"); 
             modelBuilder.Entity<LossAndDamage>().ToTable("Loss_And_Damages");
             modelBuilder.Entity<BookingDetail>().ToTable("Booking_Details");

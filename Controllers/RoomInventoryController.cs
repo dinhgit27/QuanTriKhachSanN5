@@ -158,5 +158,35 @@ namespace QuanTriKhachSanN5.Controllers
 
             return Ok(new { Message = "Đã thêm hình ảnh loại phòng thành công!", Data = image });
         }
+        // =========================================================
+        // API CHUYÊN DỤNG CHO DỌN PHÒNG (HOUSEKEEPING)
+        // =========================================================
+        [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
+        [HttpPut("rooms/{id}/mark-clean")]
+        public async Task<IActionResult> MarkRoomAsClean(int id)
+        {
+            try
+            {
+                var room = await _context.Rooms.FindAsync(id);
+                if (room == null) return NotFound(new { message = "Không tìm thấy phòng!" });
+
+                // 1. Đổi trạng thái chính thành Phòng trống
+                room.Status = "Available";
+
+                // 2. Đổi trạng thái Dọn dẹp thành Sạch sẽ (Clean)
+                // 💡 LƯU Ý: Nếu file Models/Room.cs của ní đặt tên biến là khác (VD: HousekeepingStatus)
+                // thì ní tự sửa lại chữ CleaningStatus ở dòng dưới cho khớp nha!
+                room.CleaningStatus = "Clean"; 
+
+                _context.Rooms.Update(room);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { message = "Đã dọn phòng sạch sẽ!" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = "Lỗi SQL: " + ex.Message });
+            }
+        }
     }
 }

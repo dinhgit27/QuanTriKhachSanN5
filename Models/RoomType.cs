@@ -4,12 +4,15 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace QuanTriKhachSanN5.Models
 {
+    [Table("Room_Types")]
     public class RoomType
     {
         [Key]
+        [Column("id")] // Ép chữ thường theo SQL
         public int Id { get; set; }
 
         [Required]
+        [Column("name")] // Ép chữ thường
         public string Name { get; set; } = string.Empty;
 
         [Column("base_price")]
@@ -21,27 +24,28 @@ namespace QuanTriKhachSanN5.Models
         [Column("capacity_children")]
         public int CapacityChildren { get; set; }
 
+        [Column("description")] // Ép chữ thường
         public string? Description { get; set; }
 
         [Column("size_sqm")]
-        public double? SizeSqm { get; set; } // Diện tích phòng (Để double hoặc decimal cho an toàn)
+        public double? SizeSqm { get; set; } 
 
         [Column("bed_type")]
-        public string? BedType { get; set; } // Loại giường
+        public string? BedType { get; set; } 
 
         [Column("view_type")]
-        public string? ViewType { get; set; } // View phòng
+        public string? ViewType { get; set; } 
 
         [Column("is_active")]
         public bool IsActive { get; set; } = true;
 
+        [Column("slug")] // Ép chữ thường
         public string? Slug { get; set; }
 
+        [Column("content")] // Ép chữ thường
         public string? Content { get; set; }
 
-        // --- KẾT THÚC PHẦN ĐẮP THÊM ---
-
-        // Navigation properties (Thêm dấu ? để không bị dính lỗi validation)
+        // Navigation properties
         public ICollection<Room>? Rooms { get; set; }
     }
 }
