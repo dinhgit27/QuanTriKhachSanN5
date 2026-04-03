@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using QuanTriKhachSanN5.Models;
+using System.Linq;
 
 namespace QuanTriKhachSanN5.Data
 {
@@ -14,7 +15,10 @@ namespace QuanTriKhachSanN5.Data
         public DbSet<Room> Rooms { get; set; }
         public DbSet<RoomType> RoomTypes { get; set; }
         public DbSet<Booking> Bookings { get; set; }
-        public DbSet<Booking_Detail> BookingDetails { get; set; }
+        
+        // Đã đồng nhất tên class thành BookingDetail để không bị lỗi
+        public DbSet<BookingDetail> BookingDetails { get; set; }
+        
         public DbSet<Article> Articles { get; set; }
         public DbSet<Article_Category> ArticleCategories { get; set; }
         public DbSet<Attraction> Attractions { get; set; }
@@ -43,21 +47,16 @@ namespace QuanTriKhachSanN5.Data
             base.OnModelCreating(modelBuilder);
 
             // =================================================================
-            // 🚀 BƯỚC FIX LỖI SQL TRƯỚC KHI ĐI ĂN TRƯA
-            // Ép EF Core tìm đúng tên bảng trong SQL (Không tự thêm chữ 's')
+            // ÉP EF CORE TÌM ĐÚNG TÊN BẢNG TRONG SQL (DỨT ĐIỂM LỖI 400/500)
             // =================================================================
             modelBuilder.Entity<RoomType>().ToTable("Room_Types"); 
             modelBuilder.Entity<LossAndDamage>().ToTable("Loss_And_Damages");
-            
-            // 💡 LƯU Ý NHỎ: Nếu trong SQL Server của ní, bảng đó tên là "Room_Type" 
-            // thì ní sửa dòng trên thành: modelBuilder.Entity<RoomType>().ToTable("Room_Type");
-            
-            // Ép thêm bảng Room cho chắc cú (tránh nó tìm bảng Rooms nếu trong DB là Room)
+            modelBuilder.Entity<BookingDetail>().ToTable("Booking_Details");
             modelBuilder.Entity<Room>().ToTable("Rooms"); 
 
-            // 1. Giải quyết lỗi ĐỎ: Ngắt vòng lặp xóa dây chuyền (Multiple Cascade Paths)
+            // 1. Giải quyết lỗi Multiple Cascade Paths
             modelBuilder
-                .Entity<Booking_Detail>()
+                .Entity<BookingDetail>() // Đã sửa lại thành BookingDetail
                 .HasOne(bd => bd.RoomType)
                 .WithMany()
                 .HasForeignKey(bd => bd.RoomTypeId)
@@ -83,7 +82,7 @@ namespace QuanTriKhachSanN5.Data
 
             modelBuilder.Entity<Role_Permission>().HasKey(x => new { x.RoleId, x.PermissionId });
             
-            // 2. Giải quyết lỗi VÀNG: Định dạng tất cả kiểu thập phân thành decimal(18,2)
+            // 2. Định dạng tất cả kiểu thập phân thành decimal(18,2)
             foreach (
                 var property in modelBuilder
                     .Model.GetEntityTypes()

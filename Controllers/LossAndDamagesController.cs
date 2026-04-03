@@ -4,8 +4,10 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using QuanTriKhachSanN5.Interfaces;
 using QuanTriKhachSanN5.Models;
+using QuanTriKhachSanN5.Data;
 
 namespace QuanTriKhachSanN5.Controllers
 {
@@ -14,34 +16,65 @@ namespace QuanTriKhachSanN5.Controllers
     public class LossAndDamagesController : ControllerBase
     {
         private readonly ILossAndDamageService _lossService;
+        private readonly ApplicationDbContext _context;
 
-        public LossAndDamagesController(ILossAndDamageService lossService)
+        // Tiêm thêm ApplicationDbContext để truy vấn chéo dữ liệu
+        public LossAndDamagesController(ILossAndDamageService lossService, ApplicationDbContext context)
         {
             _lossService = lossService;
+            _context = context;
         }
 
         [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
         [HttpPost]
         public async Task<IActionResult> ReportLoss([FromBody] LossAndDamage report)
         {
-           try 
+            try 
             {
-                // Bổ sung mặc định nếu React quên gửi
                 report.CreatedAt = DateTime.Now;
                 if (string.IsNullOrEmpty(report.Status)) report.Status = "Chưa đền bù";
 
+                // 2. Tìm vật tư thuộc phòng nào
+                var roomInventory = await _context.RoomInventories.FindAsync(report.RoomInventoryId);
+                if (roomInventory == null) 
+                    return BadRequest(new { message = "Lỗi: Không tìm thấy vật tư này trong cơ sở dữ liệu." });
+
+                // 3. Truy xuất hóa đơn gần nhất của phòng này
+                var currentBooking = await _context.BookingDetails
+                    .Where(bd => bd.RoomId == roomInventory.RoomId)
+                    .OrderByDescending(bd => bd.CheckOutDate)
+                    .FirstOrDefaultAsync();
+
+                // 4. Xử lý logic khóa ngoại (BookingDetailId)
+                if (currentBooking != null)
+                {
+                    report.BookingDetailId = currentBooking.Id;
+                }
+                else
+                {
+                    var fallbackBooking = await _context.BookingDetails.FirstOrDefaultAsync();
+                    if (fallbackBooking == null) 
+                        return BadRequest(new { message = "Lỗi DB: Bảng Booking_Details đang trống, không thể tạo khóa ngoại." });
+                    
+                    report.BookingDetailId = fallbackBooking.Id;
+                }
+
+                // 5. Lưu Biên bản đền bù vào SQL
                 var createdReport = await _lossService.CreateLossAndDamageAsync(report);
+
+                // =========================================================
+                // 6. FIX LỖI TỰ KHÔI PHỤC: Cập nhật trạng thái vật tư thành "Đã hỏng" (false)
+                // =========================================================
+                roomInventory.IsActive = false;
+                _context.RoomInventories.Update(roomInventory);
+                await _context.SaveChangesAsync();
+
                 return Ok(createdReport);
             }
             catch (Exception ex)
             {
-                // In ra terminal màn hình đen để anh em mình bắt bệnh ngay lập tức
-                Console.WriteLine("============= LỖI POST ĐỀN BÙ =============");
-                Console.WriteLine("Lỗi chính: " + ex.Message);
-                if (ex.InnerException != null) Console.WriteLine("Chi tiết SQL: " + ex.InnerException.Message);
-                
-                // Trả về thẳng lỗi lên màn hình React
-                return StatusCode(500, new { message = ex.InnerException?.Message ?? ex.Message });
+                var exactError = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                return BadRequest(new { message = exactError });
             }
         }
 
@@ -53,17 +86,16 @@ namespace QuanTriKhachSanN5.Controllers
             {
                 var rawData = await _lossService.GetAllLossAndDamagesAsync(); 
 
-                // MAP CHUẨN XÁC VỚI CỘT TRONG SQL CỦA NÍ
                 var data = rawData.Select(ld => new {
                     Id = ld.Id,
-                    BookingDetailId = ld.BookingDetailId,   // Khớp với booking_detail_id
-                    RoomInventoryId = ld.RoomInventoryId,   // Khớp với room_inventory_id
-                    Quantity = ld.Quantity,                 // Khớp với quantity
-                    PenaltyAmount = ld.PenaltyAmount,       // Khớp với penalty_amount
-                    Description = ld.Description,           // Khớp với description
-                    CreatedAt = ld.CreatedAt,               // Khớp với created_at
-                    ImageUrl = ld.ImageUrl,                 // Khớp với ImageUrl
-                    Status = ld.Status                      // Khớp với status
+                    BookingDetailId = ld.BookingDetailId,
+                    RoomInventoryId = ld.RoomInventoryId,
+                    Quantity = ld.Quantity,
+                    PenaltyAmount = ld.PenaltyAmount,
+                    Description = ld.Description,
+                    CreatedAt = ld.CreatedAt,
+                    ImageUrl = ld.ImageUrl,
+                    Status = ld.Status
                 }).ToList();
 
                 return Ok(data);
@@ -115,8 +147,23 @@ namespace QuanTriKhachSanN5.Controllers
         public async Task<IActionResult> UpdateStatus(int id, [FromBody] string status)
         {
             var success = await _lossService.UpdateStatusAsync(id, status);
-            
             if (!success) return NotFound();
+
+            // 2. LOGIC VÀNG: Nếu Lễ tân "Hủy", tự động khôi phục vật tư thành Hoạt động tốt
+            if (status == "Đã hủy" || status == "Hủy")
+            {
+                var lossReport = await _context.LossAndDamages.FindAsync(id);
+                if (lossReport != null)
+                {
+                    var inventory = await _context.RoomInventories.FindAsync(lossReport.RoomInventoryId);
+                    if (inventory != null)
+                    {
+                        inventory.IsActive = true;
+                        _context.RoomInventories.Update(inventory);
+                        await _context.SaveChangesAsync();
+                    }
+                }
+            }
 
             return Ok(new { message = "Cập nhật trạng thái thành công!" });
         }

@@ -21,6 +21,12 @@ namespace QuanTriKhachSanN5.DTOs.RoomType
 
         [Range(0, 5, ErrorMessage = "Sức chứa trẻ em từ 0-5")]
         public int CapacityChildren { get; set; } = 0;
+        public double? SizeSqm { get; set; }
+        public string? BedType { get; set; }
+        public string? ViewType { get; set; }
+        public bool IsActive { get; set; } = true;
+        public string? Slug { get; set; }
+        public string? Content { get; set; }
     }
 }
 

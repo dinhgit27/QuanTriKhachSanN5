@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QuanTriKhachSanN5.Interfaces;
 using QuanTriKhachSanN5.Models;
+using QuanTriKhachSanN5.Data; // Bắt buộc phải có để xài DB Context
 
 namespace QuanTriKhachSanN5.Controllers
 {
@@ -13,10 +14,38 @@ namespace QuanTriKhachSanN5.Controllers
     public class RoomInventoryController : ControllerBase
     {
         private readonly IRoomInventoryService _roomService;
+        private readonly ApplicationDbContext _context; // Khai báo thêm DB Context
 
-        public RoomInventoryController(IRoomInventoryService roomService)
+        // Tiêm ApplicationDbContext vào hàm khởi tạo
+        public RoomInventoryController(IRoomInventoryService roomService, ApplicationDbContext context)
         {
             _roomService = roomService;
+            _context = context;
+        }
+
+        // =========================================================
+        // API KHÔI PHỤC VẬT TƯ (CHO NÚT "ĐÃ THAY MỚI" CỦA KỸ THUẬT)
+        // =========================================================
+        [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
+        [HttpPut("restore/{id}")]
+        public async Task<IActionResult> RestoreInventory(int id)
+        {
+            try
+            {
+                var inventory = await _context.RoomInventories.FindAsync(id);
+                if (inventory == null) return NotFound(new { message = "Không tìm thấy vật tư này." });
+
+                // Chốt trạng thái "Hoạt động tốt" (true) vĩnh viễn xuống SQL
+                inventory.IsActive = true;
+                _context.RoomInventories.Update(inventory);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { message = "Đã khôi phục vật tư thành công!" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = "Lỗi SQL: " + ex.Message });
+            }
         }
 
         // =========================================================
@@ -30,7 +59,6 @@ namespace QuanTriKhachSanN5.Controllers
             return Ok(inventories);
         }
 
-        // Bổ sung API Sửa vật tư (Cho nút Sửa bên React)
         [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateInventory(int id, [FromBody] Room_Inventory inventory)
@@ -40,7 +68,6 @@ namespace QuanTriKhachSanN5.Controllers
             return NoContent();
         }
 
-        // Bổ sung API Xóa vật tư (Cho nút Xóa bên React)
         [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteInventory(int id)
@@ -59,9 +86,7 @@ namespace QuanTriKhachSanN5.Controllers
         {
             try 
             {
-                // SỬA TẠI ĐÂY: Đổi _roomInventoryService thành _roomService
                 var rooms = await _roomService.GetRoomsAsync();
-                
                 return Ok(rooms);
             }
             catch (Exception ex) 
