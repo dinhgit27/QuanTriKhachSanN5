@@ -10,11 +10,11 @@
         "projectUniqueName": "C:\\QuanTriKhachSanN5\\QuanTriKhachSanN5.csproj",
         "projectName": "QuanTriKhachSanN5",
         "projectPath": "C:\\QuanTriKhachSanN5\\QuanTriKhachSanN5.csproj",
-        "packagesPath": "C:\\Users\\DINH\\.nuget\\packages\\",
+        "packagesPath": "C:\\Users\\PHI HUNG\\.nuget\\packages\\",
         "outputPath": "C:\\QuanTriKhachSanN5\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\DINH\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\PHI HUNG\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
