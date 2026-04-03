@@ -57,6 +57,7 @@ namespace QuanTriKhachSanN5.Controllers
         {
             var user = await _context
                 .Users.Include(u => u.UserRoles)
+                    .Include(u => u.UserRoles)            
                     .ThenInclude(ur => ur.Role)
                         .ThenInclude(r => r.RolePermissions)
                             .ThenInclude(rp => rp.Permission)
@@ -145,7 +146,8 @@ namespace QuanTriKhachSanN5.Controllers
                 user = new { 
                     id = user.Id, 
                     email = user.Email, 
-                    fullName = user.FullName 
+                    fullName = user.FullName,
+                    roleName = user.UserRoles.FirstOrDefault()?.Role.Name 
                 },
                 permissions = permissions
             });
