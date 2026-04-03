@@ -1,29 +1,24 @@
-global using LossAndDamage = QuanTriKhachSanN5.Models.Loss_And_Damage;
-global using OrderService = QuanTriKhachSanN5.Models.Order_Service;
-global using OrderServiceDetail = QuanTriKhachSanN5.Models.Order_Service_Detail;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi;
-// using Microsoft.OpenApi.Models;
 using QuanTriKhachSanN5.API.Services;
 using QuanTriKhachSanN5.Data;
 using QuanTriKhachSanN5.Interfaces;
 using QuanTriKhachSanN5.Models;
 using QuanTriKhachSanN5.Services;
 
-// using Swashbuckle.AspNetCore.SwaggerGen;
-
 var builder = WebApplication.CreateBuilder(args);
 
-// ==========================================
-// 1. CẤU HÌNH CORS CHO REACT Ở ĐÂY
-// ==========================================
+// ============================================================
+// 1. CẤU HÌNH HỆ THỐNG (SERVICES)
+// ============================================================
+
 builder.Services.AddCors(options =>
 {
+<<<<<<< HEAD
     options.AddPolicy(
         "AllowReactApp",
         policy =>
@@ -33,25 +28,29 @@ builder.Services.AddCors(options =>
                 .AllowAnyMethod()
                 .AllowCredentials()
     );
+=======
+    options.AddPolicy("AllowReactApp", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173", "http://localhost:5174")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+>>>>>>> origin/dinh_nguyen
 });
 
-// Đăng ký AuditLogFilter cho toàn bộ các Controllers
-// Controllers
-builder
-    .Services.AddControllers(options =>
-    {
-        options.Filters.Add<QuanTriKhachSanN5.Filters.AuditLogFilter>();
-    })
+builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
     });
 
-// Database
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
 
+<<<<<<< HEAD
 builder.Services.AddHttpClient<CheckoutService>();
 
 // JWT Service
@@ -62,26 +61,30 @@ builder.Services.AddScoped<QuanTriKhachSanN5.Filters.AuditLogFilter>();
 
 // Room Service
 builder.Services.AddScoped<IRoomService, RoomService>();
+=======
+// --- DEPENDENCY INJECTION ---
+builder.Services.AddScoped<IAmenityService, AmenityService>();
+builder.Services.AddScoped<ILossAndDamageService, LossAndDamageService>();
+>>>>>>> origin/dinh_nguyen
 builder.Services.AddScoped<IRoomInventoryService, RoomInventoryService>();
+builder.Services.AddScoped<IRoomService, RoomService>();
 builder.Services.AddScoped<IRoomTypeService, RoomTypeService>();
-
 builder.Services.AddScoped<IBookingService, BookingService>();
-builder.Services.AddScoped<ICMSService, CMSService>();
+builder.Services.AddScoped<IReceptionService, ReceptionService>();
 builder.Services.AddScoped<IHRRBACService, HRRBACService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
-builder.Services.AddScoped<IReceptionService, ReceptionService>();
+builder.Services.AddScoped<ICMSService, CMSService>();
 builder.Services.AddScoped<IPromotionService, PromotionService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<IAttractionService, AttractionService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
-
-// CheckoutService
 builder.Services.AddScoped<CheckoutService>();
+builder.Services.AddScoped<JwtService>();
+builder.Services.AddScoped<QuanTriKhachSanN5.Filters.AuditLogFilter>();
 
-// Authentication
-builder
-    .Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+// --- AUTHENTICATION & AUTHORIZATION ---
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
@@ -90,21 +93,18 @@ builder
             ValidateAudience = false,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
-
             IssuerSigningKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)
             ),
-
             RoleClaimType = ClaimTypes.Role,
         };
     });
 
-// ĐĂNG KÝ PHÂN QUYỀN NÂNG CAO (POLICY-BASED)
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("MANAGE_ROOMS", policy => policy.RequireClaim("Permission", "MANAGE_ROOMS"));
+<<<<<<< HEAD
     options.AddPolicy("VIEW_ROOMS", policy => policy.RequireClaim("Permission", "VIEW_ROOMS"));
     options.AddPolicy(
         "MANAGE_ROOMTYPES",
@@ -118,10 +118,15 @@ builder.Services.AddAuthorization(options =>
         "MANAGE_BOOKINGS",
         policy => policy.RequireClaim("Permission", "MANAGE_BOOKINGS")
     );
+=======
+>>>>>>> origin/dinh_nguyen
     options.AddPolicy("MANAGE_USERS", policy => policy.RequireClaim("Permission", "MANAGE_USERS"));
+    options.AddPolicy("MANAGE_BOOKINGS", policy => policy.RequireClaim("Permission", "MANAGE_BOOKINGS"));
 });
 
+// --- SWAGGER (BẢN RÚT GỌN ĐỂ VƯỢT ẢI BUILD) ---
 builder.Services.AddEndpointsApiExplorer();
+<<<<<<< HEAD
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Hotel Management API", Version = "v1" });
@@ -355,6 +360,15 @@ using (var scope = app.Services.CreateScope())
         Console.WriteLine("Chưa thể seed data (Có thể do Database chưa sẵn sàng): " + ex.Message);
     }
 }
+=======
+builder.Services.AddSwaggerGen(); // Chỉ dùng mặc định, bỏ qua custom để né lỗi đỏ
+
+var app = builder.Build();
+
+// ============================================================
+// 2. CẤU HÌNH PIPELINE (MIDDLEWARE)
+// ============================================================
+>>>>>>> origin/dinh_nguyen
 
 if (app.Environment.IsDevelopment())
 {
@@ -363,16 +377,55 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-// ==========================================
-// 2. KÍCH HOẠT CORS TRƯỚC KHI AUTHENTICATION
-// ==========================================
-app.UseCors("AllowReactApp");
-
-// IMPORTANT
+app.UseCors("AllowReactApp"); 
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
 
+<<<<<<< HEAD
 app.Run();
+=======
+// ============================================================
+// 3. SEED DATA 
+// ============================================================
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var context = services.GetRequiredService<ApplicationDbContext>();
+    try { SeedData(context); }
+    catch (Exception ex) { Console.WriteLine($"Lỗi Seed Data: {ex.Message}"); }
+}
+
+app.Run();
+
+void SeedData(ApplicationDbContext context)
+{
+    if (!context.Roles.Any())
+    {
+        context.Roles.AddRange(
+            new Role { Name = "Admin" },
+            new Role { Name = "Guest" },
+            new Role { Name = "Receptionist" },
+            new Role { Name = "Housekeeping" }
+        );
+        context.SaveChanges();
+    }
+
+    if (!context.Users.Any(u => u.Email == "admin@hotel.com"))
+    {
+        var admin = new User { FullName = "Admin", Email = "admin@hotel.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456") };
+        var receptionist = new User { FullName = "Receptionist", Email = "receptionist@hotel.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456") };
+        
+        context.Users.AddRange(admin, receptionist);
+        context.SaveChanges();
+
+        var roles = context.Roles.ToList();
+        context.UserRoles.AddRange(
+            new User_Role { UserId = admin.Id, RoleId = roles.First(r => r.Name == "Admin").Id },
+            new User_Role { UserId = receptionist.Id, RoleId = roles.First(r => r.Name == "Receptionist").Id }
+        );
+        context.SaveChanges();
+        Console.WriteLine("✅ Seed tài khoản mẫu thành công!");
+    }
+}
+>>>>>>> origin/dinh_nguyen

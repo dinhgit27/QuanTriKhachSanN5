@@ -10,6 +10,7 @@ namespace QuanTriKhachSanN5.Interfaces
         Task<Room> GetRoomByIdAsync(int id);
         Task CreateRoomAsync(Room room);
         Task UpdateRoomStatusAsync(int id, string status);
-        // Add other methods as needed
+        Task UpdateRoomAsync(Room room);
+        Task DeleteRoomAsync(int id);
     }
 }

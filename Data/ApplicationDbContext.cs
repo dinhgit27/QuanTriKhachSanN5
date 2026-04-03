@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using QuanTriKhachSanN5.Models;
+using System.Linq;
 
 namespace QuanTriKhachSanN5.Data
 {
@@ -14,7 +15,10 @@ namespace QuanTriKhachSanN5.Data
         public DbSet<Room> Rooms { get; set; }
         public DbSet<RoomType> RoomTypes { get; set; }
         public DbSet<Booking> Bookings { get; set; }
-        public DbSet<Booking_Detail> BookingDetails { get; set; }
+        
+        // Đã đồng nhất tên class thành BookingDetail để không bị lỗi
+        public DbSet<BookingDetail> BookingDetails { get; set; }
+        
         public DbSet<Article> Articles { get; set; }
         public DbSet<Article_Category> ArticleCategories { get; set; }
         public DbSet<Attraction> Attractions { get; set; }
@@ -23,7 +27,7 @@ namespace QuanTriKhachSanN5.Data
         public DbSet<Payment> Payments { get; set; }
         public DbSet<Order_Service> OrderServices { get; set; }
         public DbSet<Order_Service_Detail> OrderServiceDetails { get; set; }
-        public DbSet<Loss_And_Damage> LossAndDamages { get; set; }
+        public DbSet<LossAndDamage> LossAndDamages { get; set; }
 
         public DbSet<Amenity> Amenities { get; set; }
         public DbSet<Room_Inventory> RoomInventories { get; set; }
@@ -41,17 +45,25 @@ namespace QuanTriKhachSanN5.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+            
 
-            // 1. Giải quyết lỗi ĐỎ: Ngắt vòng lặp xóa dây chuyền (Multiple Cascade Paths)
+            modelBuilder.Entity<RoomType>().ToTable("Room_Types"); 
+            modelBuilder.Entity<LossAndDamage>().ToTable("Loss_And_Damages");
+            modelBuilder.Entity<BookingDetail>().ToTable("Booking_Details");
+            modelBuilder.Entity<Room>().ToTable("Rooms"); 
+
+            // 1. Giải quyết lỗi Multiple Cascade Paths
             modelBuilder
-                .Entity<Booking_Detail>()
+                .Entity<BookingDetail>() // Đã sửa lại thành BookingDetail
                 .HasOne(bd => bd.RoomType)
                 .WithMany()
                 .HasForeignKey(bd => bd.RoomTypeId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // Ép tên bảng trung gian
             modelBuilder.Entity<User_Role>().ToTable("User_Roles");
 
+            // Khai báo khóa chính kép (Composite Key)
             modelBuilder.Entity<User_Role>().HasKey(ur => new { ur.UserId, ur.RoleId });
 
             modelBuilder
@@ -67,7 +79,8 @@ namespace QuanTriKhachSanN5.Data
                 .HasForeignKey(ur => ur.RoleId);
 
             modelBuilder.Entity<Role_Permission>().HasKey(x => new { x.RoleId, x.PermissionId });
-            // 2. Giải quyết lỗi VÀNG: Định dạng tất cả kiểu thập phân thành decimal(18,2)
+            
+            // 2. Định dạng tất cả kiểu thập phân thành decimal(18,2)
             foreach (
                 var property in modelBuilder
                     .Model.GetEntityTypes()

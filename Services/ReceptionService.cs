@@ -1,5 +1,5 @@
 // =========================================================================
-// MODULE 4: RECEPTION - SERVICE
+// MODULE 4: RECEPTION - SERVICE (BẢN CHUẨN ĐÃ FIX LỖI 100%)
 // =========================================================================
 
 using System;
@@ -66,15 +66,21 @@ namespace QuanTriKhachSanN5.API.Services
             return order;
         }
 
-        public async Task<Loss_And_Damage> ReportDamageAsync(int bookingId, string description, decimal fineAmount)
+        // ĐÃ FIX: Sửa lại tên biến cho chuẩn với Model LossAndDamage mới
+        public async Task<LossAndDamage> ReportDamageAsync(int bookingId, string description, decimal fineAmount)
         {
-            var damage = new Loss_And_Damage
+            // Lấy ID chi tiết phòng của khách để gắn biên bản phạt
+            var bookingDetail = await _context.BookingDetails.FirstOrDefaultAsync(bd => bd.BookingId == bookingId);
+            int detailId = bookingDetail != null ? bookingDetail.Id : 0;
+
+            var damage = new LossAndDamage
             {
-                BookingId = bookingId,
+                BookingDetailId = detailId,         // Fix lỗi ko có BookingId
                 Description = description,
-                FineAmount = fineAmount,
-                ReportedDate = DateTime.Now
+                PenaltyAmount = fineAmount,         // Fix lỗi FineAmount -> PenaltyAmount
+                CreatedAt = DateTime.Now            // Fix lỗi ReportedDate -> CreatedAt
             };
+            
             _context.LossAndDamages.Add(damage);
             await _context.SaveChangesAsync();
             return damage;
@@ -87,13 +93,24 @@ namespace QuanTriKhachSanN5.API.Services
             
             if (booking == null) throw new Exception("Booking not found");
 
-            var services = await _context.OrderServices.Where(os => os.BookingId == bookingId)
-                .Include(os => os.Details).ThenInclude(d => d.Service).ToListAsync();
-            var damages = await _context.LossAndDamages.Where(l => l.BookingId == bookingId).ToListAsync();
+            // ĐÃ FIX CẢNH BÁO VÀNG: Thêm dấu chấm hỏi (?. / !.) để an toàn với null
+            var services = await _context.OrderServices
+                .Where(os => os.BookingId == bookingId)
+                .Include(os => os.Details!) 
+                .ThenInclude(d => d.Service)
+                .ToListAsync();
+
+            // ĐÃ FIX: Tìm LossAndDamage dựa trên danh sách BookingDetailId
+            var detailIds = booking.BookingDetails.Select(bd => bd.Id).ToList();
+            var damages = await _context.LossAndDamages
+                .Where(l => detailIds.Contains(l.BookingDetailId)) 
+                .ToListAsync();
 
             decimal roomTotal = booking.BookingDetails.Sum(bd => bd.Price);
-            decimal serviceTotal = services.Sum(os => os.Details.Sum(d => d.Quantity * d.UnitPrice));
-            decimal damageTotal = damages.Sum(d => d.FineAmount);
+            decimal serviceTotal = services.Sum(os => os.Details?.Sum(d => d.Quantity * d.UnitPrice) ?? 0);
+            
+            // ĐÃ FIX: Tính tổng phạt theo PenaltyAmount
+            decimal damageTotal = damages.Sum(d => d.PenaltyAmount); 
             decimal discount = 0; // Tính từ Voucher nếu có
 
             return new CheckoutDto

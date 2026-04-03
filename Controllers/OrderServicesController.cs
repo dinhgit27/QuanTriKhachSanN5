@@ -3,6 +3,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuanTriKhachSanN5.Data;
 using QuanTriKhachSanN5.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace QuanTriKhachSanN5.Controllers
 {
@@ -17,36 +21,43 @@ namespace QuanTriKhachSanN5.Controllers
             _context = context;
         }
 
-        // =========================
-        // GET ALL ORDER
-        // =========================
-        [Authorize(Roles = "Admin,Receptionist")] // Chỉ Lễ tân và Quản lý mới được xem toàn bộ danh sách đơn
+        // ============================================================
+        // 1. LẤY TOÀN BỘ ĐƠN DỊCH VỤ
+        // ============================================================
+        [Authorize(Roles = "Admin,Receptionist")]
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<OrderService>>> GetAll()
+        public async Task<ActionResult<IEnumerable<Order_Service>>> GetAll()
         {
-            return await _context.OrderServices.ToListAsync();
+            return await _context.OrderServices
+                .Include(o => o.Details)
+                .ThenInclude(d => d.Service)
+                .OrderByDescending(o => o.OrderDate)
+                .ToListAsync();
         }
 
-        // =========================
-        // GET BY ID
-        // =========================
-        [Authorize] // Bất kỳ ai đăng nhập (Khách, Lễ tân...) đều có thể xem chi tiết đơn
+        // ============================================================
+        // 2. LẤY CHI TIẾT 1 ĐƠN HÀNG
+        // ============================================================
+        [Authorize]
         [HttpGet("{id}")]
-        public async Task<ActionResult<OrderService>> GetById(int id)
+        public async Task<ActionResult<Order_Service>> GetById(int id)
         {
-            var order = await _context.OrderServices.FindAsync(id);
+            var order = await _context.OrderServices
+                .Include(o => o.Details)
+                .ThenInclude(d => d.Service)
+                .FirstOrDefaultAsync(o => o.Id == id);
 
-            if (order == null)
-                return NotFound();
+            if (order == null) return NotFound("Không tìm thấy đơn dịch vụ.");
 
             return order;
         }
 
-        // =========================
-        // KHÁCH GỌI DỊCH VỤ
-        // =========================
-        [Authorize(Roles = "Guest,Receptionist,Admin")] // Khách hàng tự đặt hoặc Lễ tân đặt hộ
+        // ============================================================
+        // 3. TẠO ĐƠN DỊCH VỤ MỚI
+        // ============================================================
+        [Authorize(Roles = "Guest,Receptionist,Admin")]
         [HttpPost("order")]
+<<<<<<< HEAD
         public IActionResult CreateOrder([FromBody] OrderRequest request)
         {
             // 0. Lấy thông tin BookingId từ BookingDetail
@@ -99,40 +110,110 @@ namespace QuanTriKhachSanN5.Controllers
 
             return Ok(order);
         }
-
-        // =========================
-        // CẬP NHẬT TRẠNG THÁI
-        // =========================
-        [Authorize(Roles = "Admin,Receptionist")] // Chỉ nhân viên mới được phép duyệt/cập nhật trạng thái
-        [HttpPut("{id}/status")]
-        public async Task<IActionResult> UpdateStatus(int id, string status)
+=======
+        public async Task<IActionResult> CreateOrder([FromBody] OrderRequest request)
         {
-            var order = await _context.OrderServices.FindAsync(id);
+            var bookingDetail = await _context.BookingDetails.FindAsync(request.BookingDetailId);
+            
+            if (bookingDetail == null)
+                return BadRequest("Không tìm thấy thông tin đặt phòng.");
 
-            if (order == null)
-                return NotFound();
+            var order = new Order_Service
+            {
+                BookingDetailId = request.BookingDetailId,
+                BookingId = bookingDetail.BookingId, 
+                OrderDate = DateTime.Now,
+                Status = "Pending",
+                TotalAmount = 0,
+                Details = new List<Order_Service_Detail>()
+            };
 
-            order.Status = status;
+            decimal total = 0;
 
+            if (request.Items != null && request.Items.Any())
+            {
+                foreach (var item in request.Items)
+                {
+                    var service = await _context.Services.FindAsync(item.ServiceId);
+                    if (service == null) continue;
+
+                    var detail = new Order_Service_Detail
+                    {
+                        ServiceId = item.ServiceId,
+                        Quantity = item.Quantity,
+                        UnitPrice = service.Price
+                    };
+>>>>>>> origin/dinh_nguyen
+
+                    order.Details.Add(detail);
+                    total += item.Quantity * service.Price;
+                }
+            }
+
+            order.TotalAmount = total;
+            _context.OrderServices.Add(order);
             await _context.SaveChangesAsync();
 
-            return Ok("Cập nhật trạng thái thành công");
+            return Ok(order);
         }
 
+<<<<<<< HEAD
         [Authorize(Roles = "Admin,Receptionist")] // Chỉ nhân viên mới được hủy đơn
+=======
+        // ============================================================
+        // 4. CẬP NHẬT TRẠNG THÁI
+        // ============================================================
+        [Authorize(Roles = "Admin,Receptionist")]
+        [HttpPut("{id}/status")]
+        public async Task<IActionResult> UpdateStatus(int id, [FromBody] string status)
+        {
+            var order = await _context.OrderServices.FindAsync(id);
+            if (order == null) return NotFound();
+
+            order.Status = status;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Thành công" });
+        }
+
+        // ============================================================
+        // 5. HỦY ĐƠN
+        // ============================================================
+        [Authorize(Roles = "Admin,Receptionist")]
+>>>>>>> origin/dinh_nguyen
         [HttpDelete("{id}")]
         public async Task<IActionResult> Cancel(int id)
         {
             var order = await _context.OrderServices.FindAsync(id);
+<<<<<<< HEAD
 
             if (order == null)
                 return NotFound();
+=======
+            if (order == null) return NotFound();
+>>>>>>> origin/dinh_nguyen
 
             order.Status = "Cancelled";
-
             await _context.SaveChangesAsync();
 
             return Ok(order);
         }
     }
+<<<<<<< HEAD
 }
+=======
+
+    // --- CÁC LỚP HỖ TRỢ (DTO) ---
+    public class OrderRequest
+    {
+        public int BookingDetailId { get; set; }
+        public List<OrderItemRequest> Items { get; set; } = new();
+    }
+
+    public class OrderItemRequest
+    {
+        public int ServiceId { get; set; }
+        public int Quantity { get; set; }
+    }
+}
+>>>>>>> origin/dinh_nguyen

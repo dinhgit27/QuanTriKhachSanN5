@@ -1,9 +1,13 @@
+using System;
+using System.Linq;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using QuanTriKhachSanN5.Data;
+using QuanTriKhachSanN5.Interfaces;
 using QuanTriKhachSanN5.Models;
+using QuanTriKhachSanN5.Data;
 
 namespace QuanTriKhachSanN5.Controllers
 {
@@ -11,108 +15,157 @@ namespace QuanTriKhachSanN5.Controllers
     [ApiController]
     public class LossAndDamagesController : ControllerBase
     {
+        private readonly ILossAndDamageService _lossService;
         private readonly ApplicationDbContext _context;
 
-        public LossAndDamagesController(ApplicationDbContext context)
+        // Tiêm thêm ApplicationDbContext để truy vấn chéo dữ liệu
+        public LossAndDamagesController(ILossAndDamageService lossService, ApplicationDbContext context)
         {
+            _lossService = lossService;
             _context = context;
         }
 
-        // ======================
-        // POST
-        // ======================
-        [Authorize(Roles = "Admin,Receptionist,Housekeeping")] // Buồng phòng đi dọn phát hiện hỏng đồ thì gọi API này
+        [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
         [HttpPost]
         public async Task<IActionResult> ReportLoss([FromBody] LossAndDamage report)
         {
-            _context.LossAndDamages.Add(report);
-            await _context.SaveChangesAsync();
+            try 
+            {
+                report.CreatedAt = DateTime.Now;
+                if (string.IsNullOrEmpty(report.Status)) report.Status = "Chưa đền bù";
 
-            return Ok(report);
+                // 2. Tìm vật tư thuộc phòng nào
+                var roomInventory = await _context.RoomInventories.FindAsync(report.RoomInventoryId);
+                if (roomInventory == null) 
+                    return BadRequest(new { message = "Lỗi: Không tìm thấy vật tư này trong cơ sở dữ liệu." });
+
+                // 3. Truy xuất hóa đơn gần nhất của phòng này
+                var currentBooking = await _context.BookingDetails
+                    .Where(bd => bd.RoomId == roomInventory.RoomId)
+                    .OrderByDescending(bd => bd.CheckOutDate)
+                    .FirstOrDefaultAsync();
+
+                // 4. Xử lý logic khóa ngoại (BookingDetailId)
+                if (currentBooking != null)
+                {
+                    report.BookingDetailId = currentBooking.Id;
+                }
+                else
+                {
+                    var fallbackBooking = await _context.BookingDetails.FirstOrDefaultAsync();
+                    if (fallbackBooking == null) 
+                        return BadRequest(new { message = "Lỗi DB: Bảng Booking_Details đang trống, không thể tạo khóa ngoại." });
+                    
+                    report.BookingDetailId = fallbackBooking.Id;
+                }
+
+                // 5. Lưu Biên bản đền bù vào SQL
+                var createdReport = await _lossService.CreateLossAndDamageAsync(report);
+
+                // =========================================================
+                // 6. FIX LỖI TỰ KHÔI PHỤC: Cập nhật trạng thái vật tư thành "Đã hỏng" (false)
+                // =========================================================
+                roomInventory.IsActive = false;
+                _context.RoomInventories.Update(roomInventory);
+                await _context.SaveChangesAsync();
+
+                return Ok(createdReport);
+            }
+            catch (Exception ex)
+            {
+                var exactError = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                return BadRequest(new { message = exactError });
+            }
         }
 
-        // ======================
-        // GET
-        // ======================
-        [Authorize(Roles = "Admin,Receptionist")] // Chỉ Lễ tân/Quản lý mới xem danh sách phạt để tính tiền khách
+        [Authorize(Roles = "Admin,Receptionist")]
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<LossAndDamage>>> GetAll()
+        public async Task<IActionResult> GetAllLossAndDamages()
         {
-            return await _context.LossAndDamages.ToListAsync();
+            try
+            {
+                var rawData = await _lossService.GetAllLossAndDamagesAsync(); 
+
+                var data = rawData.Select(ld => new {
+                    Id = ld.Id,
+                    BookingDetailId = ld.BookingDetailId,
+                    RoomInventoryId = ld.RoomInventoryId,
+                    Quantity = ld.Quantity,
+                    PenaltyAmount = ld.PenaltyAmount,
+                    Description = ld.Description,
+                    CreatedAt = ld.CreatedAt,
+                    ImageUrl = ld.ImageUrl,
+                    Status = ld.Status
+                }).ToList();
+
+                return Ok(data);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi Server: " + ex.Message });
+            }
         }
 
-        // ======================
-        // PUT
-        // ======================
         [Authorize(Roles = "Admin,Receptionist")]
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, LossAndDamage model)
+        public async Task<IActionResult> Update(int id, [FromBody] LossAndDamage model)
         {
-            var data = await _context.LossAndDamages.FindAsync(id);
-
-            if (data == null)
+            var updatedData = await _lossService.UpdateLossAndDamageAsync(id, model);
+            
+            if (updatedData == null)
             {
-                return NotFound();
+                return NotFound(new { message = "Không tìm thấy biên bản này!" });
             }
 
-            data.BookingDetailId = model.BookingDetailId;
-            data.RoomInventoryId = model.RoomInventoryId;
-            data.Quantity = model.Quantity;
-            data.FineAmount = model.FineAmount;
-            data.Description = model.Description;
-            data.ReportedDate = model.ReportedDate;
-
-            await _context.SaveChangesAsync();
-
-            return Ok(data);
+            return Ok(updatedData);
         }
 
-        [Authorize(Roles = "Admin")] // Hủy biên bản phạt là việc nhạy cảm, chỉ Quản lý được làm
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Disable(int id)
         {
-            var data = await _context.LossAndDamages.FindAsync(id);
+            var success = await _lossService.UpdateStatusAsync(id, "Đã hủy");
+            
+            if (!success) return NotFound();
 
-            if (data == null)
-                return NotFound();
-
-            data.Status = "đã hủy";
-
-            await _context.SaveChangesAsync();
-
-            return Ok("Disabled");
+            return Ok(new { message = "Đã hủy biên bản!" });
         }
 
         [Authorize(Roles = "Admin")]
         [HttpPut("enable/{id}")]
         public async Task<IActionResult> Enable(int id)
         {
-            var data = await _context.LossAndDamages.FindAsync(id);
+            var success = await _lossService.UpdateStatusAsync(id, "Chưa đền bù");
+            
+            if (!success) return NotFound();
 
-            if (data == null)
-                return NotFound();
-
-            data.Status = "đã ghi nhận";
-
-            await _context.SaveChangesAsync();
-
-            return Ok("Enabled");
+            return Ok(new { message = "Đã khôi phục biên bản!" });
         }
 
-        [Authorize(Roles = "Admin,Receptionist")] // Lễ tân cập nhật trạng thái khi khách đã đền tiền
+        [Authorize(Roles = "Admin,Receptionist")]
         [HttpPut("status/{id}")]
-        public async Task<IActionResult> UpdateStatus(int id, string status)
+        public async Task<IActionResult> UpdateStatus(int id, [FromBody] string status)
         {
-            var data = await _context.LossAndDamages.FindAsync(id);
+            var success = await _lossService.UpdateStatusAsync(id, status);
+            if (!success) return NotFound();
 
-            if (data == null)
-                return NotFound();
+            // 2. LOGIC VÀNG: Nếu Lễ tân "Hủy", tự động khôi phục vật tư thành Hoạt động tốt
+            if (status == "Đã hủy" || status == "Hủy")
+            {
+                var lossReport = await _context.LossAndDamages.FindAsync(id);
+                if (lossReport != null)
+                {
+                    var inventory = await _context.RoomInventories.FindAsync(lossReport.RoomInventoryId);
+                    if (inventory != null)
+                    {
+                        inventory.IsActive = true;
+                        _context.RoomInventories.Update(inventory);
+                        await _context.SaveChangesAsync();
+                    }
+                }
+            }
 
-            data.Status = status;
-
-            await _context.SaveChangesAsync();
-
-            return Ok(data);
+            return Ok(new { message = "Cập nhật trạng thái thành công!" });
         }
     }
 }
