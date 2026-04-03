@@ -12,6 +12,8 @@ using QuanTriKhachSanN5.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddHttpClient();
+
 // ============================================================
 // 1. CẤU HÌNH HỆ THỐNG (SERVICES)
 // ============================================================

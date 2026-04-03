@@ -73,8 +73,10 @@ namespace QuanTriKhachSanN5.Controllers
                 return Unauthorized(new { message = "Tài khoản hoặc mật khẩu không đúng!" });
 
             // (Tùy chọn) TRẠM KIỂM SOÁT 3: Kiểm tra trạng thái tài khoản (Soft Delete)
-            // if (user.IsActive == false)
-            //     return Unauthorized(new { message = "Tài khoản của bạn đã bị khóa!" });
+            if (!user.IsActive)
+            {
+                return Unauthorized(new { message = "Tài khoản của bạn đã bị khóa!" });
+            }
 
             // 3. Vượt qua hết mới bắt đầu lấy dữ liệu Role và Permission
             var roles = user.UserRoles.Select(ur => ur.Role.Name).ToList();
