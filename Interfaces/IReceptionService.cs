@@ -13,7 +13,7 @@ namespace QuanTriKhachSanN5.Interfaces
     {
         Task CheckInBookingAsync(int bookingId, int roomId);
         Task<Order_Service> OrderServiceAsync(int bookingId, int serviceId, int quantity);
-        Task<Loss_And_Damage> ReportDamageAsync(int bookingId, string description, decimal fineAmount);
+        Task<LossAndDamage> ReportDamageAsync(int bookingId, string description, decimal fineAmount);
         Task<CheckoutDto> CalculateCheckoutAsync(int bookingId);
     }
 }

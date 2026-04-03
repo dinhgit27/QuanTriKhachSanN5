@@ -19,16 +19,6 @@ namespace QuanTriKhachSanN5.Models
         public decimal Price { get; set; }
     }
 
-    // Bảng Vouchers: Mã giảm giá
-    public class Voucher
-    {
-        public int Id { get; set; }
-        public string Code { get; set; }
-        public decimal DiscountAmount { get; set; }
-        public decimal DiscountPercent { get; set; }
-        public DateTime ExpiryDate { get; set; }
-        public bool IsActive { get; set; }
-    }
 
     // Bảng Memberships: Hạng thẻ thành viên
     public class Membership

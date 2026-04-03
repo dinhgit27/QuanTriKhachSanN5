@@ -23,7 +23,7 @@ namespace QuanTriKhachSanN5.Data
         public DbSet<Payment> Payments { get; set; }
         public DbSet<Order_Service> OrderServices { get; set; }
         public DbSet<Order_Service_Detail> OrderServiceDetails { get; set; }
-        public DbSet<Loss_And_Damage> LossAndDamages { get; set; }
+        public DbSet<LossAndDamage> LossAndDamages { get; set; }
 
         public DbSet<Amenity> Amenities { get; set; }
         public DbSet<Room_Inventory> RoomInventories { get; set; }
@@ -42,6 +42,19 @@ namespace QuanTriKhachSanN5.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            // =================================================================
+            // 🚀 BƯỚC FIX LỖI SQL TRƯỚC KHI ĐI ĂN TRƯA
+            // Ép EF Core tìm đúng tên bảng trong SQL (Không tự thêm chữ 's')
+            // =================================================================
+            modelBuilder.Entity<RoomType>().ToTable("Room_Types"); 
+            modelBuilder.Entity<LossAndDamage>().ToTable("Loss_And_Damages");
+            
+            // 💡 LƯU Ý NHỎ: Nếu trong SQL Server của ní, bảng đó tên là "Room_Type" 
+            // thì ní sửa dòng trên thành: modelBuilder.Entity<RoomType>().ToTable("Room_Type");
+            
+            // Ép thêm bảng Room cho chắc cú (tránh nó tìm bảng Rooms nếu trong DB là Room)
+            modelBuilder.Entity<Room>().ToTable("Rooms"); 
+
             // 1. Giải quyết lỗi ĐỎ: Ngắt vòng lặp xóa dây chuyền (Multiple Cascade Paths)
             modelBuilder
                 .Entity<Booking_Detail>()
@@ -50,8 +63,10 @@ namespace QuanTriKhachSanN5.Data
                 .HasForeignKey(bd => bd.RoomTypeId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // Ép tên bảng trung gian
             modelBuilder.Entity<User_Role>().ToTable("User_Roles");
 
+            // Khai báo khóa chính kép (Composite Key)
             modelBuilder.Entity<User_Role>().HasKey(ur => new { ur.UserId, ur.RoleId });
 
             modelBuilder
@@ -67,6 +82,7 @@ namespace QuanTriKhachSanN5.Data
                 .HasForeignKey(ur => ur.RoleId);
 
             modelBuilder.Entity<Role_Permission>().HasKey(x => new { x.RoleId, x.PermissionId });
+            
             // 2. Giải quyết lỗi VÀNG: Định dạng tất cả kiểu thập phân thành decimal(18,2)
             foreach (
                 var property in modelBuilder
