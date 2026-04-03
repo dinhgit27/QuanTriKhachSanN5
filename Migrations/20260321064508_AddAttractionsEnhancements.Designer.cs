@@ -12,8 +12,8 @@ using QuanTriKhachSanN5.Data;
 namespace QuanTriKhachSanN5.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260323174615_AddIsActiveColumn")]
-    partial class AddIsActiveColumn
+    [Migration("20260321064508_AddAttractionsEnhancements")]
+    partial class AddAttractionsEnhancements
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,23 +24,6 @@ namespace QuanTriKhachSanN5.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("Permission", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Permissions");
-                });
 
             modelBuilder.Entity("QuanTriKhachSanN5.Models.Amenity", b =>
                 {
@@ -59,6 +42,7 @@ namespace QuanTriKhachSanN5.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("Price")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
@@ -123,11 +107,31 @@ namespace QuanTriKhachSanN5.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Description")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
+                    b.Property<string>("GooglePlaceId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("float");
+
                     b.Property<string>("Location")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("float");
+
+                    b.Property<string>("MainImageUrl")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
@@ -136,9 +140,45 @@ namespace QuanTriKhachSanN5.Migrations
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)");
 
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
 
                     b.ToTable("Attractions");
+                });
+
+            modelBuilder.Entity("QuanTriKhachSanN5.Models.AttractionImage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AttractionId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CloudinaryPublicId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AttractionId");
+
+                    b.ToTable("AttractionImages");
                 });
 
             modelBuilder.Entity("QuanTriKhachSanN5.Models.Audit_Log", b =>
@@ -205,6 +245,7 @@ namespace QuanTriKhachSanN5.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("TotalAmount")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
@@ -234,6 +275,7 @@ namespace QuanTriKhachSanN5.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<decimal>("Price")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int?>("RoomId")
@@ -290,12 +332,15 @@ namespace QuanTriKhachSanN5.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<decimal>("DamageFee")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("RoomTotalCost")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("ServicesCost")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Status")
@@ -304,12 +349,14 @@ namespace QuanTriKhachSanN5.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<decimal>("TotalAmount")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<decimal>("VoucherDiscount")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
@@ -336,6 +383,7 @@ namespace QuanTriKhachSanN5.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("FineAmount")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("Quantity")
@@ -367,6 +415,7 @@ namespace QuanTriKhachSanN5.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("DiscountPercent")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Level")
@@ -408,6 +457,7 @@ namespace QuanTriKhachSanN5.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("TotalAmount")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
@@ -435,6 +485,7 @@ namespace QuanTriKhachSanN5.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("UnitPrice")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
@@ -455,6 +506,7 @@ namespace QuanTriKhachSanN5.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("AmountPaid")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("CreatedAt")
@@ -497,7 +549,7 @@ namespace QuanTriKhachSanN5.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Permission");
+                    b.ToTable("Permissions");
                 });
 
             modelBuilder.Entity("QuanTriKhachSanN5.Models.Post", b =>
@@ -601,7 +653,7 @@ namespace QuanTriKhachSanN5.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Role");
+                    b.ToTable("Roles");
                 });
 
             modelBuilder.Entity("QuanTriKhachSanN5.Models.Role_Permission", b =>
@@ -624,7 +676,7 @@ namespace QuanTriKhachSanN5.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("Role_Permission");
+                    b.ToTable("RolePermissions");
                 });
 
             modelBuilder.Entity("QuanTriKhachSanN5.Models.Room", b =>
@@ -662,6 +714,7 @@ namespace QuanTriKhachSanN5.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("BasePrice")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("CapacityAdults")
@@ -758,6 +811,7 @@ namespace QuanTriKhachSanN5.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("Price")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("Status")
@@ -819,7 +873,7 @@ namespace QuanTriKhachSanN5.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("User");
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("QuanTriKhachSanN5.Models.User_Role", b =>
@@ -842,7 +896,7 @@ namespace QuanTriKhachSanN5.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("User_Role");
+                    b.ToTable("UserRoles");
                 });
 
             modelBuilder.Entity("QuanTriKhachSanN5.Models.Voucher", b =>
@@ -858,9 +912,11 @@ namespace QuanTriKhachSanN5.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("DiscountAmount")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("DiscountPercent")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("ExpiryDate")
@@ -874,89 +930,6 @@ namespace QuanTriKhachSanN5.Migrations
                     b.ToTable("Vouchers");
                 });
 
-            modelBuilder.Entity("Role", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Roles");
-                });
-
-            modelBuilder.Entity("Role_Permission", b =>
-                {
-                    b.Property<int>("RoleId")
-                        .HasColumnType("int")
-                        .HasColumnName("role_id");
-
-                    b.Property<int>("PermissionId")
-                        .HasColumnType("int")
-                        .HasColumnName("permission_id");
-
-                    b.HasKey("RoleId", "PermissionId");
-
-                    b.HasIndex("PermissionId");
-
-                    b.ToTable("Role_Permissions");
-                });
-
-            modelBuilder.Entity("User", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("id");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("email");
-
-                    b.Property<string>("FullName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("full_name");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("PasswordHash")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("password_hash");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Users");
-                });
-
-            modelBuilder.Entity("User_Role", b =>
-                {
-                    b.Property<int>("UserId")
-                        .HasColumnType("int")
-                        .HasColumnName("user_id");
-
-                    b.Property<int>("RoleId")
-                        .HasColumnType("int")
-                        .HasColumnName("role_id");
-
-                    b.HasKey("UserId", "RoleId");
-
-                    b.HasIndex("RoleId");
-
-                    b.ToTable("User_Roles", (string)null);
-                });
-
             modelBuilder.Entity("QuanTriKhachSanN5.Models.Article", b =>
                 {
                     b.HasOne("QuanTriKhachSanN5.Models.Article_Category", "Category")
@@ -966,6 +939,17 @@ namespace QuanTriKhachSanN5.Migrations
                         .IsRequired();
 
                     b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("QuanTriKhachSanN5.Models.AttractionImage", b =>
+                {
+                    b.HasOne("QuanTriKhachSanN5.Models.Attraction", "Attraction")
+                        .WithMany("Images")
+                        .HasForeignKey("AttractionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Attraction");
                 });
 
             modelBuilder.Entity("QuanTriKhachSanN5.Models.Audit_Log", b =>
@@ -1201,52 +1185,14 @@ namespace QuanTriKhachSanN5.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Role_Permission", b =>
-                {
-                    b.HasOne("Permission", "Permission")
-                        .WithMany("RolePermissions")
-                        .HasForeignKey("PermissionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Role", "Role")
-                        .WithMany("RolePermissions")
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Permission");
-
-                    b.Navigation("Role");
-                });
-
-            modelBuilder.Entity("User_Role", b =>
-                {
-                    b.HasOne("Role", "Role")
-                        .WithMany("UserRoles")
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("User", "User")
-                        .WithMany("UserRoles")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Role");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Permission", b =>
-                {
-                    b.Navigation("RolePermissions");
-                });
-
             modelBuilder.Entity("QuanTriKhachSanN5.Models.Article_Category", b =>
                 {
                     b.Navigation("Articles");
+                });
+
+            modelBuilder.Entity("QuanTriKhachSanN5.Models.Attraction", b =>
+                {
+                    b.Navigation("Images");
                 });
 
             modelBuilder.Entity("QuanTriKhachSanN5.Models.Booking", b =>
@@ -1290,18 +1236,6 @@ namespace QuanTriKhachSanN5.Migrations
                 {
                     b.Navigation("Memberships");
 
-                    b.Navigation("UserRoles");
-                });
-
-            modelBuilder.Entity("Role", b =>
-                {
-                    b.Navigation("RolePermissions");
-
-                    b.Navigation("UserRoles");
-                });
-
-            modelBuilder.Entity("User", b =>
-                {
                     b.Navigation("UserRoles");
                 });
 #pragma warning restore 612, 618
