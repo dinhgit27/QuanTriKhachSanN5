@@ -59,7 +59,6 @@ namespace QuanTriKhachSanN5.Services
 
         public async Task<int> CreateRoomTypeAsync(CreateRoomTypeDTO dto)
         {
-            // Kiểm tra tên trùng lặp
             if (await _context.RoomTypes.AnyAsync(rt => rt.Name == dto.Name))
             {
                 throw new Exception($"Loại phòng '{dto.Name}' đã tồn tại");
@@ -71,7 +70,14 @@ namespace QuanTriKhachSanN5.Services
                 Description = dto.Description,
                 BasePrice = dto.BasePrice,
                 CapacityAdults = dto.CapacityAdults,
-                CapacityChildren = dto.CapacityChildren
+                CapacityChildren = dto.CapacityChildren,
+                // 👉 ĐẮP THÊM CÁC TRƯỜNG BỊ THIẾU VÀO ĐÂY:
+                SizeSqm = dto.SizeSqm,
+                BedType = dto.BedType,
+                ViewType = dto.ViewType,
+                IsActive = dto.IsActive,
+                Slug = dto.Slug,
+                Content = dto.Content
             };
 
             _context.RoomTypes.Add(roomType);
@@ -88,7 +94,6 @@ namespace QuanTriKhachSanN5.Services
                 throw new Exception("Loại phòng không tồn tại");
             }
 
-            // Kiểm tra tên trùng (trừ chính nó)
             if (await _context.RoomTypes.AnyAsync(rt => rt.Id != id && rt.Name == dto.Name))
             {
                 throw new Exception($"Loại phòng '{dto.Name}' đã tồn tại");
@@ -99,6 +104,13 @@ namespace QuanTriKhachSanN5.Services
             roomType.BasePrice = dto.BasePrice;
             roomType.CapacityAdults = dto.CapacityAdults;
             roomType.CapacityChildren = dto.CapacityChildren;
+            // 👉 ĐẮP THÊM CÁC TRƯỜNG BỊ THIẾU VÀO ĐÂY:
+            roomType.SizeSqm = dto.SizeSqm;
+            roomType.BedType = dto.BedType;
+            roomType.ViewType = dto.ViewType;
+            roomType.IsActive = dto.IsActive;
+            roomType.Slug = dto.Slug;
+            roomType.Content = dto.Content;
 
             await _context.SaveChangesAsync();
         }

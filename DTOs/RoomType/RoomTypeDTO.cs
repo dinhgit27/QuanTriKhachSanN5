@@ -18,6 +18,12 @@ namespace QuanTriKhachSanN5.DTOs.RoomType
 
         // Computed field
         public int TotalRooms { get; set; }
+        public double? SizeSqm { get; set; }
+        public string? BedType { get; set; }
+        public string? ViewType { get; set; }
+        public bool IsActive { get; set; } = true;
+        public string? Slug { get; set; }
+        public string? Content { get; set; }
     }
 }
 
