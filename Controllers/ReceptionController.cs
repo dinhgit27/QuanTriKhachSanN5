@@ -43,7 +43,7 @@ namespace QuanTriKhachSanN5.Controllers.Disabled
         }
 
         [HttpPost("damages")]
-        public async Task<ActionResult<Loss_And_Damage>> ReportDamage(
+        public async Task<ActionResult<LossAndDamage>> ReportDamage(
             [FromBody] DamageRequest request
         )
         {

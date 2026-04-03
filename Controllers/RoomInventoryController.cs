@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
@@ -25,7 +26,6 @@ namespace QuanTriKhachSanN5.Controllers
         [HttpGet]
         public async Task<ActionResult<List<Room_Inventory>>> GetAllInventories()
         {
-            // (Nếu Service của ní chưa có hàm này thì phải qua Service viết thêm nhé)
             var inventories = await _roomService.GetAllInventoriesAsync();
             return Ok(inventories);
         }
@@ -55,10 +55,19 @@ namespace QuanTriKhachSanN5.Controllers
 
         [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
         [HttpGet("rooms")]
-        public async Task<ActionResult<List<Room>>> GetRooms()
+        public async Task<IActionResult> GetRooms()
         {
-            var rooms = await _roomService.GetRoomsAsync();
-            return Ok(rooms);
+            try 
+            {
+                // SỬA TẠI ĐÂY: Đổi _roomInventoryService thành _roomService
+                var rooms = await _roomService.GetRoomsAsync();
+                
+                return Ok(rooms);
+            }
+            catch (Exception ex) 
+            {
+                return StatusCode(500, new { message = "Lỗi Server: " + ex.Message });
+            }
         }
 
         [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
@@ -97,7 +106,6 @@ namespace QuanTriKhachSanN5.Controllers
             if (roomId != inventory.RoomId)
                 return BadRequest(new { message = "ID phòng không khớp." });
 
-            // ĐÃ MỞ COMMENT ĐỂ LƯU THẬT XUỐNG SQL
             await _roomService.AddRoomInventoryAsync(inventory);
 
             return Ok(new { Message = "Đã gán vật tư cho phòng thành công!", Data = inventory });
@@ -112,7 +120,7 @@ namespace QuanTriKhachSanN5.Controllers
         }
 
         // =========================================================
-        // 2. THÊM HÌNH ẢNH (Đã sửa lại thành RoomTypeId cho khớp Model và SQL)
+        // 2. THÊM HÌNH ẢNH
         // =========================================================
         [Authorize(Roles = "Admin")]
         [HttpPost("roomtypes/{roomTypeId}/images")] 
@@ -121,7 +129,6 @@ namespace QuanTriKhachSanN5.Controllers
             if (roomTypeId != image.RoomTypeId)
                 return BadRequest(new { message = "ID loại phòng không khớp." });
 
-            // ĐÃ MỞ COMMENT ĐỂ LƯU THẬT XUỐNG SQL
             await _roomService.AddRoomImageAsync(image);
 
             return Ok(new { Message = "Đã thêm hình ảnh loại phòng thành công!", Data = image });

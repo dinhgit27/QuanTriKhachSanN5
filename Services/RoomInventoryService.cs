@@ -10,6 +10,7 @@ using QuanTriKhachSanN5.Data;
 using QuanTriKhachSanN5.Interfaces;
 using QuanTriKhachSanN5.Models;
 
+
 namespace QuanTriKhachSanN5.Services
 {
     public class RoomInventoryService : IRoomInventoryService
@@ -21,9 +22,23 @@ namespace QuanTriKhachSanN5.Services
             _context = context;
         }
 
-        public async Task<List<Room>> GetRoomsAsync()
+        public async Task<List<object>> GetRoomsAsync()
         {
-            return await _context.Rooms.Include(r => r.RoomType).ToListAsync();
+            // BƯỚC 1: Dùng ToListAsync() TRƯỚC để ép C# kéo hết dữ liệu thật từ SQL về RAM.
+            // Điều này giúp cắt đứt mọi lỗi dịch câu lệnh của Entity Framework.
+            var rooms = await _context.Rooms
+                .Include(r => r.RoomType)
+                .ToListAsync();
+
+            // BƯỚC 2: Sau khi có data, mới dùng Select để tạo object gọn nhẹ, cắt đứt vòng lặp JSON.
+            var result = rooms.Select(r => new {
+                Id = r.Id,
+                RoomNumber = r.RoomNumber,
+                Status = r.Status,
+                RoomTypeName = r.RoomType != null ? r.RoomType.Name : "Chưa xác định"
+            }).Cast<object>().ToList();
+
+            return result;
         }
 
         public async Task<Room> GetRoomByIdAsync(int id)

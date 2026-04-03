@@ -1,8 +1,10 @@
+using System;
+using System.Linq;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using QuanTriKhachSanN5.Data;
+using QuanTriKhachSanN5.Interfaces;
 using QuanTriKhachSanN5.Models;
 
 namespace QuanTriKhachSanN5.Controllers
@@ -11,108 +13,112 @@ namespace QuanTriKhachSanN5.Controllers
     [ApiController]
     public class LossAndDamagesController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ILossAndDamageService _lossService;
 
-        public LossAndDamagesController(ApplicationDbContext context)
+        public LossAndDamagesController(ILossAndDamageService lossService)
         {
-            _context = context;
+            _lossService = lossService;
         }
 
-        // ======================
-        // POST
-        // ======================
-        [Authorize(Roles = "Admin,Receptionist,Housekeeping")] // Buồng phòng đi dọn phát hiện hỏng đồ thì gọi API này
+        [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
         [HttpPost]
         public async Task<IActionResult> ReportLoss([FromBody] LossAndDamage report)
         {
-            _context.LossAndDamages.Add(report);
-            await _context.SaveChangesAsync();
+           try 
+            {
+                // Bổ sung mặc định nếu React quên gửi
+                report.CreatedAt = DateTime.Now;
+                if (string.IsNullOrEmpty(report.Status)) report.Status = "Chưa đền bù";
 
-            return Ok(report);
+                var createdReport = await _lossService.CreateLossAndDamageAsync(report);
+                return Ok(createdReport);
+            }
+            catch (Exception ex)
+            {
+                // In ra terminal màn hình đen để anh em mình bắt bệnh ngay lập tức
+                Console.WriteLine("============= LỖI POST ĐỀN BÙ =============");
+                Console.WriteLine("Lỗi chính: " + ex.Message);
+                if (ex.InnerException != null) Console.WriteLine("Chi tiết SQL: " + ex.InnerException.Message);
+                
+                // Trả về thẳng lỗi lên màn hình React
+                return StatusCode(500, new { message = ex.InnerException?.Message ?? ex.Message });
+            }
         }
 
-        // ======================
-        // GET
-        // ======================
-        [Authorize(Roles = "Admin,Receptionist")] // Chỉ Lễ tân/Quản lý mới xem danh sách phạt để tính tiền khách
+        [Authorize(Roles = "Admin,Receptionist")]
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<LossAndDamage>>> GetAll()
+        public async Task<IActionResult> GetAllLossAndDamages()
         {
-            return await _context.LossAndDamages.ToListAsync();
+            try
+            {
+                var rawData = await _lossService.GetAllLossAndDamagesAsync(); 
+
+                // MAP CHUẨN XÁC VỚI CỘT TRONG SQL CỦA NÍ
+                var data = rawData.Select(ld => new {
+                    Id = ld.Id,
+                    BookingDetailId = ld.BookingDetailId,   // Khớp với booking_detail_id
+                    RoomInventoryId = ld.RoomInventoryId,   // Khớp với room_inventory_id
+                    Quantity = ld.Quantity,                 // Khớp với quantity
+                    PenaltyAmount = ld.PenaltyAmount,       // Khớp với penalty_amount
+                    Description = ld.Description,           // Khớp với description
+                    CreatedAt = ld.CreatedAt,               // Khớp với created_at
+                    ImageUrl = ld.ImageUrl,                 // Khớp với ImageUrl
+                    Status = ld.Status                      // Khớp với status
+                }).ToList();
+
+                return Ok(data);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi Server: " + ex.Message });
+            }
         }
 
-        // ======================
-        // PUT
-        // ======================
         [Authorize(Roles = "Admin,Receptionist")]
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, LossAndDamage model)
+        public async Task<IActionResult> Update(int id, [FromBody] LossAndDamage model)
         {
-            var data = await _context.LossAndDamages.FindAsync(id);
-
-            if (data == null)
+            var updatedData = await _lossService.UpdateLossAndDamageAsync(id, model);
+            
+            if (updatedData == null)
             {
-                return NotFound();
+                return NotFound(new { message = "Không tìm thấy biên bản này!" });
             }
 
-            data.BookingDetailId = model.BookingDetailId;
-            data.RoomInventoryId = model.RoomInventoryId;
-            data.Quantity = model.Quantity;
-            data.FineAmount = model.FineAmount;
-            data.Description = model.Description;
-            data.ReportedDate = model.ReportedDate;
-
-            await _context.SaveChangesAsync();
-
-            return Ok(data);
+            return Ok(updatedData);
         }
 
-        [Authorize(Roles = "Admin")] // Hủy biên bản phạt là việc nhạy cảm, chỉ Quản lý được làm
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Disable(int id)
         {
-            var data = await _context.LossAndDamages.FindAsync(id);
+            var success = await _lossService.UpdateStatusAsync(id, "Đã hủy");
+            
+            if (!success) return NotFound();
 
-            if (data == null)
-                return NotFound();
-
-            data.Status = "đã hủy";
-
-            await _context.SaveChangesAsync();
-
-            return Ok("Disabled");
+            return Ok(new { message = "Đã hủy biên bản!" });
         }
 
         [Authorize(Roles = "Admin")]
         [HttpPut("enable/{id}")]
         public async Task<IActionResult> Enable(int id)
         {
-            var data = await _context.LossAndDamages.FindAsync(id);
+            var success = await _lossService.UpdateStatusAsync(id, "Chưa đền bù");
+            
+            if (!success) return NotFound();
 
-            if (data == null)
-                return NotFound();
-
-            data.Status = "đã ghi nhận";
-
-            await _context.SaveChangesAsync();
-
-            return Ok("Enabled");
+            return Ok(new { message = "Đã khôi phục biên bản!" });
         }
 
-        [Authorize(Roles = "Admin,Receptionist")] // Lễ tân cập nhật trạng thái khi khách đã đền tiền
+        [Authorize(Roles = "Admin,Receptionist")]
         [HttpPut("status/{id}")]
-        public async Task<IActionResult> UpdateStatus(int id, string status)
+        public async Task<IActionResult> UpdateStatus(int id, [FromBody] string status)
         {
-            var data = await _context.LossAndDamages.FindAsync(id);
+            var success = await _lossService.UpdateStatusAsync(id, status);
+            
+            if (!success) return NotFound();
 
-            if (data == null)
-                return NotFound();
-
-            data.Status = status;
-
-            await _context.SaveChangesAsync();
-
-            return Ok(data);
+            return Ok(new { message = "Cập nhật trạng thái thành công!" });
         }
     }
 }

@@ -852,7 +852,7 @@
           }
         }
       },
-      "Microsoft.OpenApi/2.4.1": {
+      "Microsoft.OpenApi/3.5.1": {
         "type": "package",
         "compile": {
           "lib/net8.0/Microsoft.OpenApi.dll": {
@@ -3247,10 +3247,10 @@
         "microsoft.identitymodel.tokens.nuspec"
       ]
     },
-    "Microsoft.OpenApi/2.4.1": {
-      "sha512": "u7QhXCISMQuab3flasb1hoaiERmUqyWsW7tmQODyILoQ7mJV5IRGM+2KKZYo0QUfC13evEOcHAb6TPWgqEQtrw==",
+    "Microsoft.OpenApi/3.5.1": {
+      "sha512": "UkWK59fPIACeXY769xg6rM3mvwZnEmYxyGTa12vVF9N08QjKzxnkOX6l2iiOA5RL4emGX49tRX7gZMUfyHZ+/w==",
       "type": "package",
-      "path": "microsoft.openapi/2.4.1",
+      "path": "microsoft.openapi/3.5.1",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -3261,7 +3261,7 @@
         "lib/netstandard2.0/Microsoft.OpenApi.dll",
         "lib/netstandard2.0/Microsoft.OpenApi.pdb",
         "lib/netstandard2.0/Microsoft.OpenApi.xml",
-        "microsoft.openapi.2.4.1.nupkg.sha512",
+        "microsoft.openapi.3.5.1.nupkg.sha512",
         "microsoft.openapi.nuspec"
       ]
     },
@@ -3823,6 +3823,7 @@
       "Microsoft.EntityFrameworkCore.InMemory >= 10.0.5",
       "Microsoft.EntityFrameworkCore.SqlServer >= 10.0.5",
       "Microsoft.EntityFrameworkCore.Tools >= 10.0.5",
+      "Microsoft.OpenApi >= 3.5.1",
       "Swashbuckle.AspNetCore >= 10.1.5",
       "System.IdentityModel.Tokens.Jwt >= 8.16.0"
     ]
@@ -3899,6 +3900,10 @@
             "suppressParent": "All",
             "target": "Package",
             "version": "[10.0.5, )"
+          },
+          "Microsoft.OpenApi": {
+            "target": "Package",
+            "version": "[3.5.1, )"
           },
           "Swashbuckle.AspNetCore": {
             "target": "Package",

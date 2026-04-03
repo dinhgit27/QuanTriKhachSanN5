@@ -6,7 +6,7 @@ namespace QuanTriKhachSanN5.Interfaces
 {
     public interface IRoomInventoryService
     {
-        Task<List<Room>> GetRoomsAsync();
+        Task<List<object>> GetRoomsAsync();
         Task<Room> GetRoomByIdAsync(int id);
         Task UpdateRoomStatusAsync(int roomId, string status);
         
