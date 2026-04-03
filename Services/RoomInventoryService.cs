@@ -10,7 +10,6 @@ using QuanTriKhachSanN5.Data;
 using QuanTriKhachSanN5.Interfaces;
 using QuanTriKhachSanN5.Models;
 
-
 namespace QuanTriKhachSanN5.Services
 {
     public class RoomInventoryService : IRoomInventoryService
@@ -26,24 +25,28 @@ namespace QuanTriKhachSanN5.Services
         {
             // BƯỚC 1: Dùng ToListAsync() TRƯỚC để ép C# kéo hết dữ liệu thật từ SQL về RAM.
             // Điều này giúp cắt đứt mọi lỗi dịch câu lệnh của Entity Framework.
-            var rooms = await _context.Rooms
-                .Include(r => r.RoomType)
-                .ToListAsync();
+            var rooms = await _context.Rooms.Include(r => r.RoomType).ToListAsync();
 
             // BƯỚC 2: Sau khi có data, mới dùng Select để tạo object gọn nhẹ, cắt đứt vòng lặp JSON.
-            var result = rooms.Select(r => new {
-                Id = r.Id,
-                RoomNumber = r.RoomNumber,
-                Status = r.Status,
-                RoomTypeName = r.RoomType != null ? r.RoomType.Name : "Chưa xác định"
-            }).Cast<object>().ToList();
+            var result = rooms
+                .Select(r => new
+                {
+                    Id = r.Id,
+                    RoomNumber = r.RoomNumber,
+                    Status = r.Status,
+                    RoomTypeName = r.RoomType != null ? r.RoomType.Name : "Chưa xác định",
+                })
+                .Cast<object>()
+                .ToList();
 
             return result;
         }
 
         public async Task<Room> GetRoomByIdAsync(int id)
         {
-            return await _context.Rooms.Include(r => r.RoomType).FirstOrDefaultAsync(r => r.Id == id);
+            return await _context
+                .Rooms.Include(r => r.RoomType)
+                .FirstOrDefaultAsync(r => r.Id == id);
         }
 
         public async Task UpdateRoomStatusAsync(int roomId, string status)
@@ -63,8 +66,8 @@ namespace QuanTriKhachSanN5.Services
 
         public async Task<List<Room_Inventory>> GetRoomInventoryAsync(int roomId)
         {
-            return await _context.RoomInventories
-                .Where(ri => ri.RoomId == roomId)
+            return await _context
+                .RoomInventories.Where(ri => ri.RoomId == roomId)
                 .Include(ri => ri.Amenity)
                 .ToListAsync();
         }
@@ -76,8 +79,8 @@ namespace QuanTriKhachSanN5.Services
         public async Task<List<Room_Inventory>> GetAllInventoriesAsync()
         {
             // Lấy tất cả vật tư, nhớ Include để React lấy được tên Phòng và tên Vật tư
-            return await _context.RoomInventories
-                .Include(ri => ri.Room)
+            return await _context
+                .RoomInventories.Include(ri => ri.Room)
                 .Include(ri => ri.Amenity)
                 .ToListAsync();
         }
@@ -107,7 +110,7 @@ namespace QuanTriKhachSanN5.Services
         public async Task AddRoomImageAsync(Room_Image image)
         {
             // Lưu ý: Trong file ApplicationDbContext.cs của ní phải có public DbSet<Room_Image> RoomImages { get; set; } nha
-            _context.Add(image); 
+            _context.Add(image);
             await _context.SaveChangesAsync();
         }
     }

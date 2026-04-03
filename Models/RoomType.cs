@@ -8,24 +8,12 @@ namespace QuanTriKhachSanN5.Models
     public class RoomType
     {
         [Key]
-<<<<<<< HEAD
-        [Column("user_id")]
-        public int Id { get; set; }
-
-        [Required]
-        [Column("name")]
-        public string Name { get; set; }
-
-        [Column("description")]
-        public string Description { get; set; }
-=======
         [Column("id")] // Ép chữ thường theo SQL
         public int Id { get; set; }
 
         [Required]
         [Column("name")] // Ép chữ thường
         public string Name { get; set; } = string.Empty;
->>>>>>> origin/dinh_nguyen
 
         [Column("base_price")]
         public decimal BasePrice { get; set; }
@@ -40,13 +28,13 @@ namespace QuanTriKhachSanN5.Models
         public string? Description { get; set; }
 
         [Column("size_sqm")]
-        public double? SizeSqm { get; set; } 
+        public double? SizeSqm { get; set; }
 
         [Column("bed_type")]
-        public string? BedType { get; set; } 
+        public string? BedType { get; set; }
 
         [Column("view_type")]
-        public string? ViewType { get; set; } 
+        public string? ViewType { get; set; }
 
         [Column("is_active")]
         public bool IsActive { get; set; } = true;

@@ -19,16 +19,23 @@ namespace QuanTriKhachSanN5.Controllers
         }
 
         // --- 1. THÊM PHÒNG (CREATE) ---
-        [Authorize(Roles = "Admin")] 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> CreateRoom([FromBody] Room room)
         {
             // BƯỚC BẢO VỆ: Lấy danh sách phòng ra kiểm tra xem trùng tên không
             var allRooms = await _roomService.GetRoomsAsync();
-            if (allRooms.Any(r => r.RoomNumber.Trim().ToLower() == room.RoomNumber.Trim().ToLower()))
+            if (
+                allRooms.Any(r => r.RoomNumber.Trim().ToLower() == room.RoomNumber.Trim().ToLower())
+            )
             {
                 // Nếu trùng -> Đuổi về ngay và luôn (Báo lỗi 400)
-                return BadRequest(new { message = $"Số phòng '{room.RoomNumber}' đã tồn tại trong hệ thống rồi ní ơi!" });
+                return BadRequest(
+                    new
+                    {
+                        message = $"Số phòng '{room.RoomNumber}' đã tồn tại trong hệ thống rồi ní ơi!",
+                    }
+                );
             }
 
             await _roomService.CreateRoomAsync(room);
@@ -50,12 +57,8 @@ namespace QuanTriKhachSanN5.Controllers
         public async Task<ActionResult<Room>> GetRoom(int id)
         {
             var room = await _roomService.GetRoomByIdAsync(id);
-<<<<<<< HEAD
             if (room == null)
-                return NotFound();
-=======
-            if (room == null) return NotFound(new { message = "Không tìm thấy phòng!" });
->>>>>>> origin/dinh_nguyen
+                return NotFound(new { message = "Không tìm thấy phòng!" });
             return Ok(room);
         }
 
@@ -66,12 +69,14 @@ namespace QuanTriKhachSanN5.Controllers
         {
             if (id != room.Id)
             {
-                return BadRequest(new { message = "ID trên đường dẫn và ID trong dữ liệu không khớp!" });
+                return BadRequest(
+                    new { message = "ID trên đường dẫn và ID trong dữ liệu không khớp!" }
+                );
             }
 
             // Gọi xuống Service để xử lý logic lưu Database
-            await _roomService.UpdateRoomAsync(room); 
-            
+            await _roomService.UpdateRoomAsync(room);
+
             return NoContent(); // Cập nhật thành công, trả về 204
         }
 
@@ -85,7 +90,7 @@ namespace QuanTriKhachSanN5.Controllers
         }
 
         // --- 6. XÓA PHÒNG (DELETE) ---
-        [Authorize(Roles = "Admin")] 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteRoom(int id)
         {
@@ -95,7 +100,7 @@ namespace QuanTriKhachSanN5.Controllers
                 return NotFound(new { message = "Phòng này không tồn tại hoặc đã bị xóa!" });
             }
 
-            try 
+            try
             {
                 // Thử xóa xem SQL có cho phép không
                 await _roomService.DeleteRoomAsync(id);
@@ -104,7 +109,12 @@ namespace QuanTriKhachSanN5.Controllers
             catch (System.Exception)
             {
                 // Nếu SQL quăng lỗi (do dính khóa ngoại Vật tư, Đặt phòng...) -> Báo lỗi 400 cho React
-                return BadRequest(new { message = "Không thể xóa! Phòng này đang chứa Vật tư hoặc có lịch Đặt phòng dính kèm. Hãy xóa dữ liệu liên quan trước!" });
+                return BadRequest(
+                    new
+                    {
+                        message = "Không thể xóa! Phòng này đang chứa Vật tư hoặc có lịch Đặt phòng dính kèm. Hãy xóa dữ liệu liên quan trước!",
+                    }
+                );
             }
         }
     }

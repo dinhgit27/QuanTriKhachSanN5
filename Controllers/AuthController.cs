@@ -57,7 +57,7 @@ namespace QuanTriKhachSanN5.Controllers
         {
             var user = await _context
                 .Users.Include(u => u.UserRoles)
-                    .Include(u => u.UserRoles)            
+                .Include(u => u.UserRoles)
                     .ThenInclude(ur => ur.Role)
                         .ThenInclude(r => r.RolePermissions)
                             .ThenInclude(rp => rp.Permission)
@@ -143,7 +143,6 @@ namespace QuanTriKhachSanN5.Controllers
             var token = _jwt.GenerateToken(user, roles, permissions);
 
             // Đồng bộ Response trả về giống hàm Login thường
-<<<<<<< HEAD
             return Ok(
                 new
                 {
@@ -153,23 +152,11 @@ namespace QuanTriKhachSanN5.Controllers
                         id = user.Id,
                         email = user.Email,
                         fullName = user.FullName,
+                        roleName = user.UserRoles.FirstOrDefault()?.Role.Name,
                     },
                     permissions = permissions,
                 }
             );
-=======
-            return Ok(new 
-            { 
-                token = token,
-                user = new { 
-                    id = user.Id, 
-                    email = user.Email, 
-                    fullName = user.FullName,
-                    roleName = user.UserRoles.FirstOrDefault()?.Role.Name 
-                },
-                permissions = permissions
-            });
->>>>>>> origin/dinh_nguyen
         }
     }
 }

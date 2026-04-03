@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QuanTriKhachSanN5.Data; // Bắt buộc phải có để xài DB Context
 using QuanTriKhachSanN5.Interfaces;
 using QuanTriKhachSanN5.Models;
-using QuanTriKhachSanN5.Data; // Bắt buộc phải có để xài DB Context
 
 namespace QuanTriKhachSanN5.Controllers
 {
@@ -17,7 +17,10 @@ namespace QuanTriKhachSanN5.Controllers
         private readonly ApplicationDbContext _context; // Khai báo thêm DB Context
 
         // Tiêm ApplicationDbContext vào hàm khởi tạo
-        public RoomInventoryController(IRoomInventoryService roomService, ApplicationDbContext context)
+        public RoomInventoryController(
+            IRoomInventoryService roomService,
+            ApplicationDbContext context
+        )
         {
             _roomService = roomService;
             _context = context;
@@ -33,7 +36,8 @@ namespace QuanTriKhachSanN5.Controllers
             try
             {
                 var inventory = await _context.RoomInventories.FindAsync(id);
-                if (inventory == null) return NotFound(new { message = "Không tìm thấy vật tư này." });
+                if (inventory == null)
+                    return NotFound(new { message = "Không tìm thấy vật tư này." });
 
                 // Chốt trạng thái "Hoạt động tốt" (true) vĩnh viễn xuống SQL
                 inventory.IsActive = true;
@@ -61,9 +65,13 @@ namespace QuanTriKhachSanN5.Controllers
 
         [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateInventory(int id, [FromBody] Room_Inventory inventory)
+        public async Task<IActionResult> UpdateInventory(
+            int id,
+            [FromBody] Room_Inventory inventory
+        )
         {
-            if (id != inventory.Id) return BadRequest(new { message = "ID không khớp!" });
+            if (id != inventory.Id)
+                return BadRequest(new { message = "ID không khớp!" });
             await _roomService.UpdateRoomInventoryAsync(inventory);
             return NoContent();
         }
@@ -84,12 +92,12 @@ namespace QuanTriKhachSanN5.Controllers
         [HttpGet("rooms")]
         public async Task<IActionResult> GetRooms()
         {
-            try 
+            try
             {
                 var rooms = await _roomService.GetRoomsAsync();
                 return Ok(rooms);
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 return StatusCode(500, new { message = "Lỗi Server: " + ex.Message });
             }
@@ -126,7 +134,10 @@ namespace QuanTriKhachSanN5.Controllers
         // =========================================================
         [Authorize(Roles = "Admin")]
         [HttpPost("rooms/{roomId}/inventory")]
-        public async Task<IActionResult> AssignAmenityToRoom(int roomId, [FromBody] Room_Inventory inventory)
+        public async Task<IActionResult> AssignAmenityToRoom(
+            int roomId,
+            [FromBody] Room_Inventory inventory
+        )
         {
             if (roomId != inventory.RoomId)
                 return BadRequest(new { message = "ID phòng không khớp." });
@@ -148,7 +159,7 @@ namespace QuanTriKhachSanN5.Controllers
         // 2. THÊM HÌNH ẢNH
         // =========================================================
         [Authorize(Roles = "Admin")]
-        [HttpPost("roomtypes/{roomTypeId}/images")] 
+        [HttpPost("roomtypes/{roomTypeId}/images")]
         public async Task<IActionResult> AddRoomImage(int roomTypeId, [FromBody] Room_Image image)
         {
             if (roomTypeId != image.RoomTypeId)
@@ -158,6 +169,7 @@ namespace QuanTriKhachSanN5.Controllers
 
             return Ok(new { Message = "Đã thêm hình ảnh loại phòng thành công!", Data = image });
         }
+
         // =========================================================
         // API CHUYÊN DỤNG CHO DỌN PHÒNG (HOUSEKEEPING)
         // =========================================================
@@ -168,7 +180,8 @@ namespace QuanTriKhachSanN5.Controllers
             try
             {
                 var room = await _context.Rooms.FindAsync(id);
-                if (room == null) return NotFound(new { message = "Không tìm thấy phòng!" });
+                if (room == null)
+                    return NotFound(new { message = "Không tìm thấy phòng!" });
 
                 // 1. Đổi trạng thái chính thành Phòng trống
                 room.Status = "Available";
@@ -176,7 +189,7 @@ namespace QuanTriKhachSanN5.Controllers
                 // 2. Đổi trạng thái Dọn dẹp thành Sạch sẽ (Clean)
                 // 💡 LƯU Ý: Nếu file Models/Room.cs của ní đặt tên biến là khác (VD: HousekeepingStatus)
                 // thì ní tự sửa lại chữ CleaningStatus ở dòng dưới cho khớp nha!
-                room.CleaningStatus = "Clean"; 
+                room.CleaningStatus = "Clean";
 
                 _context.Rooms.Update(room);
                 await _context.SaveChangesAsync();

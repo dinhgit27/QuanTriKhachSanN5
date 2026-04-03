@@ -70,16 +70,13 @@ namespace QuanTriKhachSanN5.Services
                 BasePrice = dto.BasePrice,
                 CapacityAdults = dto.CapacityAdults,
                 CapacityChildren = dto.CapacityChildren,
-<<<<<<< HEAD
-=======
                 // 👉 ĐẮP THÊM CÁC TRƯỜNG BỊ THIẾU VÀO ĐÂY:
                 SizeSqm = dto.SizeSqm,
                 BedType = dto.BedType,
                 ViewType = dto.ViewType,
                 IsActive = dto.IsActive,
                 Slug = dto.Slug,
-                Content = dto.Content
->>>>>>> origin/dinh_nguyen
+                Content = dto.Content,
             };
 
             _context.RoomTypes.Add(roomType);
