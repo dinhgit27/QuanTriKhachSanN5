@@ -43,8 +43,8 @@ public class AttractionService : IAttractionService
 
     public async Task<IEnumerable<AttractionDTO>> GetAllAsync()
     {
-        return await _db.Attractions
-            .AsNoTracking()
+        return await _db
+            .Attractions.AsNoTracking()
             .OrderByDescending(x => x.CreatedAt)
             .Select(x => Map(x))
             .ToListAsync();
@@ -52,9 +52,7 @@ public class AttractionService : IAttractionService
 
     public async Task<AttractionDTO?> GetByIdAsync(int id)
     {
-        var entity = await _db.Attractions
-            .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Id == id);
+        var entity = await _db.Attractions.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
 
         return entity is null ? null : Map(entity);
     }
@@ -73,8 +71,8 @@ public class AttractionService : IAttractionService
         return true;
     }
 
-    private static AttractionDTO Map(Attraction entity)
-        => new()
+    private static AttractionDTO Map(Attraction entity) =>
+        new()
         {
             Id = entity.Id,
             Name = entity.Name,

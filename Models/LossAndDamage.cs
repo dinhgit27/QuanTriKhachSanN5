@@ -16,7 +16,7 @@ namespace QuanTriKhachSanN5.Models
 
         [Column("room_inventory_id")]
         public int RoomInventoryId { get; set; }
-        
+
         // Navigation property để C# tự Join lấy tên vật tư bị hỏng
         public Room_Inventory? RoomInventory { get; set; }
 

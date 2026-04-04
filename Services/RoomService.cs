@@ -42,6 +42,7 @@ namespace QuanTriKhachSanN5.Services
                 await _context.SaveChangesAsync();
             }
         }
+
         public async Task UpdateRoomAsync(Room room)
         {
             _context.Rooms.Update(room);

@@ -1,12 +1,12 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuanTriKhachSanN5.Data;
 using QuanTriKhachSanN5.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace QuanTriKhachSanN5.Controllers
 {
@@ -28,9 +28,9 @@ namespace QuanTriKhachSanN5.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Order_Service>>> GetAll()
         {
-            return await _context.OrderServices
-                .Include(o => o.Details)
-                .ThenInclude(d => d.Service)
+            return await _context
+                .OrderServices.Include(o => o.Details)
+                    .ThenInclude(d => d.Service)
                 .OrderByDescending(o => o.OrderDate)
                 .ToListAsync();
         }
@@ -42,12 +42,13 @@ namespace QuanTriKhachSanN5.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Order_Service>> GetById(int id)
         {
-            var order = await _context.OrderServices
-                .Include(o => o.Details)
-                .ThenInclude(d => d.Service)
+            var order = await _context
+                .OrderServices.Include(o => o.Details)
+                    .ThenInclude(d => d.Service)
                 .FirstOrDefaultAsync(o => o.Id == id);
 
-            if (order == null) return NotFound("Không tìm thấy đơn dịch vụ.");
+            if (order == null)
+                return NotFound("Không tìm thấy đơn dịch vụ.");
 
             return order;
         }
@@ -60,18 +61,18 @@ namespace QuanTriKhachSanN5.Controllers
         public async Task<IActionResult> CreateOrder([FromBody] OrderRequest request)
         {
             var bookingDetail = await _context.BookingDetails.FindAsync(request.BookingDetailId);
-            
+
             if (bookingDetail == null)
                 return BadRequest("Không tìm thấy thông tin đặt phòng.");
 
             var order = new Order_Service
             {
                 BookingDetailId = request.BookingDetailId,
-                BookingId = bookingDetail.BookingId, 
+                BookingId = bookingDetail.BookingId,
                 OrderDate = DateTime.Now,
                 Status = "Pending",
                 TotalAmount = 0,
-                Details = new List<Order_Service_Detail>()
+                Details = new List<Order_Service_Detail>(),
             };
 
             decimal total = 0;
@@ -81,13 +82,14 @@ namespace QuanTriKhachSanN5.Controllers
                 foreach (var item in request.Items)
                 {
                     var service = await _context.Services.FindAsync(item.ServiceId);
-                    if (service == null) continue;
+                    if (service == null)
+                        continue;
 
                     var detail = new Order_Service_Detail
                     {
                         ServiceId = item.ServiceId,
                         Quantity = item.Quantity,
-                        UnitPrice = service.Price
+                        UnitPrice = service.Price,
                     };
 
                     order.Details.Add(detail);
@@ -110,7 +112,8 @@ namespace QuanTriKhachSanN5.Controllers
         public async Task<IActionResult> UpdateStatus(int id, [FromBody] string status)
         {
             var order = await _context.OrderServices.FindAsync(id);
-            if (order == null) return NotFound();
+            if (order == null)
+                return NotFound();
 
             order.Status = status;
             await _context.SaveChangesAsync();
@@ -126,7 +129,8 @@ namespace QuanTriKhachSanN5.Controllers
         public async Task<IActionResult> Cancel(int id)
         {
             var order = await _context.OrderServices.FindAsync(id);
-            if (order == null) return NotFound();
+            if (order == null)
+                return NotFound();
 
             order.Status = "Cancelled";
             await _context.SaveChangesAsync();

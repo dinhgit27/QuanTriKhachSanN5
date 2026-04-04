@@ -28,13 +28,13 @@ namespace QuanTriKhachSanN5.Models
         public string? Description { get; set; }
 
         [Column("size_sqm")]
-        public double? SizeSqm { get; set; } 
+        public double? SizeSqm { get; set; }
 
         [Column("bed_type")]
-        public string? BedType { get; set; } 
+        public string? BedType { get; set; }
 
         [Column("view_type")]
-        public string? ViewType { get; set; } 
+        public string? ViewType { get; set; }
 
         [Column("is_active")]
         public bool IsActive { get; set; } = true;

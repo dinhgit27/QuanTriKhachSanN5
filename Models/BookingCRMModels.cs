@@ -19,7 +19,6 @@ namespace QuanTriKhachSanN5.Models
         public decimal Price { get; set; }
     }
 
-
     // Bảng Memberships: Hạng thẻ thành viên
     public class Membership
     {

@@ -4,9 +4,9 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using QuanTriKhachSanN5.Data;
 using QuanTriKhachSanN5.DTOs; // Nhớ check namespace này
+using QuanTriKhachSanN5.DTOs;
 using QuanTriKhachSanN5.Interfaces;
 using QuanTriKhachSanN5.Models;
-using QuanTriKhachSanN5.DTOs;
 
 namespace QuanTriKhachSanN5.Services
 {
@@ -22,8 +22,8 @@ namespace QuanTriKhachSanN5.Services
         // 1. LẤY DANH SÁCH KÈM LOGIC TÍNH TOÁN (TRẢ VỀ DTO)
         public async Task<List<AmenityDto>> GetAllAmenitiesAsync()
         {
-            return await _context.Amenities
-                .Select(a => new AmenityDto
+            return await _context
+                .Amenities.Select(a => new AmenityDto
                 {
                     Id = a.Id,
                     Name = a.Name,
@@ -32,16 +32,23 @@ namespace QuanTriKhachSanN5.Services
                     ImageUrl = a.ImageUrl,
                     ImportPrice = a.ImportPrice,
                     TotalQuantity = a.TotalQuantity,
-                    
+
                     // Tính số lượng đã cấp dựa trên thực tế các phòng
-                    IssuedQuantity = _context.RoomInventories
-                        .Where(ri => ri.AmenityId == a.Id)
-                        .Sum(ri => (int?)ri.Quantity) ?? 0,
+                    IssuedQuantity =
+                        _context
+                            .RoomInventories.Where(ri => ri.AmenityId == a.Id)
+                            .Sum(ri => (int?)ri.Quantity)
+                        ?? 0,
 
                     // Tính số lượng khả dụng trong kho
-                    AvailableQuantity = a.TotalQuantity - (_context.RoomInventories
-                        .Where(ri => ri.AmenityId == a.Id)
-                        .Sum(ri => (int?)ri.Quantity) ?? 0)
+                    AvailableQuantity =
+                        a.TotalQuantity
+                        - (
+                            _context
+                                .RoomInventories.Where(ri => ri.AmenityId == a.Id)
+                                .Sum(ri => (int?)ri.Quantity)
+                            ?? 0
+                        ),
                 })
                 .ToListAsync();
         }

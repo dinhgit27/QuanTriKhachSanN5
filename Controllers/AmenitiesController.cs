@@ -2,9 +2,9 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QuanTriKhachSanN5.DTOs;
 using QuanTriKhachSanN5.Interfaces;
 using QuanTriKhachSanN5.Models;
-using QuanTriKhachSanN5.DTOs;
 
 namespace QuanTriKhachSanN5.Controllers
 {
@@ -24,10 +24,10 @@ namespace QuanTriKhachSanN5.Controllers
         [HttpGet]
         public async Task<ActionResult<List<AmenityDto>>> GetAllAmenities()
         {
-
             var amenities = await _amenityService.GetAllAmenitiesAsync();
             return Ok(amenities);
         }
+
         // 2. THÊM VẬT TƯ MỚI VÀO KHO
         [Authorize(Roles = "Admin")]
         [HttpPost]
@@ -42,8 +42,9 @@ namespace QuanTriKhachSanN5.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateAmenity(int id, [FromBody] Amenity amenity)
         {
-            if (id != amenity.Id) return BadRequest(new { message = "ID không khớp!" });
-            
+            if (id != amenity.Id)
+                return BadRequest(new { message = "ID không khớp!" });
+
             await _amenityService.UpdateAmenityAsync(amenity);
             return Ok(new { message = "Cập nhật thành công!" });
         }
@@ -65,7 +66,7 @@ namespace QuanTriKhachSanN5.Controllers
         [HttpPut("{id}/import")]
         public async Task<IActionResult> ImportStock(int id, [FromBody] ImportStockRequest request)
         {
-            if (request.AddedQuantity <= 0) 
+            if (request.AddedQuantity <= 0)
                 return BadRequest(new { message = "Số lượng nhập thêm phải lớn hơn 0 ní ơi!" });
 
             await _amenityService.ImportStockAsync(id, request.AddedQuantity);

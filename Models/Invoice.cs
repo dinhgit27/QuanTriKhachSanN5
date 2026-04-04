@@ -7,18 +7,29 @@ namespace QuanTriKhachSanN5.Models
     public class Invoice
     {
         [Key]
+        [Column("id")]
         public int Id { get; set; }
-        public int BookingId { get; set; }
-        public decimal RoomTotalCost { get; set; }
-        public decimal ServicesCost { get; set; }
-        public decimal DamageFee { get; set; }
-        public decimal VoucherDiscount { get; set; }
-        public decimal TotalAmount { get; set; }
-        
+
+        [Column("booking_id")]
+        public int? BookingId { get; set; }
+
+        [Column("total_room_amount")]
+        public decimal? TotalRoomAmount { get; set; }
+
+        [Column("total_service_amount")]
+        public decimal? TotalServiceAmount { get; set; }
+
+        [Column("discount_amount")]
+        public decimal? DiscountAmount { get; set; }
+
+        [Column("tax_amount")]
+        public decimal? TaxAmount { get; set; }
+
+        [Column("final_total")]
+        public decimal? FinalTotal { get; set; }
+
         [StringLength(50)]
-        public string Status { get; set; } = "Pending"; 
-        
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        [Column("status")]
+        public string? Status { get; set; } = "Unpaid";
     }
 }

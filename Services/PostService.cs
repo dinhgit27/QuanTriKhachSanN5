@@ -27,7 +27,8 @@ public class PostService : IPostService
         _db.Posts.Add(entity);
         await _db.SaveChangesAsync();
 
-        return await GetByIdAsync(entity.Id) ?? throw new InvalidOperationException("Could not map created post.");
+        return await GetByIdAsync(entity.Id)
+            ?? throw new InvalidOperationException("Could not map created post.");
     }
 
     public async Task<bool> DeleteAsync(int id)
@@ -43,8 +44,8 @@ public class PostService : IPostService
 
     public async Task<IEnumerable<PostDTO>> GetAllAsync()
     {
-        return await _db.Posts
-            .AsNoTracking()
+        return await _db
+            .Posts.AsNoTracking()
             .Include(x => x.Category)
             .OrderByDescending(x => x.CreatedAt)
             .Select(x => Map(x))
@@ -53,8 +54,8 @@ public class PostService : IPostService
 
     public async Task<PostDTO?> GetByIdAsync(int id)
     {
-        var entity = await _db.Posts
-            .AsNoTracking()
+        var entity = await _db
+            .Posts.AsNoTracking()
             .Include(x => x.Category)
             .FirstOrDefaultAsync(x => x.Id == id);
 
@@ -75,8 +76,8 @@ public class PostService : IPostService
         return true;
     }
 
-    private static PostDTO Map(Post entity)
-        => new()
+    private static PostDTO Map(Post entity) =>
+        new()
         {
             Id = entity.Id,
             Title = entity.Title,

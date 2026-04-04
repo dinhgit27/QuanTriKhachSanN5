@@ -29,7 +29,7 @@ namespace QuanTriKhachSanN5.Controllers
             var exist = await _context.Users.FirstOrDefaultAsync(x => x.Email == dto.Email);
             if (exist != null)
                 // Trả về dạng JSON (new { message = ... }) để Frontend React dễ bắt lỗi
-                return BadRequest(new { message = "Email đã tồn tại!" }); 
+                return BadRequest(new { message = "Email đã tồn tại!" });
 
             var user = new User
             {
@@ -57,7 +57,7 @@ namespace QuanTriKhachSanN5.Controllers
         {
             var user = await _context
                 .Users.Include(u => u.UserRoles)
-                    .Include(u => u.UserRoles)            
+                .Include(u => u.UserRoles)
                     .ThenInclude(ur => ur.Role)
                         .ThenInclude(r => r.RolePermissions)
                             .ThenInclude(rp => rp.Permission)
@@ -73,8 +73,10 @@ namespace QuanTriKhachSanN5.Controllers
                 return Unauthorized(new { message = "Tài khoản hoặc mật khẩu không đúng!" });
 
             // (Tùy chọn) TRẠM KIỂM SOÁT 3: Kiểm tra trạng thái tài khoản (Soft Delete)
-            // if (user.IsActive == false) 
-            //     return Unauthorized(new { message = "Tài khoản của bạn đã bị khóa!" });
+            if (!user.IsActive)
+            {
+                return Unauthorized(new { message = "Tài khoản của bạn đã bị khóa!" });
+            }
 
             // 3. Vượt qua hết mới bắt đầu lấy dữ liệu Role và Permission
             var roles = user.UserRoles.Select(ur => ur.Role.Name).ToList();
@@ -89,16 +91,19 @@ namespace QuanTriKhachSanN5.Controllers
             var token = _jwt.GenerateToken(user, roles, permissions);
 
             // 5. Trả về đúng cấu trúc mà React Frontend đang chờ để lưu vào Zustand store
-            return Ok(new 
-            { 
-                token = token,
-                user = new { 
-                    id = user.Id, 
-                    email = user.Email, 
-                    fullName = user.FullName 
-                },
-                permissions = permissions
-            });
+            return Ok(
+                new
+                {
+                    token = token,
+                    user = new
+                    {
+                        id = user.Id,
+                        email = user.Email,
+                        fullName = user.FullName,
+                    },
+                    permissions = permissions,
+                }
+            );
         }
 
         [HttpPost("google-login")]
@@ -140,17 +145,20 @@ namespace QuanTriKhachSanN5.Controllers
             var token = _jwt.GenerateToken(user, roles, permissions);
 
             // Đồng bộ Response trả về giống hàm Login thường
-            return Ok(new 
-            { 
-                token = token,
-                user = new { 
-                    id = user.Id, 
-                    email = user.Email, 
-                    fullName = user.FullName,
-                    roleName = user.UserRoles.FirstOrDefault()?.Role.Name 
-                },
-                permissions = permissions
-            });
+            return Ok(
+                new
+                {
+                    token = token,
+                    user = new
+                    {
+                        id = user.Id,
+                        email = user.Email,
+                        fullName = user.FullName,
+                        roleName = user.UserRoles.FirstOrDefault()?.Role.Name,
+                    },
+                    permissions = permissions,
+                }
+            );
         }
     }
 }

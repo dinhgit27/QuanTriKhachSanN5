@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace QuanTriKhachSanN5.Models
 {
-    [Table("Booking_Details")] 
+    [Table("Booking_Details")]
     public class BookingDetail
     {
         [Key]
@@ -18,7 +18,7 @@ namespace QuanTriKhachSanN5.Models
         public int RoomId { get; set; }
 
         [Column("room_type_id")]
-        public int? RoomTypeId { get; set; } 
+        public int? RoomTypeId { get; set; }
 
         [Column("check_in_date")]
         public DateTime CheckInDate { get; set; }
@@ -27,13 +27,13 @@ namespace QuanTriKhachSanN5.Models
         public DateTime CheckOutDate { get; set; }
 
         [Column("price_per_night")]
-        public decimal Price { get; set; } 
+        public decimal Price { get; set; }
 
         // Navigation properties
         public Booking? Booking { get; set; }
         public Room? Room { get; set; }
-        
+
         // DÒNG NÀY ĐỂ CHỮA LỖI CS1061 CỦA DB CONTEXT
-        public RoomType? RoomType { get; set; } 
+        public RoomType? RoomType { get; set; }
     }
 }
