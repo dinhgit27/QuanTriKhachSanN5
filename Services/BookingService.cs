@@ -70,7 +70,7 @@ namespace QuanTriKhachSanN5.Services
             var bookedRoomIds = await _context.BookingDetails
                 .Where(bd => bd.RoomTypeId == roomTypeId 
                           && bd.Booking.Status != "Cancelled" 
-                          && bd.RoomId != null // Chỉ xét những booking đã được Lễ tân gán số phòng
+                          && bd.RoomId > 0 // Chỉ xét những booking đã được Lễ tân gán số phòng
                           && bd.CheckInDate < checkOut 
                           && bd.CheckOutDate > checkIn) // LOGIC OVERLAP
                 .Select(bd => bd.RoomId)

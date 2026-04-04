@@ -28,7 +28,6 @@ namespace QuanTriKhachSanN5.Controllers
                 .Select(u => new 
                 {
                     u.Id,
-                    u.Username,
                     u.Email,
                     Roles = u.UserRoles.Select(ur => ur.Role.Name)
                 })
