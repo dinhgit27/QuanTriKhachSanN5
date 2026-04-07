@@ -1,5 +1,5 @@
 // =========================================================================
-// MODULE 3: ROOM INVENTORY - SERVICE (BẢN FULL OPTION)
+// MODULE 3: ROOM INVENTORY - SERVICE (BẢN FULL OPTION ĐÃ FIX EQUIPMENT)
 // =========================================================================
 
 using System.Collections.Generic;
@@ -24,13 +24,10 @@ namespace QuanTriKhachSanN5.Services
 
         public async Task<List<object>> GetRoomsAsync()
         {
-            // BƯỚC 1: Dùng ToListAsync() TRƯỚC để ép C# kéo hết dữ liệu thật từ SQL về RAM.
-            // Điều này giúp cắt đứt mọi lỗi dịch câu lệnh của Entity Framework.
             var rooms = await _context.Rooms
                 .Include(r => r.RoomType)
                 .ToListAsync();
 
-            // BƯỚC 2: Sau khi có data, mới dùng Select để tạo object gọn nhẹ, cắt đứt vòng lặp JSON.
             var result = rooms.Select(r => new {
                 Id = r.Id,
                 RoomNumber = r.RoomNumber,
@@ -56,29 +53,28 @@ namespace QuanTriKhachSanN5.Services
             }
         }
 
-        public async Task<List<Amenity>> GetAmenitiesAsync()
+        // =========================================================
+        // CHÚ Ý: VẪN GIỮ HÀM NÀY NẾU CÓ DÙNG CHỖ KHÁC, NHƯNG NÓ LẤY TỪ EQUIPMENT
+        // =========================================================
+        public async Task<List<Equipment>> GetAmenitiesAsync() 
         {
-            return await _context.Amenities.ToListAsync();
+            // Trả về danh sách Equipments thay vì Amenities cũ
+            return await _context.Equipments.ToListAsync();
         }
 
         public async Task<List<Room_Inventory>> GetRoomInventoryAsync(int roomId)
         {
             return await _context.RoomInventories
                 .Where(ri => ri.RoomId == roomId)
-                .Include(ri => ri.Amenity)
+                .Include(ri => ri.Equipment) // ĐÃ SỬA AMENITY THÀNH EQUIPMENT
                 .ToListAsync();
         }
 
-        // =========================================================
-        // CÁC HÀM MỚI BỔ SUNG ĐỂ REACT KHÔNG BỊ LỖI 404/500
-        // =========================================================
-
         public async Task<List<Room_Inventory>> GetAllInventoriesAsync()
         {
-            // Lấy tất cả vật tư, nhớ Include để React lấy được tên Phòng và tên Vật tư
             return await _context.RoomInventories
                 .Include(ri => ri.Room)
-                .Include(ri => ri.Amenity)
+                .Include(ri => ri.Equipment) // ĐÃ SỬA AMENITY THÀNH EQUIPMENT
                 .ToListAsync();
         }
 
@@ -106,7 +102,6 @@ namespace QuanTriKhachSanN5.Services
 
         public async Task AddRoomImageAsync(Room_Image image)
         {
-            // Lưu ý: Trong file ApplicationDbContext.cs của ní phải có public DbSet<Room_Image> RoomImages { get; set; } nha
             _context.Add(image); 
             await _context.SaveChangesAsync();
         }

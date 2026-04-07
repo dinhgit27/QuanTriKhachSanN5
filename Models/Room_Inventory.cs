@@ -5,16 +5,16 @@ namespace QuanTriKhachSanN5.Models
     [Table("Room_Inventory")]
     public class Room_Inventory
     {
-        
         public int Id { get; set; }
 
         [Column("room_id")]
         public int RoomId { get; set; }
         public Room? Room { get; set; }
 
-        [Column("EquipmentId")] // Khớp với tên EquipmentId trong SQL của ní
-        public int AmenityId { get; set; } 
-        public Amenity? Amenity { get; set; }
+        // ĐÃ CHUYỂN HOÀN TOÀN SANG EQUIPMENT
+        [Column("EquipmentId")] 
+        public int EquipmentId { get; set; } 
+        public Equipment? Equipment { get; set; }
 
         public int Quantity { get; set; }
 

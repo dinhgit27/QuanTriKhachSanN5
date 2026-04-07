@@ -15,6 +15,7 @@ namespace QuanTriKhachSanN5.Data
         public DbSet<Room> Rooms { get; set; }
         public DbSet<RoomType> RoomTypes { get; set; }
         public DbSet<Booking> Bookings { get; set; }
+        public DbSet<Equipment> Equipments { get; set; }
         
         // Đã đồng nhất tên class thành BookingDetail để không bị lỗi
         public DbSet<BookingDetail> BookingDetails { get; set; }

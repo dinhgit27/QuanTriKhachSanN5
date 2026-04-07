@@ -1,22 +1,34 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using QuanTriKhachSanN5.Interfaces;
 using QuanTriKhachSanN5.Models;
-using QuanTriKhachSanN5.Data; // Bắt buộc phải có để xài DB Context
+using QuanTriKhachSanN5.Data;
 
 namespace QuanTriKhachSanN5.Controllers
 {
+    // =========================================================
+    // DTO: CLASS PHIÊN DỊCH DỮ LIỆU TỪ REACT GỬI LÊN
+    // =========================================================
+    public class AssignInventoryDto
+    {
+        public int RoomId { get; set; }
+        public int AmenityId { get; set; } // React gửi chữ này
+        public int Quantity { get; set; }
+        public bool IsActive { get; set; }
+    }
+
     [ApiController]
     [Route("api/[controller]")]
     public class RoomInventoryController : ControllerBase
     {
         private readonly IRoomInventoryService _roomService;
-        private readonly ApplicationDbContext _context; // Khai báo thêm DB Context
+        private readonly ApplicationDbContext _context;
 
-        // Tiêm ApplicationDbContext vào hàm khởi tạo
         public RoomInventoryController(IRoomInventoryService roomService, ApplicationDbContext context)
         {
             _roomService = roomService;
@@ -24,7 +36,91 @@ namespace QuanTriKhachSanN5.Controllers
         }
 
         // =========================================================
-        // API KHÔI PHỤC VẬT TƯ (CHO NÚT "ĐÃ THAY MỚI" CỦA KỸ THUẬT)
+        // 1. LẤY DANH SÁCH VẬT TƯ ĐỂ ĐỔ VÀO DROPDOWN (React gọi /amenities)
+        // =========================================================
+        [Authorize(Roles = "Admin,Receptionist")]
+        [HttpGet("amenities")]
+        public async Task<IActionResult> GetAmenities()
+        {
+            // React vẫn gọi đường dẫn "amenities", nhưng mình ngầm chui vào kho "Equipments" lấy đồ ra
+            var equipments = await _context.Equipments
+                                           .Where(e => e.IsActive == true)
+                                           .ToListAsync();
+            return Ok(equipments);
+        }
+
+        // =========================================================
+        // 2. LẤY DANH SÁCH TÀI SẢN TRONG 1 PHÒNG (KÈM TÊN VÀ ẢNH)
+        // =========================================================
+        [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
+        [HttpGet("rooms/{roomId}/inventory")]
+        public async Task<IActionResult> GetRoomInventory(int roomId)
+        {
+            var inventory = await _context.RoomInventories
+                .Where(ri => ri.RoomId == roomId)
+                .Include(ri => ri.Equipment) // Gắn Equipment vào để lấy tên/giá/ảnh
+                .Select(ri => new {
+                    id = ri.Id,
+                    roomId = ri.RoomId,
+                    amenityId = ri.EquipmentId, // Trả về chữ amenityId để React hiểu
+                    quantity = ri.Quantity,
+                    isActive = ri.IsActive,
+                    amenityName = ri.Equipment != null ? ri.Equipment.Name : "Không xác định",
+                    
+                    // Gói lại thành object amenity cho React hiển thị
+                    amenity = new {
+                        name = ri.Equipment != null ? ri.Equipment.Name : "Không xác định",
+                        price = ri.Equipment != null ? ri.Equipment.DefaultPriceIfLost : 0,
+                        imageUrl = ri.Equipment != null ? ri.Equipment.ImageUrl : null
+                    }
+                })
+                .ToListAsync();
+
+            return Ok(inventory);
+        }
+
+        // =========================================================
+        // 3. GÁN VẬT TƯ VÀO PHÒNG (React gửi POST)
+        // =========================================================
+        [Authorize(Roles = "Admin")]
+        [HttpPost("rooms/{roomId}/inventory")]
+        public async Task<IActionResult> AssignEquipmentToRoom(int roomId, [FromBody] AssignInventoryDto dto)
+        {
+            if (roomId != dto.RoomId) return BadRequest(new { message = "ID phòng không khớp." });
+
+            // Hóa phép từ DTO của React thành Model thực tế của C#
+            var newInventory = new Room_Inventory
+            {
+                RoomId = dto.RoomId,
+                EquipmentId = dto.AmenityId, // Chuyển AmenityId -> EquipmentId
+                Quantity = dto.Quantity,
+                IsActive = true
+            };
+
+            _context.RoomInventories.Add(newInventory);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { Message = "Đã gán vật tư cho phòng thành công!", Data = newInventory });
+        }
+
+        // =========================================================
+        // 4. XÓA VẬT TƯ KHỎI PHÒNG
+        // =========================================================
+        [Authorize(Roles = "Admin")]
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteInventory(int id)
+        {
+            var item = await _context.RoomInventories.FindAsync(id);
+            if (item != null)
+            {
+                _context.RoomInventories.Remove(item);
+                await _context.SaveChangesAsync();
+            }
+            return NoContent(); // Cứ trả về NoContent là React hiểu đã xóa thành công
+        }
+
+        // =========================================================
+        // 5. KHÔI PHỤC VẬT TƯ BỊ HỎNG (Nút "Đã thay mới")
         // =========================================================
         [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
         [HttpPut("restore/{id}")]
@@ -35,7 +131,6 @@ namespace QuanTriKhachSanN5.Controllers
                 var inventory = await _context.RoomInventories.FindAsync(id);
                 if (inventory == null) return NotFound(new { message = "Không tìm thấy vật tư này." });
 
-                // Chốt trạng thái "Hoạt động tốt" (true) vĩnh viễn xuống SQL
                 inventory.IsActive = true;
                 _context.RoomInventories.Update(inventory);
                 await _context.SaveChangesAsync();
@@ -48,51 +143,16 @@ namespace QuanTriKhachSanN5.Controllers
             }
         }
 
-        // =========================================================
-        // 0. API LẤY TẤT CẢ VẬT TƯ (Bơm máu cho bảng React)
-        // =========================================================
-        [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
-        [HttpGet]
-        public async Task<ActionResult<List<Room_Inventory>>> GetAllInventories()
-        {
-            var inventories = await _roomService.GetAllInventoriesAsync();
-            return Ok(inventories);
-        }
-
-        [Authorize(Roles = "Admin")]
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateInventory(int id, [FromBody] Room_Inventory inventory)
-        {
-            if (id != inventory.Id) return BadRequest(new { message = "ID không khớp!" });
-            await _roomService.UpdateRoomInventoryAsync(inventory);
-            return NoContent();
-        }
-
-        [Authorize(Roles = "Admin")]
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteInventory(int id)
-        {
-            await _roomService.DeleteRoomInventoryAsync(id);
-            return NoContent();
-        }
 
         // =========================================================
-        // CÁC API CŨ CỦA NÍ ĐÃ ĐƯỢC CHUẨN HÓA LẠI
+        // CÁC API VỀ PHÒNG (GIỮ NGUYÊN KHÔNG ĐỤNG ĐẾN)
         // =========================================================
-
         [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
         [HttpGet("rooms")]
         public async Task<IActionResult> GetRooms()
         {
-            try 
-            {
-                var rooms = await _roomService.GetRoomsAsync();
-                return Ok(rooms);
-            }
-            catch (Exception ex) 
-            {
-                return StatusCode(500, new { message = "Lỗi Server: " + ex.Message });
-            }
+            try { return Ok(await _roomService.GetRoomsAsync()); }
+            catch (Exception ex) { return StatusCode(500, new { message = "Lỗi Server: " + ex.Message }); }
         }
 
         [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
@@ -100,8 +160,7 @@ namespace QuanTriKhachSanN5.Controllers
         public async Task<ActionResult<Room>> GetRoom(int id)
         {
             var room = await _roomService.GetRoomByIdAsync(id);
-            if (room == null)
-                return NotFound();
+            if (room == null) return NotFound();
             return Ok(room);
         }
 
@@ -113,54 +172,6 @@ namespace QuanTriKhachSanN5.Controllers
             return NoContent();
         }
 
-        [Authorize(Roles = "Admin,Receptionist")]
-        [HttpGet("amenities")]
-        public async Task<ActionResult<List<Amenity>>> GetAmenities()
-        {
-            var amenities = await _roomService.GetAmenitiesAsync();
-            return Ok(amenities);
-        }
-
-        // =========================================================
-        // 1. GÁN VẬT TƯ / TIỆN ÍCH CHO PHÒNG
-        // =========================================================
-        [Authorize(Roles = "Admin")]
-        [HttpPost("rooms/{roomId}/inventory")]
-        public async Task<IActionResult> AssignAmenityToRoom(int roomId, [FromBody] Room_Inventory inventory)
-        {
-            if (roomId != inventory.RoomId)
-                return BadRequest(new { message = "ID phòng không khớp." });
-
-            await _roomService.AddRoomInventoryAsync(inventory);
-
-            return Ok(new { Message = "Đã gán vật tư cho phòng thành công!", Data = inventory });
-        }
-
-        [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
-        [HttpGet("rooms/{roomId}/inventory")]
-        public async Task<ActionResult<List<Room_Inventory>>> GetRoomInventory(int roomId)
-        {
-            var inventory = await _roomService.GetRoomInventoryAsync(roomId);
-            return Ok(inventory);
-        }
-
-        // =========================================================
-        // 2. THÊM HÌNH ẢNH
-        // =========================================================
-        [Authorize(Roles = "Admin")]
-        [HttpPost("roomtypes/{roomTypeId}/images")] 
-        public async Task<IActionResult> AddRoomImage(int roomTypeId, [FromBody] Room_Image image)
-        {
-            if (roomTypeId != image.RoomTypeId)
-                return BadRequest(new { message = "ID loại phòng không khớp." });
-
-            await _roomService.AddRoomImageAsync(image);
-
-            return Ok(new { Message = "Đã thêm hình ảnh loại phòng thành công!", Data = image });
-        }
-        // =========================================================
-        // API CHUYÊN DỤNG CHO DỌN PHÒNG (HOUSEKEEPING)
-        // =========================================================
         [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
         [HttpPut("rooms/{id}/mark-clean")]
         public async Task<IActionResult> MarkRoomAsClean(int id)
@@ -170,23 +181,14 @@ namespace QuanTriKhachSanN5.Controllers
                 var room = await _context.Rooms.FindAsync(id);
                 if (room == null) return NotFound(new { message = "Không tìm thấy phòng!" });
 
-                // 1. Đổi trạng thái chính thành Phòng trống
                 room.Status = "Available";
-
-                // 2. Đổi trạng thái Dọn dẹp thành Sạch sẽ (Clean)
-                // 💡 LƯU Ý: Nếu file Models/Room.cs của ní đặt tên biến là khác (VD: HousekeepingStatus)
-                // thì ní tự sửa lại chữ CleaningStatus ở dòng dưới cho khớp nha!
                 room.CleaningStatus = "Clean"; 
-
                 _context.Rooms.Update(room);
                 await _context.SaveChangesAsync();
 
                 return Ok(new { message = "Đã dọn phòng sạch sẽ!" });
             }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = "Lỗi SQL: " + ex.Message });
-            }
+            catch (Exception ex) { return BadRequest(new { message = "Lỗi SQL: " + ex.Message }); }
         }
     }
 }
