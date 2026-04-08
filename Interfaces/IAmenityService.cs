@@ -7,11 +7,11 @@ namespace QuanTriKhachSanN5.Interfaces
 {
     public interface IAmenityService
     {
-        Task<List<AmenityDto>> GetAllAmenitiesAsync(); 
-
-        Task<Amenity> GetAmenityByIdAsync(int id);
-        Task<Amenity> CreateAmenityAsync(Amenity amenity);
-        Task UpdateAmenityAsync(Amenity amenity);
+        Task<List<AmenityDto>> GetAllAmenitiesAsync();
+        // Đổi Amenity thành Equipment ở đây
+        Task<Equipment> GetAmenityByIdAsync(int id);
+        Task<Equipment> CreateAmenityAsync(Equipment equipment);
+        Task UpdateAmenityAsync(Equipment equipment);
         Task DeleteAmenityAsync(int id);
         Task ImportStockAsync(int id, int addedQuantity);
     }

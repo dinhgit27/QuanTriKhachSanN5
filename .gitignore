@@ -1,8 +1,6 @@
 # Các file build của .NET
 [Bb]in/
 [Oo]bj/
-bin/
-obj/
 
 # Các file rác của Visual Studio / VS Code
 .vs/

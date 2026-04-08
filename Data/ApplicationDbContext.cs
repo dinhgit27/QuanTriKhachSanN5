@@ -15,6 +15,7 @@ namespace QuanTriKhachSanN5.Data
         public DbSet<Room> Rooms { get; set; }
         public DbSet<RoomType> RoomTypes { get; set; }
         public DbSet<Booking> Bookings { get; set; }
+        public DbSet<Equipment> Equipments { get; set; }
         
         // Đã đồng nhất tên class thành BookingDetail để không bị lỗi
         public DbSet<BookingDetail> BookingDetails { get; set; }
@@ -22,6 +23,7 @@ namespace QuanTriKhachSanN5.Data
         public DbSet<Article> Articles { get; set; }
         public DbSet<Article_Category> ArticleCategories { get; set; }
         public DbSet<Attraction> Attractions { get; set; }
+        public DbSet<AttractionImage> AttractionImages { get; set; }
         public DbSet<Review> Reviews { get; set; }
         public DbSet<Invoice> Invoices { get; set; }
         public DbSet<Payment> Payments { get; set; }

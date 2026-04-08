@@ -3,8 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using QuanTriKhachSanN5.Data;
-using QuanTriKhachSanN5.DTOs; // Nhớ check namespace này
-using QuanTriKhachSanN5.DTOs;
+using QuanTriKhachSanN5.DTOs; 
 using QuanTriKhachSanN5.Interfaces;
 using QuanTriKhachSanN5.Models;
 
@@ -19,76 +18,69 @@ namespace QuanTriKhachSanN5.Services
             _context = context;
         }
 
-        // 1. LẤY DANH SÁCH KÈM LOGIC TÍNH TOÁN (TRẢ VỀ DTO)
+        // 1. LẤY DANH SÁCH KÈM LOGIC TÍNH TOÁN (DÙNG CHO TRANG KHO VẬT TƯ)
         public async Task<List<AmenityDto>> GetAllAmenitiesAsync()
         {
-            return await _context
-                .Amenities.Select(a => new AmenityDto
+            // Chuyển sang lấy dữ liệu từ bảng Equipments mới
+            return await _context.Equipments
+                .Select(e => new AmenityDto
                 {
-                    Id = a.Id,
-                    Name = a.Name,
-                    Category = a.Category,
-                    Unit = a.Unit,
-                    ImageUrl = a.ImageUrl,
-                    ImportPrice = a.ImportPrice,
-                    TotalQuantity = a.TotalQuantity,
+                    Id = e.Id,
+                    Name = e.Name,
+                    Category = e.Category,
+                    Unit = e.Unit,
+                    ImageUrl = e.ImageUrl,
+                    ImportPrice = e.BasePrice ?? 0, // Map BasePrice sang ImportPrice cho DTO
+                    TotalQuantity = e.TotalQuantity ?? 0,
+                    
+                    // Tính số lượng đã cấp dựa trên EquipmentId
+                    IssuedQuantity = _context.RoomInventories
+                        .Where(ri => ri.EquipmentId == e.Id)
+                        .Sum(ri => (int?)ri.Quantity) ?? 0,
 
-                    // Tính số lượng đã cấp dựa trên thực tế các phòng
-                    IssuedQuantity =
-                        _context
-                            .RoomInventories.Where(ri => ri.AmenityId == a.Id)
-                            .Sum(ri => (int?)ri.Quantity)
-                        ?? 0,
-
-                    // Tính số lượng khả dụng trong kho
-                    AvailableQuantity =
-                        a.TotalQuantity
-                        - (
-                            _context
-                                .RoomInventories.Where(ri => ri.AmenityId == a.Id)
-                                .Sum(ri => (int?)ri.Quantity)
-                            ?? 0
-                        ),
+                    // Tính số lượng khả dụng thực tế trong kho
+                    AvailableQuantity = (e.TotalQuantity ?? 0) - (_context.RoomInventories
+                        .Where(ri => ri.EquipmentId == e.Id)
+                        .Sum(ri => (int?)ri.Quantity) ?? 0)
                 })
                 .ToListAsync();
         }
 
-        public async Task<Amenity> GetAmenityByIdAsync(int id)
+        public async Task<Equipment> GetAmenityByIdAsync(int id)
         {
-            return await _context.Amenities.FindAsync(id);
+            return await _context.Equipments.FindAsync(id);
         }
 
-        public async Task<Amenity> CreateAmenityAsync(Amenity amenity)
+        public async Task<Equipment> CreateAmenityAsync(Equipment equipment)
         {
-            _context.Amenities.Add(amenity);
+            _context.Equipments.Add(equipment);
             await _context.SaveChangesAsync();
-            return amenity;
+            return equipment;
         }
 
-        public async Task UpdateAmenityAsync(Amenity amenity)
+        public async Task UpdateAmenityAsync(Equipment equipment)
         {
-            // Khi update, ta update model gốc Amenity
-            _context.Amenities.Update(amenity);
+            _context.Equipments.Update(equipment);
             await _context.SaveChangesAsync();
         }
 
         public async Task DeleteAmenityAsync(int id)
         {
-            var amenity = await _context.Amenities.FindAsync(id);
-            if (amenity != null)
+            var equipment = await _context.Equipments.FindAsync(id);
+            if (equipment != null)
             {
-                _context.Amenities.Remove(amenity);
+                _context.Equipments.Remove(equipment);
                 await _context.SaveChangesAsync();
             }
         }
 
-        // HÀM NHẬP KHO: Tăng tổng sở hữu của khách sạn
+        // HÀM NHẬP KHO
         public async Task ImportStockAsync(int id, int addedQuantity)
         {
-            var amenity = await _context.Amenities.FindAsync(id);
-            if (amenity != null)
+            var equipment = await _context.Equipments.FindAsync(id);
+            if (equipment != null)
             {
-                amenity.TotalQuantity += addedQuantity;
+                equipment.TotalQuantity = (equipment.TotalQuantity ?? 0) + addedQuantity;
                 await _context.SaveChangesAsync();
             }
         }

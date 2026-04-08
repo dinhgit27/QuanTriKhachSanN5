@@ -11,15 +11,10 @@ namespace QuanTriKhachSanN5.Models
         public int RoomId { get; set; }
         public Room? Room { get; set; }
 
-        [Column("EquipmentId")] // Khớp với tên EquipmentId trong SQL của ní
-        public int AmenityId { get; set; }
-        public Amenity? Amenity { get; set; }
-
         public int Quantity { get; set; }
 
         [Column("price_if_lost")]
         public decimal PriceIfLost { get; set; }
-
         public string? Note { get; set; }
 
         [Column("is_active")]

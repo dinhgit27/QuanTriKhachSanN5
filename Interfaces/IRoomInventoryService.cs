@@ -10,15 +10,14 @@ namespace QuanTriKhachSanN5.Interfaces
         Task<Room> GetRoomByIdAsync(int id);
         Task UpdateRoomStatusAsync(int roomId, string status);
         
-        Task<List<Amenity>> GetAmenitiesAsync();
+        // Đổi Task<List<Amenity>> thành Task<List<Equipment>> ở đây
+        Task<List<Equipment>> GetAmenitiesAsync(); 
+        
         Task<List<Room_Inventory>> GetRoomInventoryAsync(int roomId);
-
-        // --- CÁC HÀM MỚI BỔ SUNG CHO ĐỦ BỘ CRUD ---
         Task<List<Room_Inventory>> GetAllInventoriesAsync();
         Task AddRoomInventoryAsync(Room_Inventory inventory);
         Task UpdateRoomInventoryAsync(Room_Inventory inventory);
         Task DeleteRoomInventoryAsync(int id);
-        
         Task AddRoomImageAsync(Room_Image image);
     }
 }

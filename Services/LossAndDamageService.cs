@@ -18,10 +18,10 @@ namespace QuanTriKhachSanN5.Services
 
         public async Task<List<LossAndDamage>> GetAllLossAndDamagesAsync()
         {
-            // Có Include để lấy được tên đồ vật bị hỏng luôn
-            return await _context
-                .LossAndDamages.Include(ld => ld.RoomInventory)
-                    .ThenInclude(ri => ri.Amenity)
+            // ĐÃ FIX: Đổi ThenInclude(ri => ri.Amenity) thành ThenInclude(ri => ri.Equipment)
+            return await _context.LossAndDamages
+                .Include(ld => ld.RoomInventory)
+                    .ThenInclude(ri => ri.Equipment)
                 .ToListAsync();
         }
 
@@ -54,6 +54,7 @@ namespace QuanTriKhachSanN5.Services
             data.PenaltyAmount = model.PenaltyAmount;
             data.Description = model.Description;
             data.ImageUrl = model.ImageUrl;
+            data.Status = model.Status; // Cập nhật thêm status nếu cần
 
             await _context.SaveChangesAsync();
             return data;

@@ -84,8 +84,8 @@ namespace QuanTriKhachSanN5.Controllers
             // user.PhoneNumber = request.PhoneNumber;
 
             // 2. Cập nhật chức vụ (Role) theo đúng luật EF Core: Xóa cũ -> Thêm mới
-            var currentRole = user.UserRoles.FirstOrDefault();
-
+            var currentRole = user.UserRoles?.FirstOrDefault();
+            
             // Bước A: Nếu có role cũ thì xóa nó đi
             if (currentRole != null)
             {
