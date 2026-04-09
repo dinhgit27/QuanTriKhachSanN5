@@ -99,5 +99,82 @@ namespace QuanTriKhachSanN5.Controllers
 
             return Ok(new { message = "Đặt phòng thành công!", bookingCode = newBooking.BookingCode });
         }
+        [HttpGet]
+        public async Task<IActionResult> GetAllBookings()
+        {
+            var bookings = await _context.Bookings
+                .Include(b => b.BookingDetails)
+                .OrderByDescending(b => b.Id)
+                .Select(b => new {
+                    id = b.Id,
+                    bookingCode = b.BookingCode,
+                    guestName = b.GuestName,
+                    checkInDate = b.BookingDetails.Any() ? b.BookingDetails.Min(d => d.CheckInDate) : (DateTime?)null,
+                    status = b.Status
+                })
+                .ToListAsync();
+
+            return Ok(bookings);
+        }
+        // ==============================================================================
+        // 4. LẤY CHI TIẾT 1 ĐƠN ĐẶT PHÒNG
+        // ==============================================================================
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetBookingDetail(int id)
+        {
+            var booking = await _context.Bookings
+                .Include(b => b.BookingDetails)
+                    .ThenInclude(bd => bd.Room)
+                .Include(b => b.BookingDetails)
+                    .ThenInclude(bd => bd.RoomType)
+                .FirstOrDefaultAsync(b => b.Id == id);
+
+            if (booking == null) return NotFound(new { message = "Không tìm thấy đơn đặt phòng!" });
+
+            // Tính tổng tiền
+            decimal totalAmount = booking.BookingDetails.Sum(bd => 
+                bd.PricePerNight * ((bd.CheckOutDate - bd.CheckInDate).Days == 0 ? 1 : (bd.CheckOutDate - bd.CheckInDate).Days));
+
+            return Ok(new {
+                id = booking.Id,
+                bookingCode = booking.BookingCode,
+                guestName = booking.GuestName,
+                guestPhone = booking.GuestPhone,
+                guestEmail = booking.GuestEmail,
+                status = booking.Status,
+                totalAmount = totalAmount,
+                details = booking.BookingDetails.Select(d => new {
+                    roomNumber = d.Room?.RoomNumber,
+                    roomTypeName = d.RoomType?.Name,
+                    checkIn = d.CheckInDate,
+                    checkOut = d.CheckOutDate,
+                    pricePerNight = d.PricePerNight
+                })
+            });
+        }
+
+        // ==============================================================================
+        // 5. CẬP NHẬT TRẠNG THÁI (XÁC NHẬN / HỦY)
+        // ==============================================================================
+        [HttpPut("{id}/status")]
+        public async Task<IActionResult> UpdateBookingStatus(int id, [FromBody] UpdateStatusDto req)
+        {
+            var booking = await _context.Bookings.FindAsync(id);
+            if (booking == null) return NotFound(new { message = "Không tìm thấy đơn!" });
+
+            // Khi Hủy đơn, hệ thống SQL tự động nhả phòng trống ra (vì API GetAvailableRooms đã lọc Cancelled rồi)
+            booking.Status = req.Status;
+            await _context.SaveChangesAsync();
+            
+            return Ok(new { message = "Cập nhật trạng thái thành công!" });
+        }
+    } // ĐÂY LÀ DẤU NGOẶC ĐÓNG CỦA CLASS BookingsController
+
+    // Ní chèn thêm cái class DTO này ngay BÊN DƯỚI class BookingsController nha
+    public class UpdateStatusDto 
+    {
+        public string Status { get; set; }
     }
+        
+    
 }
