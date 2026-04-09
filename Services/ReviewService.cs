@@ -143,7 +143,7 @@ namespace QuanTriKhachSanN5.Services
             {
                 var booking = await _context
                     .Bookings.Include(b => b.BookingDetails)
-                    .FirstOrDefaultAsync(b => b.Id == dto.BookingId.Value && b.GuestId == userId);
+                    .FirstOrDefaultAsync(b => b.Id == dto.BookingId.Value && b.UserId == userId);
 
                 if (
                     booking != null

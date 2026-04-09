@@ -1,33 +1,36 @@
-using System.ComponentModel.DataAnnotations;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace QuanTriKhachSanN5.Models
 {
+    [Table("Bookings")]
     public class Booking
     {
-        [Key]
         public int Id { get; set; }
 
-        [Required]
-        public int GuestId { get; set; }
-        public User Guest { get; set; }
+        [Column("user_id")]
+        public int? UserId { get; set; }
 
-        [Required]
-        public int RoomId { get; set; }
-        public Room Room { get; set; }
+        [Column("guest_name")]
+        public string? GuestName { get; set; }
 
-        [Required]
-        public DateTime CheckInDate { get; set; }
+        [Column("guest_phone")]
+        public string? GuestPhone { get; set; }
 
-        [Required]
-        public DateTime CheckOutDate { get; set; }
+        [Column("guest_email")]
+        public string? GuestEmail { get; set; }
 
-        public string Status { get; set; } // Pending, Confirmed, CheckedIn, CheckedOut, Cancelled
+        [Column("booking_code")]
+        public string? BookingCode { get; set; }
 
-        public decimal TotalAmount { get; set; }
+        [Column("voucher_id")]
+        public int? VoucherId { get; set; }
 
-        public DateTime CreatedAt { get; set; }
+        [Column("status")]
+        public string? Status { get; set; } // Vd: Pending, Confirmed, Checked_in, Completed, Cancelled
 
-        // Navigation properties
-        public ICollection<Booking_Detail> BookingDetails { get; set; }
+        // Navigation property (1 Booking có nhiều Chi tiết đặt phòng)
+        public ICollection<BookingDetail>? BookingDetails { get; set; }
     }
 }

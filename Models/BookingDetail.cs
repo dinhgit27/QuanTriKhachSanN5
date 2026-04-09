@@ -1,21 +1,18 @@
 using System;
-using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace QuanTriKhachSanN5.Models
 {
     [Table("Booking_Details")]
-    public class BookingDetail
+    public class BookingDetail 
     {
-        [Key]
-        [Column("id")]
         public int Id { get; set; }
 
         [Column("booking_id")]
         public int BookingId { get; set; }
 
         [Column("room_id")]
-        public int RoomId { get; set; }
+        public int? RoomId { get; set; }
 
         [Column("room_type_id")]
         public int? RoomTypeId { get; set; }
@@ -27,13 +24,15 @@ namespace QuanTriKhachSanN5.Models
         public DateTime CheckOutDate { get; set; }
 
         [Column("price_per_night")]
-        public decimal Price { get; set; }
+        public decimal PricePerNight { get; set; }
 
-        // Navigation properties
+        [ForeignKey("BookingId")]
         public Booking? Booking { get; set; }
+
+        [ForeignKey("RoomId")]
         public Room? Room { get; set; }
 
-        // DÒNG NÀY ĐỂ CHỮA LỖI CS1061 CỦA DB CONTEXT
+        [ForeignKey("RoomTypeId")]
         public RoomType? RoomType { get; set; }
     }
 }
