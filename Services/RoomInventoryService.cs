@@ -10,7 +10,6 @@ using QuanTriKhachSanN5.Data;
 using QuanTriKhachSanN5.Interfaces;
 using QuanTriKhachSanN5.Models;
 
-
 namespace QuanTriKhachSanN5.Services
 {
     public class RoomInventoryService : IRoomInventoryService
@@ -40,7 +39,9 @@ namespace QuanTriKhachSanN5.Services
 
         public async Task<Room> GetRoomByIdAsync(int id)
         {
-            return await _context.Rooms.Include(r => r.RoomType).FirstOrDefaultAsync(r => r.Id == id);
+            return await _context
+                .Rooms.Include(r => r.RoomType)
+                .FirstOrDefaultAsync(r => r.Id == id);
         }
 
         public async Task UpdateRoomStatusAsync(int roomId, string status)

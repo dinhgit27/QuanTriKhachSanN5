@@ -20,10 +20,10 @@ namespace QuanTriKhachSanN5.Controllers
         public async Task<IActionResult> GetRoles()
         {
             // Lấy danh sách ID và Tên của các chức vụ để hiển thị lên Dropdown (Select)
-            var roles = await _context.Roles
-                .Select(r => new { id = r.Id, name = r.Name })
+            var roles = await _context
+                .Roles.Select(r => new { id = r.Id, name = r.Name })
                 .ToListAsync();
-            
+
             return Ok(roles);
         }
     }

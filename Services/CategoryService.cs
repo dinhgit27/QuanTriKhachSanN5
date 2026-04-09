@@ -17,11 +17,7 @@ public class CategoryService : ICategoryService
 
     public async Task<CategoryDTO> CreateAsync(CreateCategoryDTO dto)
     {
-        var entity = new Category
-        {
-            Name = dto.Name.Trim(),
-            Description = dto.Description?.Trim(),
-        };
+        var entity = new Category { Name = dto.Name.Trim(), Description = dto.Description?.Trim() };
 
         _db.Categories.Add(entity);
         await _db.SaveChangesAsync();
@@ -42,8 +38,8 @@ public class CategoryService : ICategoryService
 
     public async Task<IEnumerable<CategoryDTO>> GetAllAsync()
     {
-        return await _db.Categories
-            .AsNoTracking()
+        return await _db
+            .Categories.AsNoTracking()
             .OrderBy(x => x.Name)
             .Select(x => Map(x))
             .ToListAsync();
@@ -51,9 +47,7 @@ public class CategoryService : ICategoryService
 
     public async Task<CategoryDTO?> GetByIdAsync(int id)
     {
-        var entity = await _db.Categories
-            .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Id == id);
+        var entity = await _db.Categories.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
 
         return entity is null ? null : Map(entity);
     }
@@ -71,8 +65,8 @@ public class CategoryService : ICategoryService
         return true;
     }
 
-    private static CategoryDTO Map(Category entity)
-        => new()
+    private static CategoryDTO Map(Category entity) =>
+        new()
         {
             Id = entity.Id,
             Name = entity.Name,

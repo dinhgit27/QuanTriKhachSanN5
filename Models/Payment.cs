@@ -7,19 +7,24 @@ namespace QuanTriKhachSanN5.Models
     public class Payment
     {
         [Key]
+        [Column("id")]
         public int Id { get; set; }
-        public int InvoiceId { get; set; }
-        
+
+        [Column("invoice_id")]
+        public int? InvoiceId { get; set; }
+
         [StringLength(50)]
-        public string PaymentMethod { get; set; } = null!;
+        [Column("payment_method")]
+        public string? PaymentMethod { get; set; }
+
+        [Column("amount_paid")]
         public decimal AmountPaid { get; set; }
-        
+
         [StringLength(100)]
-        public string TransactionId { get; set; }
-        
-        [StringLength(50)]
-        public string Status { get; set; } = "Success";
-        
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        [Column("transaction_code")]
+        public string? TransactionCode { get; set; }
+
+        [Column("payment_date")]
+        public DateTime? PaymentDate { get; set; } = DateTime.Now;
     }
 }

@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using QuanTriKhachSanN5.DTOs;
 using QuanTriKhachSanN5.Services;
 
-namespace QuanTriKhachSanN5.Controllers.Disabled
+namespace QuanTriKhachSanN5.Controllers
 {
     [ApiController]
     [Route("api/checkout")]

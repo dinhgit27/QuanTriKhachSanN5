@@ -28,7 +28,9 @@ namespace QuanTriKhachSanN5.Services
 
         public async Task<Article> GetArticleByIdAsync(int id)
         {
-            return await _context.Articles.Include(a => a.Category).FirstOrDefaultAsync(a => a.Id == id);
+            return await _context
+                .Articles.Include(a => a.Category)
+                .FirstOrDefaultAsync(a => a.Id == id);
         }
 
         public async Task CreateArticleAsync(Article article)

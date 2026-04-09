@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using QuanTriKhachSanN5.DTOs;
 using QuanTriKhachSanN5.Interfaces;
 using QuanTriKhachSanN5.Models;
 using System.Threading.Tasks;

@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-
 namespace QuanTriKhachSanN5.Controllers
 {
     [Route("api/[controller]")]
@@ -15,7 +14,9 @@ namespace QuanTriKhachSanN5.Controllers
         [HttpDelete("system-config/{id}")]
         public IActionResult DeleteConfig(int id)
         {
-            return Ok(new { Message = "Đã xóa cấu hình hệ thống (và Audit Log đã tự động lưu vết)." });
+            return Ok(
+                new { Message = "Đã xóa cấu hình hệ thống (và Audit Log đã tự động lưu vết)." }
+            );
         }
 
         // =========================================================================

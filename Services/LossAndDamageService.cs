@@ -36,7 +36,7 @@ namespace QuanTriKhachSanN5.Services
             {
                 report.Status = "Chưa đền bù";
             }
-            
+
             _context.LossAndDamages.Add(report);
             await _context.SaveChangesAsync();
             return report;
@@ -45,7 +45,8 @@ namespace QuanTriKhachSanN5.Services
         public async Task<LossAndDamage> UpdateLossAndDamageAsync(int id, LossAndDamage model)
         {
             var data = await _context.LossAndDamages.FindAsync(id);
-            if (data == null) return null;
+            if (data == null)
+                return null;
 
             data.BookingDetailId = model.BookingDetailId;
             data.RoomInventoryId = model.RoomInventoryId;
@@ -62,7 +63,8 @@ namespace QuanTriKhachSanN5.Services
         public async Task<bool> UpdateStatusAsync(int id, string status)
         {
             var data = await _context.LossAndDamages.FindAsync(id);
-            if (data == null) return false;
+            if (data == null)
+                return false;
 
             data.Status = status;
             await _context.SaveChangesAsync();

@@ -12,22 +12,29 @@ using QuanTriKhachSanN5.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddHttpClient();
+
 // ============================================================
 // 1. CẤU HÌNH HỆ THỐNG (SERVICES)
 // ============================================================
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowReactApp", policy =>
-    {
-        policy.WithOrigins("http://localhost:5173", "http://localhost:5174")
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
-    });
+    options.AddPolicy(
+        "AllowReactApp",
+        policy =>
+        {
+            policy
+                .WithOrigins("http://localhost:5173", "http://localhost:5174")
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();
+        }
+    );
 });
 
-builder.Services.AddControllers()
+builder
+    .Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
@@ -59,7 +66,8 @@ builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<QuanTriKhachSanN5.Filters.AuditLogFilter>();
 
 // --- AUTHENTICATION & AUTHORIZATION ---
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+builder
+    .Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
@@ -80,7 +88,10 @@ builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("MANAGE_ROOMS", policy => policy.RequireClaim("Permission", "MANAGE_ROOMS"));
     options.AddPolicy("MANAGE_USERS", policy => policy.RequireClaim("Permission", "MANAGE_USERS"));
-    options.AddPolicy("MANAGE_BOOKINGS", policy => policy.RequireClaim("Permission", "MANAGE_BOOKINGS"));
+    options.AddPolicy(
+        "MANAGE_BOOKINGS",
+        policy => policy.RequireClaim("Permission", "MANAGE_BOOKINGS")
+    );
 });
 
 // --- SWAGGER (BẢN RÚT GỌN ĐỂ VƯỢT ẢI BUILD) ---
@@ -100,20 +111,26 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseCors("AllowReactApp"); 
+app.UseCors("AllowReactApp");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
 // ============================================================
-// 3. SEED DATA 
+// 3. SEED DATA
 // ============================================================
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     var context = services.GetRequiredService<ApplicationDbContext>();
-    try { SeedData(context); }
-    catch (Exception ex) { Console.WriteLine($"Lỗi Seed Data: {ex.Message}"); }
+    try
+    {
+        SeedData(context);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Lỗi Seed Data: {ex.Message}");
+    }
 }
 
 app.Run();
@@ -133,16 +150,30 @@ void SeedData(ApplicationDbContext context)
 
     if (!context.Users.Any(u => u.Email == "admin@hotel.com"))
     {
-        var admin = new User { FullName = "Admin", Email = "admin@hotel.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456") };
-        var receptionist = new User { FullName = "Receptionist", Email = "receptionist@hotel.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456") };
-        
+        var admin = new User
+        {
+            FullName = "Admin",
+            Email = "admin@hotel.com",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
+        };
+        var receptionist = new User
+        {
+            FullName = "Receptionist",
+            Email = "receptionist@hotel.com",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
+        };
+
         context.Users.AddRange(admin, receptionist);
         context.SaveChanges();
 
         var roles = context.Roles.ToList();
         context.UserRoles.AddRange(
             new User_Role { UserId = admin.Id, RoleId = roles.First(r => r.Name == "Admin").Id },
-            new User_Role { UserId = receptionist.Id, RoleId = roles.First(r => r.Name == "Receptionist").Id }
+            new User_Role
+            {
+                UserId = receptionist.Id,
+                RoleId = roles.First(r => r.Name == "Receptionist").Id,
+            }
         );
         context.SaveChanges();
         Console.WriteLine("✅ Seed tài khoản mẫu thành công!");
