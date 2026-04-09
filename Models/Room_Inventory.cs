@@ -11,10 +11,16 @@ namespace QuanTriKhachSanN5.Models
         public int RoomId { get; set; }
         public Room? Room { get; set; }
 
+        public int EquipmentId { get; set; }
+        
+        [ForeignKey("EquipmentId")]
+        public Equipment? Equipment { get; set; }
+
         public int Quantity { get; set; }
 
         [Column("price_if_lost")]
         public decimal PriceIfLost { get; set; }
+        
         public string? Note { get; set; }
 
         [Column("is_active")]

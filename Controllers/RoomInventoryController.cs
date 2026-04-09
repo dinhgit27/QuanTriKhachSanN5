@@ -17,7 +17,7 @@ namespace QuanTriKhachSanN5.Controllers
     public class AssignInventoryDto
     {
         public int RoomId { get; set; }
-        public int AmenityId { get; set; } // React gửi chữ này
+        public int AmenityId { get; set; }
         public int Quantity { get; set; }
         public bool IsActive { get; set; }
     }
@@ -35,39 +35,29 @@ namespace QuanTriKhachSanN5.Controllers
             _context = context;
         }
 
-        // =========================================================
-        // 1. LẤY DANH SÁCH VẬT TƯ ĐỂ ĐỔ VÀO DROPDOWN (React gọi /amenities)
-        // =========================================================
         [Authorize(Roles = "Admin,Receptionist")]
         [HttpGet("amenities")]
         public async Task<IActionResult> GetAmenities()
         {
-            // React vẫn gọi đường dẫn "amenities", nhưng mình ngầm chui vào kho "Equipments" lấy đồ ra
-            var equipments = await _context.Equipments
-                                           .Where(e => e.IsActive == true)
-                                           .ToListAsync();
+            var equipments = await _context.Equipments.Where(e => e.IsActive == true).ToListAsync();
             return Ok(equipments);
         }
 
-        // =========================================================
-        // 2. LẤY DANH SÁCH TÀI SẢN TRONG 1 PHÒNG (KÈM TÊN VÀ ẢNH)
-        // =========================================================
         [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
         [HttpGet("rooms/{roomId}/inventory")]
         public async Task<IActionResult> GetRoomInventory(int roomId)
         {
             var inventory = await _context.RoomInventories
                 .Where(ri => ri.RoomId == roomId)
-                .Include(ri => ri.Equipment) // Gắn Equipment vào để lấy tên/giá/ảnh
+                .Include(ri => ri.Equipment) 
                 .Select(ri => new {
                     id = ri.Id,
                     roomId = ri.RoomId,
-                    amenityId = ri.EquipmentId, // Trả về chữ amenityId để React hiểu
+                    amenityId = ri.EquipmentId, 
                     quantity = ri.Quantity,
                     isActive = ri.IsActive,
                     amenityName = ri.Equipment != null ? ri.Equipment.Name : "Không xác định",
                     
-                    // Gói lại thành object amenity cho React hiển thị
                     amenity = new {
                         name = ri.Equipment != null ? ri.Equipment.Name : "Không xác định",
                         price = ri.Equipment != null ? ri.Equipment.DefaultPriceIfLost : 0,
@@ -80,19 +70,28 @@ namespace QuanTriKhachSanN5.Controllers
         }
 
         // =========================================================
-        // 3. GÁN VẬT TƯ VÀO PHÒNG (React gửi POST)
+        // 🚨 NÂNG CẤP 1: KIỂM TRA TỒN KHO TRƯỚC KHI THÊM 1 MÓN
         // =========================================================
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
         [HttpPost("rooms/{roomId}/inventory")]
         public async Task<IActionResult> AssignEquipmentToRoom(int roomId, [FromBody] AssignInventoryDto dto)
         {
             if (roomId != dto.RoomId) return BadRequest(new { message = "ID phòng không khớp." });
 
-            // Hóa phép từ DTO của React thành Model thực tế của C#
+            var equipment = await _context.Equipments.FindAsync(dto.AmenityId);
+            if (equipment == null) return NotFound(new { message = "Không tìm thấy vật tư trong kho." });
+
+            // LOGIC KIỂM TRA KHO: Tính số lượng đang rảnh rỗi
+            int currentlyInUse = await _context.RoomInventories.Where(ri => ri.EquipmentId == dto.AmenityId).SumAsync(ri => ri.Quantity);
+            int available = (equipment.TotalQuantity ?? 0) - currentlyInUse;
+
+            if (available < dto.Quantity)
+                return BadRequest(new { message = $"Kho không đủ '{equipment.Name}'. Chỉ còn lại: {available} cái." });
+
             var newInventory = new Room_Inventory
             {
                 RoomId = dto.RoomId,
-                EquipmentId = dto.AmenityId, // Chuyển AmenityId -> EquipmentId
+                EquipmentId = dto.AmenityId,
                 Quantity = dto.Quantity,
                 IsActive = true
             };
@@ -104,9 +103,48 @@ namespace QuanTriKhachSanN5.Controllers
         }
 
         // =========================================================
-        // 4. XÓA VẬT TƯ KHỎI PHÒNG
+        // 🚨 NÂNG CẤP 2: API THÊM HÀNG LOẠT (BULK INSERT) SIÊU NHANH
         // =========================================================
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
+        [HttpPost("rooms/{roomId}/inventory/bulk")]
+        public async Task<IActionResult> AssignBulkEquipmentsToRoom(int roomId, [FromBody] List<AssignInventoryDto> dtos)
+        {
+            var inventoriesToAdd = new List<Room_Inventory>();
+
+            foreach (var dto in dtos)
+            {
+                var equipment = await _context.Equipments.FindAsync(dto.AmenityId);
+                if (equipment == null) continue;
+
+                // Kiểm tra tồn kho cho từng món
+                int currentlyInUse = await _context.RoomInventories.Where(ri => ri.EquipmentId == dto.AmenityId).SumAsync(ri => ri.Quantity);
+                int available = (equipment.TotalQuantity ?? 0) - currentlyInUse;
+
+                if (available < dto.Quantity)
+                {
+                    return BadRequest(new { message = $"Kho không đủ '{equipment.Name}'. Chỉ còn: {available} cái." });
+                }
+
+                inventoriesToAdd.Add(new Room_Inventory
+                {
+                    RoomId = roomId,
+                    EquipmentId = dto.AmenityId,
+                    Quantity = dto.Quantity,
+                    IsActive = true
+                });
+            }
+
+            if (!inventoriesToAdd.Any())
+                return BadRequest(new { message = "Không có vật tư hợp lệ nào để thêm." });
+
+            // AddRange giúp lưu 100 món đồ chỉ với 1 thao tác xuống DB, cực kỳ tối ưu!
+            _context.RoomInventories.AddRange(inventoriesToAdd);
+            await _context.SaveChangesAsync(); 
+
+            return Ok(new { Message = $"Đã thêm thành công {inventoriesToAdd.Count} vật tư vào phòng!" });
+        }
+
+        [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteInventory(int id)
         {
@@ -116,12 +154,9 @@ namespace QuanTriKhachSanN5.Controllers
                 _context.RoomInventories.Remove(item);
                 await _context.SaveChangesAsync();
             }
-            return NoContent(); // Cứ trả về NoContent là React hiểu đã xóa thành công
+            return NoContent(); 
         }
 
-        // =========================================================
-        // 5. KHÔI PHỤC VẬT TƯ BỊ HỎNG (Nút "Đã thay mới")
-        // =========================================================
         [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
         [HttpPut("restore/{id}")]
         public async Task<IActionResult> RestoreInventory(int id)
@@ -129,8 +164,7 @@ namespace QuanTriKhachSanN5.Controllers
             try
             {
                 var inventory = await _context.RoomInventories.FindAsync(id);
-                if (inventory == null)
-                    return NotFound(new { message = "Không tìm thấy vật tư này." });
+                if (inventory == null) return NotFound(new { message = "Không tìm thấy vật tư này." });
 
                 inventory.IsActive = true;
                 _context.RoomInventories.Update(inventory);
@@ -144,9 +178,8 @@ namespace QuanTriKhachSanN5.Controllers
             }
         }
 
-
         // =========================================================
-        // CÁC API VỀ PHÒNG (GIỮ NGUYÊN KHÔNG ĐỤNG ĐẾN)
+        // CÁC API VỀ PHÒNG (GIỮ NGUYÊN)
         // =========================================================
         [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
         [HttpGet("rooms")]
@@ -180,8 +213,7 @@ namespace QuanTriKhachSanN5.Controllers
             try
             {
                 var room = await _context.Rooms.FindAsync(id);
-                if (room == null)
-                    return NotFound(new { message = "Không tìm thấy phòng!" });
+                if (room == null) return NotFound(new { message = "Không tìm thấy phòng!" });
 
                 room.Status = "Available";
                 room.CleaningStatus = "Clean"; 
