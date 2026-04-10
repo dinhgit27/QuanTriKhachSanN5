@@ -122,7 +122,7 @@ namespace QuanTriKhachSanN5.API.Services
                 .LossAndDamages.Where(l => detailIds.Contains(l.BookingDetailId))
                 .ToListAsync();
 
-            decimal roomTotal = booking.BookingDetails.Sum(bd => bd.Price);
+            decimal roomTotal = booking.BookingDetails.Sum(bd => bd.PricePerNight);
             decimal serviceTotal = services.Sum(os =>
                 os.Details?.Sum(d => d.Quantity * d.UnitPrice) ?? 0
             );
