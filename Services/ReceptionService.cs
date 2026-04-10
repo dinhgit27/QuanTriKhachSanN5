@@ -1,7 +1,3 @@
-// =========================================================================
-// MODULE 4: RECEPTION - SERVICE (BẢN CHUẨN ĐÃ FIX LỖI 100%)
-// =========================================================================
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,72 +22,81 @@ namespace QuanTriKhachSanN5.API.Services
         public async Task CheckInBookingAsync(int bookingId, int roomId)
         {
             var booking = await _context.Bookings.FindAsync(bookingId);
-            if (booking != null && booking.Status == "Confirmed")
+            
+            // Lấy cả đơn Confirmed hoặc Pending đều cho phép Check-in
+            if (booking != null)
             {
-                // Cập nhật Booking_Details với room_id
-                var detail = await _context.BookingDetails.FirstOrDefaultAsync(bd =>
-                    bd.BookingId == bookingId
-                );
+                var detail = await _context.BookingDetails.FirstOrDefaultAsync(bd => bd.BookingId == bookingId);
                 if (detail != null)
                 {
+                    // 1. Cập nhật chi tiết đơn: Gán phòng cho khách
                     detail.RoomId = roomId;
-                    booking.Status = "CheckedIn";
+                    
+                    // 2. Đổi trạng thái Booking thành Đang ở
+                    booking.Status = "Checked_in"; 
+
+                    // 3. 🚨 LOGIC MỚI: TÌM PHÒNG VẬT LÝ VÀ ĐỔI TRẠNG THÁI SANG CÓ KHÁCH 🚨
+                    var room = await _context.Rooms.FindAsync(roomId);
+                    if (room != null)
+                    {
+                        room.Status = "Occupied"; // Khớp với model Room.cs của ní
+                    }
+
+                    // Lưu tất cả thay đổi vào SQL cùng một lúc
                     await _context.SaveChangesAsync();
                 }
             }
         }
 
-        public async Task<Order_Service> OrderServiceAsync(
-            int bookingId,
-            int serviceId,
-            int quantity
-        )
+        public async Task<Order_Service> OrderServiceAsync(int bookingId, int serviceId, int quantity)
         {
+            // 1. Tìm chính xác chi tiết phòng của khách
+            var detailInfo = await _context.BookingDetails.FirstOrDefaultAsync(bd => bd.BookingId == bookingId);
+            if (detailInfo == null) throw new Exception("Không tìm thấy thông tin lưu trú của khách!");
+
+            // 2. Tạo đơn dịch vụ mới (Khởi tạo TotalAmount = 0 để tránh lỗi 500)
             var order = new Order_Service
             {
-                BookingId = bookingId,
+                BookingDetailId = detailInfo.Id,
                 OrderDate = DateTime.Now,
                 Status = "Ordered",
+                TotalAmount = 0m 
             };
             _context.OrderServices.Add(order);
             await _context.SaveChangesAsync();
 
+            // 3. Tìm thông tin dịch vụ (giá tiền)
             var service = await _context.Services.FindAsync(serviceId);
-            if (service == null)
-                throw new Exception("Service not found");
+            if (service == null) throw new Exception("Dịch vụ không tồn tại!");
 
+            // 4. Tạo chi tiết dịch vụ
             var detail = new Order_Service_Detail
             {
                 OrderServiceId = order.Id,
                 ServiceId = serviceId,
                 Quantity = quantity,
-                UnitPrice = service.Price,
+                UnitPrice = service.Price
             };
             _context.OrderServiceDetails.Add(detail);
-            await _context.SaveChangesAsync();
 
+            // 5. 🚨 ĐÃ FIX LỖI CS0019: Xóa ?? 0m vì service.Price đã là decimal chuẩn
+            order.TotalAmount = quantity * service.Price;
+            
+            await _context.SaveChangesAsync();
             return order;
         }
 
-        // ĐÃ FIX: Sửa lại tên biến cho chuẩn với Model LossAndDamage mới
-        public async Task<LossAndDamage> ReportDamageAsync(
-            int bookingId,
-            string description,
-            decimal fineAmount
-        )
+        public async Task<LossAndDamage> ReportDamageAsync(int bookingId, string description, decimal fineAmount)
         {
-            // Lấy ID chi tiết phòng của khách để gắn biên bản phạt
-            var bookingDetail = await _context.BookingDetails.FirstOrDefaultAsync(bd =>
-                bd.BookingId == bookingId
-            );
+            var bookingDetail = await _context.BookingDetails.FirstOrDefaultAsync(bd => bd.BookingId == bookingId);
             int detailId = bookingDetail != null ? bookingDetail.Id : 0;
 
             var damage = new LossAndDamage
             {
-                BookingDetailId = detailId, // Fix lỗi ko có BookingId
+                BookingDetailId = detailId, 
                 Description = description,
-                PenaltyAmount = fineAmount, // Fix lỗi FineAmount -> PenaltyAmount
-                CreatedAt = DateTime.Now, // Fix lỗi ReportedDate -> CreatedAt
+                PenaltyAmount = fineAmount, 
+                CreatedAt = DateTime.Now, 
             };
 
             _context.LossAndDamages.Add(damage);
@@ -101,7 +106,6 @@ namespace QuanTriKhachSanN5.API.Services
 
         public async Task<CheckoutDto> CalculateCheckoutAsync(int bookingId)
         {
-            // Tính tổng: Tiền phòng + Dịch vụ + Phạt - Giảm giá
             var booking = await _context
                 .Bookings.Include(b => b.BookingDetails)
                 .FirstOrDefaultAsync(b => b.Id == bookingId);
@@ -109,27 +113,30 @@ namespace QuanTriKhachSanN5.API.Services
             if (booking == null)
                 throw new Exception("Booking not found");
 
-            // ĐÃ FIX CẢNH BÁO VÀNG: Thêm dấu chấm hỏi (?. / !.) để an toàn với null
-            var services = await _context
-                .OrderServices.Where(os => os.BookingId == bookingId)
-                .Include(os => os.Details!)
-                    .ThenInclude(d => d.Service)
-                .ToListAsync();
-
-            // ĐÃ FIX: Tìm LossAndDamage dựa trên danh sách BookingDetailId
             var detailIds = booking.BookingDetails.Select(bd => bd.Id).ToList();
+
+            var services = await _context
+                .OrderServices.Where(os => os.BookingDetailId != null && detailIds.Contains(os.BookingDetailId.Value))
+                .ToListAsync();
+            var serviceIds = services.Select(s => s.Id).ToList();
+
+            decimal serviceTotal = 0m;
+            if (serviceIds.Any())
+            {
+                var orderDetails = await _context.OrderServiceDetails
+                    .Where(d => serviceIds.Contains(d.OrderServiceId))
+                    .ToListAsync();
+                
+                serviceTotal = orderDetails.Sum(d => d.Quantity * d.UnitPrice);
+            }
+
             var damages = await _context
-                .LossAndDamages.Where(l => detailIds.Contains(l.BookingDetailId))
+                .LossAndDamages.Where(l => l.BookingDetailId != null && detailIds.Contains(l.BookingDetailId.Value))
                 .ToListAsync();
 
-            decimal roomTotal = booking.BookingDetails.Sum(bd => bd.PricePerNight);
-            decimal serviceTotal = services.Sum(os =>
-                os.Details?.Sum(d => d.Quantity * d.UnitPrice) ?? 0
-            );
-
-            // ĐÃ FIX: Tính tổng phạt theo PenaltyAmount
-            decimal damageTotal = damages.Sum(d => d.PenaltyAmount);
-            decimal discount = 0; // Tính từ Voucher nếu có
+            decimal roomTotal = booking.BookingDetails.Sum(bd => bd.PricePerNight); 
+            decimal damageTotal = damages.Sum(d => d.PenaltyAmount ?? 0m);
+            decimal discount = 0m; 
 
             return new CheckoutDto
             {

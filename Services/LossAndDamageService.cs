@@ -18,11 +18,8 @@ namespace QuanTriKhachSanN5.Services
 
         public async Task<List<LossAndDamage>> GetAllLossAndDamagesAsync()
         {
-            // ĐÃ FIX: Đổi ThenInclude(ri => ri.Amenity) thành ThenInclude(ri => ri.Equipment)
-            return await _context.LossAndDamages
-                .Include(ld => ld.RoomInventory)
-                    .ThenInclude(ri => ri.Equipment)
-                .ToListAsync();
+            // 🚨 ĐÃ FIX: Xóa .ThenInclude bị dư thừa vì không có .Include đi kèm
+            return await _context.LossAndDamages.ToListAsync();
         }
 
         public async Task<LossAndDamage> GetLossAndDamageByIdAsync(int id)
@@ -54,7 +51,7 @@ namespace QuanTriKhachSanN5.Services
             data.PenaltyAmount = model.PenaltyAmount;
             data.Description = model.Description;
             data.ImageUrl = model.ImageUrl;
-            data.Status = model.Status; // Cập nhật thêm status nếu cần
+            data.Status = model.Status; 
 
             await _context.SaveChangesAsync();
             return data;

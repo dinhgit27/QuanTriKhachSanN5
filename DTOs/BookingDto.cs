@@ -18,6 +18,12 @@ namespace QuanTriKhachSanN5.DTOs
         public string GuestEmail { get; set; }
         public DateTime CheckIn { get; set; }
         public DateTime CheckOut { get; set; }
-        public List<int> SelectedRoomIds { get; set; } // Danh sách các ID phòng khách chọn
+        public List<int> SelectedRoomIds { get; set; } 
+    }
+
+    // 🚨 THÊM THẰNG NÀY VÀO ĐÂY LÀ HẾT LỖI 🚨
+    public class UpdateStatusDto
+    {
+        public string Status { get; set; }
     }
 }
