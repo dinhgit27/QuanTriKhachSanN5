@@ -16,15 +16,19 @@ namespace QuanTriKhachSanN5.Models
 
         public string Name { get; set; } = string.Empty;
 
+        // 🚨 BÙA CHÚ BẢO VỆ: SQL không có cột này thì cấm C# đòi hỏi!
+        [NotMapped]
         public string? Description { get; set; }
 
         public decimal Price { get; set; }
 
         public string? Unit { get; set; }
 
+        // 🚨 BÙA CHÚ BẢO VỆ: SQL không có cột này thì cấm C# đòi hỏi!
+        [NotMapped]
         public int Status { get; set; } = 1; // 1 = enable, 0 = disable
 
-        [Column("category_id")] // Bùa map cột SQL
+        [Column("category_id")] 
         public int CategoryId { get; set; }
         public Service_Category? Category { get; set; }
     }
@@ -52,8 +56,11 @@ namespace QuanTriKhachSanN5.Models
         [Key]
         public int Id { get; set; }
 
-        [Column("booking_id")]
+        // 🚨 BÙA CHÚ BẢO VỆ: Không cho lưu cột này xuống SQL
+        [NotMapped]
         public int BookingId { get; set; }
+        
+        [NotMapped]
         public Booking? Booking { get; set; }
 
         [Column("order_date")]

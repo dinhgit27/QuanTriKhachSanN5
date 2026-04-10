@@ -47,15 +47,19 @@ namespace QuanTriKhachSanN5.Data
         {
             base.OnModelCreating(modelBuilder);
             
-
             modelBuilder.Entity<RoomType>().ToTable("Room_Types"); 
             modelBuilder.Entity<LossAndDamage>().ToTable("Loss_And_Damages");
             modelBuilder.Entity<BookingDetail>().ToTable("Booking_Details");
             modelBuilder.Entity<Room>().ToTable("Rooms"); 
+            
+            // 🚨 Bổ sung ép tên bảng cho chắc cú
+            modelBuilder.Entity<Invoice>().ToTable("Invoices");
+            modelBuilder.Entity<Order_Service>().ToTable("Order_Services");
+            modelBuilder.Entity<Order_Service_Detail>().ToTable("Order_Service_Details");
 
-            // 1. Giải quyết lỗi Multiple Cascade Paths
+            // Giải quyết lỗi Multiple Cascade Paths
             modelBuilder
-                .Entity<BookingDetail>() // Đã sửa lại thành BookingDetail
+                .Entity<BookingDetail>()
                 .HasOne(bd => bd.RoomType)
                 .WithMany()
                 .HasForeignKey(bd => bd.RoomTypeId)
@@ -81,7 +85,7 @@ namespace QuanTriKhachSanN5.Data
 
             modelBuilder.Entity<Role_Permission>().HasKey(x => new { x.RoleId, x.PermissionId });
             
-            // 2. Định dạng tất cả kiểu thập phân thành decimal(18,2)
+            // Định dạng tất cả kiểu thập phân thành decimal(18,2)
             foreach (
                 var property in modelBuilder
                     .Model.GetEntityTypes()
