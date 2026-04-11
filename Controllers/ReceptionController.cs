@@ -44,6 +44,26 @@ namespace QuanTriKhachSanN5.Controllers
                 return BadRequest(new { message = "Lỗi Database: " + errorMsg });
             }
         }
+
+        // ====================================================================
+        // NÚT BÁO HỎNG ĐỒ (ĐỀN BÙ)
+        // ====================================================================
+        [HttpPost("report-damage/{bookingId}")]
+        public async Task<IActionResult> ReportDamage(int bookingId, [FromBody] ReportDamageDto req)
+        {
+            try 
+            {
+                // Gọi thẳng cái Service xịn sò của ní
+                await _receptionService.ReportDamageAsync(bookingId, req.Description, req.FineAmount);
+                return Ok(new { message = "Ghi nhận báo hỏng và đền bù thành công!" });
+            }
+            catch (Exception ex)
+            {
+                // Bức cung lỗi luôn cho chắc ăn
+                string errorMsg = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                return BadRequest(new { message = "Lỗi Database: " + errorMsg });
+            }
+        }
         // LẤY DANH SÁCH DỊCH VỤ CHO DROPDOWN
         [HttpGet("services-list")]
         public async Task<IActionResult> GetServicesList()
@@ -76,5 +96,10 @@ namespace QuanTriKhachSanN5.Controllers
     {
         public int ServiceId { get; set; }
         public int Quantity { get; set; }
+    }
+    public class ReportDamageDto
+    {
+        public string Description { get; set; }
+        public decimal FineAmount { get; set; }
     }
 }

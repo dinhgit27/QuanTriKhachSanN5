@@ -11,7 +11,7 @@ namespace QuanTriKhachSanN5.Models
         [Column("room_inventory_id")] public int? RoomInventoryId { get; set; }
         [Column("quantity")] public int? Quantity { get; set; }
         [Column("penalty_amount")] public decimal? PenaltyAmount { get; set; }
-        [Column("description")] public string Description { get; set; }
+        [Column("description")] public string? Description { get; set; }
         [Column("created_at")] public DateTime? CreatedAt { get; set; }
         [Column("ImageUrl")] public string ImageUrl { get; set; }
         [Column("status")] public string Status { get; set; }
