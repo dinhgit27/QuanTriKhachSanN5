@@ -96,7 +96,10 @@ builder.Services.AddAuthorization(options =>
 
 // --- SWAGGER (BẢN RÚT GỌN ĐỂ VƯỢT ẢI BUILD) ---
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(); // Chỉ dùng mặc định, bỏ qua custom để né lỗi đỏ
+builder.Services.AddSwaggerGen(c =>
+{
+    c.CustomSchemaIds(type => type.FullName); // Tránh xung đột nếu có class trùng tên ở namespace khác
+});
 
 var app = builder.Build();
 
