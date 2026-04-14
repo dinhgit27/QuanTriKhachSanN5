@@ -19,4 +19,5 @@ public class User
     public string PasswordHash { get; set; }
 
     public ICollection<User_Role> UserRoles { get; set; }
+    public ICollection<User_Permission> UserPermissions { get; set; }
 }

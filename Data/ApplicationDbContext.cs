@@ -36,6 +36,7 @@ namespace QuanTriKhachSanN5.Data
         public DbSet<Role> Roles { get; set; }
         public DbSet<Permission> Permissions { get; set; }
         public DbSet<Role_Permission> RolePermissions { get; set; }
+        public DbSet<User_Permission> UserPermissions { get; set; }
         public DbSet<User_Role> UserRoles { get; set; }
         public DbSet<Audit_Log> AuditLogs { get; set; }
         public DbSet<Voucher> Vouchers { get; set; }
@@ -84,6 +85,7 @@ namespace QuanTriKhachSanN5.Data
                 .HasForeignKey(ur => ur.RoleId);
 
             modelBuilder.Entity<Role_Permission>().HasKey(x => new { x.RoleId, x.PermissionId });
+            modelBuilder.Entity<User_Permission>().HasKey(x => new { x.UserId, x.PermissionId });
             
             // Định dạng tất cả kiểu thập phân thành decimal(18,2)
             foreach (
