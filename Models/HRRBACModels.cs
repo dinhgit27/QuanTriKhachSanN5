@@ -2,20 +2,14 @@
 // MODULE 6: NHÂN SỰ & PHÂN QUYỀN (RBAC) - MODELS
 // =========================================================================
 
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace QuanTriKhachSanN5.Models
 {
-    // Bảng Users: Tài khoản người dùng
-    public class User
-    {
-        public int Id { get; set; }
-        public string Username { get; set; }
-        public string Email { get; set; }
-        public string PasswordHash { get; set; }
-        public string Role { get; set; } // Admin, User, Receptionist, Housekeeping
-        public DateTime CreatedAt { get; set; }
-        public ICollection<Membership> Memberships { get; set; }
-        public ICollection<User_Role> UserRoles { get; set; }
-    }
+
 
     // Bảng Roles: Nhóm quyền
     public class Role
@@ -55,15 +49,43 @@ namespace QuanTriKhachSanN5.Models
     }
 
     // Bảng Audit_Logs: Log hệ thống
+    [Table("Audit_Logs")]
     public class Audit_Log
     {
+        [Key]
+        [Column("id")]
         public int Id { get; set; }
+
+        [Column("user_id")]
         public int UserId { get; set; }
+
+        [ForeignKey("UserId")]
         public User User { get; set; }
-        public string Action { get; set; } // Create, Update, Delete
-        public string TableName { get; set; }
-        public int RecordId { get; set; }
+
+        [Column("log_date")]
         public DateTime Timestamp { get; set; }
-        public string Details { get; set; }
+
+        [Column("role_name")]
+        [StringLength(255)]
+        public string RoleName { get; set; }
+
+        [Column("action")]
+        [StringLength(50)]
+        public string Action { get; set; }
+
+        [Column("target_table")]
+        [StringLength(100)]
+        public string TargetTable { get; set; }
+
+        [Column("status")]
+        [StringLength(20)]
+        public string Status { get; set; }
+
+        [Column("event_id")]
+        [StringLength(50)]
+        public string EventId { get; set; }
+
+        [Column("log_data")]
+        public string? LogData { get; set; }
     }
 }

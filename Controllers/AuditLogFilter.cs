@@ -2,6 +2,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Filters;
 using QuanTriKhachSanN5.Data;
 using QuanTriKhachSanN5.Models;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
+using System.Text.Json;
 
 namespace QuanTriKhachSanN5.Filters
 {
@@ -21,7 +24,7 @@ namespace QuanTriKhachSanN5.Filters
         {
             // 1. Trích xuất thông tin HTTP Request
             var method = context.HttpContext.Request.Method;
-            var userIdClaim = context.HttpContext.User.FindFirst("UserId")?.Value;
+            var userIdClaim = context.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             int.TryParse(userIdClaim, out int userId);
 
             // 2. Cho phép API (Controller) thực thi nghiệp vụ chính
@@ -35,23 +38,38 @@ namespace QuanTriKhachSanN5.Filters
             {
                 if (userId > 0) // Chỉ log nếu thao tác do user đã đăng nhập thực hiện
                 {
-                    var controllerName =
-                        context.RouteData.Values["controller"]?.ToString() ?? "Unknown";
-                    var recordIdStr = context.RouteData.Values["id"]?.ToString();
-                    int.TryParse(recordIdStr, out int recordId);
+                    var roleName = context.HttpContext.User.FindFirst(ClaimTypes.Role)?.Value ?? "Unknown";
+                    var controllerName = context.RouteData.Values["controller"]?.ToString() ?? "Unknown";
 
+                    var actionType = method == "POST" ? "CREATE" : (method == "PUT" ? "UPDATE" : "DELETE");
+                    var actionDetailObj = new {
+                        eventId = Guid.NewGuid().ToString("N").Substring(0, 8),
+                        actionType = actionType,
+                        targetTable = controllerName,
+                        status = "Success",
+                        timestamp = DateTime.UtcNow
+                    };
                     var auditLog = new Audit_Log
                     {
                         UserId = userId,
-                        Action = method, // POST (Tạo), PUT (Sửa), DELETE (Xóa)
-                        TableName = controllerName, // Lấy tên Controller làm đại diện cho Entity
-                        RecordId = recordId,
+                        RoleName = roleName,
+                        Action = actionType,
+                        TargetTable = controllerName,
+                        Status = "Success",
+                        EventId = Guid.NewGuid().ToString("N").Substring(0, 8),
                         Timestamp = DateTime.UtcNow,
-                        Details = $"Thực thi API {method} thành công trên {controllerName}",
+                        LogData = actionDetailJson
                     };
-
+                    
                     _context.AuditLogs.Add(auditLog);
-                    await _context.SaveChangesAsync();
+                    try 
+                    {
+                        await _context.SaveChangesAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"AuditLog save error: {ex.Message}");
+                    }
                 }
             }
         }

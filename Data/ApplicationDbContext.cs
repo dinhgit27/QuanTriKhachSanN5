@@ -87,6 +87,14 @@ namespace QuanTriKhachSanN5.Data
             modelBuilder.Entity<Role_Permission>().HasKey(x => new { x.RoleId, x.PermissionId });
             modelBuilder.Entity<User_Permission>().HasKey(x => new { x.UserId, x.PermissionId });
             
+            // Explicitly resolve relationship ambiguity for User_Permission
+            modelBuilder.Entity<User_Permission>()
+                .HasOne(up => up.User)
+                .WithMany(u => u.UserPermissions)
+                .HasForeignKey(up => up.UserId);
+
+            modelBuilder.Entity<Audit_Log>().ToTable("Audit_Logs");
+            
             // Định dạng tất cả kiểu thập phân thành decimal(18,2)
             foreach (
                 var property in modelBuilder

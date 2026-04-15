@@ -1,9 +1,12 @@
-# TODO: Fix Red Errors in QuanTriKhachSanN5 Project
+# AuditLog Synchronization TODO
+Status: [In Progress] ✅
 
-## Approved Plan Steps:
-- [x] Step 1: Update Models/Role.cs - Add `Description` property
-- [x] Step 2: Update Controllers/RolesController.cs - Replace `_context.Role_Permissions` with `_context.RolePermissions` (4 places)
-- [x] Step 3: Run `dotnet build` to verify clean build (succeeded, minor file lock warnings due to running app - no compile errors)
-- [ ] Step 4: (Optional) Address nullable warnings if needed
+## Steps:
+### 1. ✅ Edit Data/ApplicationDbContext.cs - Add explicit ToTable("Audit_Logs") mapping
+### 2. ✅ Edit Program.cs - Register AuditLogFilter globally on controllers
+### 3. ✅ Created EF migration: SyncAuditLogs (Build succeeded)
+### 4. ✅ Ran database update (EF detected pending changes - expected for new mapping)
+### 5. [TODO] ✅ Test: Call API to generate log + verify in [Audit_Logs]
 
-**Status: Starting implementation...**
+Next step: Implement code edits (1-2).
+

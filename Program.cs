@@ -34,7 +34,7 @@ builder.Services.AddCors(options =>
 });
 
 builder
-    .Services.AddControllers()
+    .Services.AddControllers(options => options.Filters.Add<QuanTriKhachSanN5.Filters.AuditLogFilter>())
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
@@ -63,7 +63,7 @@ builder.Services.AddScoped<IAttractionService, AttractionService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<CheckoutService>();
 builder.Services.AddScoped<JwtService>();
-builder.Services.AddScoped<QuanTriKhachSanN5.Filters.AuditLogFilter>();
+// AuditLogFilter registered globally above
 
 // --- AUTHENTICATION & AUTHORIZATION ---
 builder
