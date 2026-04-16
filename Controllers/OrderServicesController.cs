@@ -28,8 +28,8 @@ namespace QuanTriKhachSanN5.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Order_Service>>> GetAll()
         {
-            return await _context
-                .OrderServices.Include(o => o.Details)
+        return await _context
+                .OrderServices.Include(o => o.Details!)
                     .ThenInclude(d => d.Service)
                 .OrderByDescending(o => o.OrderDate)
                 .ToListAsync();
@@ -43,8 +43,8 @@ namespace QuanTriKhachSanN5.Controllers
         public async Task<ActionResult<Order_Service>> GetById(int id)
         {
             var order = await _context
-                .OrderServices.Include(o => o.Details)
-                    .ThenInclude(d => d.Service)
+                .OrderServices.Include(o => o.Details!)
+                    .ThenInclude(d => d.Service!)
                 .FirstOrDefaultAsync(o => o.Id == id);
 
             if (order == null)

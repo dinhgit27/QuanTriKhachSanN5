@@ -48,7 +48,7 @@ namespace QuanTriKhachSanN5.Models
         public Role Role { get; set; }
     }
 
-    // Bảng Audit_Logs: Log hệ thống
+    // Bảng Audit_Logs: Log hệ thống (Fixed to match DB schema)
     [Table("Audit_Logs")]
     public class Audit_Log
     {
@@ -69,23 +69,7 @@ namespace QuanTriKhachSanN5.Models
         [StringLength(255)]
         public string RoleName { get; set; }
 
-        [Column("action")]
-        [StringLength(50)]
-        public string Action { get; set; }
-
-        [Column("target_table")]
-        [StringLength(100)]
-        public string TargetTable { get; set; }
-
-        [Column("status")]
-        [StringLength(20)]
-        public string Status { get; set; }
-
-        [Column("event_id")]
-        [StringLength(50)]
-        public string EventId { get; set; }
-
         [Column("log_data")]
-        public string? LogData { get; set; }
+        public string? LogData { get; set; } = null!;
     }
 }

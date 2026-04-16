@@ -51,8 +51,8 @@ namespace QuanTriKhachSanN5.Controllers
         public async Task<IActionResult> GetInvoicePreview(int bookingId)
         {
             var booking = await _context.Bookings
-                .Include(b => b.BookingDetails).ThenInclude(bd => bd.Room)
-                .Include(b => b.BookingDetails).ThenInclude(bd => bd.RoomType)
+                .Include(b => b.BookingDetails!).ThenInclude(bd => bd.Room)
+                .Include(b => b.BookingDetails!).ThenInclude(bd => bd.RoomType)
                 .FirstOrDefaultAsync(b => b.Id == bookingId);
 
             if (booking == null) return NotFound(new { message = "Không tìm thấy đơn!" });

@@ -9,6 +9,8 @@ using QuanTriKhachSanN5.Data;
 using QuanTriKhachSanN5.Interfaces;
 using QuanTriKhachSanN5.Models;
 using QuanTriKhachSanN5.Services;
+using Microsoft.Extensions.Caching.Memory;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -63,6 +65,8 @@ builder.Services.AddScoped<IAttractionService, AttractionService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<CheckoutService>();
 builder.Services.AddScoped<JwtService>();
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<IAuditBatchService, AuditBatchService>();
 // AuditLogFilter registered globally above
 
 // --- AUTHENTICATION & AUTHORIZATION ---

@@ -1,8 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
+using System.Text.Json;
 using QuanTriKhachSanN5.Data;
 using QuanTriKhachSanN5.Models;
+using QuanTriKhachSanN5.Interfaces;
 
 namespace QuanTriKhachSanN5.Controllers;
 
@@ -12,16 +15,17 @@ namespace QuanTriKhachSanN5.Controllers;
 public class AuditLogsController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
+    private readonly IAuditBatchService _batchService;
 
-    public AuditLogsController(ApplicationDbContext context)
+    public AuditLogsController(ApplicationDbContext context, IAuditBatchService batchService)
     {
         _context = context;
+        _batchService = batchService;
     }
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<AuditLogDto>>> GetAuditLogs(
         [FromQuery] int? userId = null,
-        [FromQuery] string? action = null,
         [FromQuery] DateTime? fromDate = null,
         [FromQuery] DateTime? toDate = null,
         [FromQuery] int page = 1,
@@ -33,9 +37,6 @@ public class AuditLogsController : ControllerBase
 
         if (userId.HasValue)
             query = query.Where(al => al.UserId == userId.Value);
-        
-        if (!string.IsNullOrEmpty(action))
-            query = query.Where(al => al.Action == action);
         
         if (fromDate.HasValue)
             query = query.Where(al => al.Timestamp >= fromDate.Value);
@@ -54,10 +55,6 @@ public class AuditLogsController : ControllerBase
                 UserId = al.UserId,
                 UserName = al.User != null ? al.User.FullName : null,
                 RoleName = al.RoleName,
-                Action = al.Action,
-                TargetTable = al.TargetTable,
-                Status = al.Status,
-                EventId = al.EventId,
                 Timestamp = al.Timestamp,
                 LogData = al.LogData
             })
@@ -82,16 +79,53 @@ public class AuditLogsController : ControllerBase
             UserId = auditLog.UserId,
             UserName = auditLog.User != null ? auditLog.User.FullName : null,
             RoleName = auditLog.RoleName,
-            Action = auditLog.Action,
-            TargetTable = auditLog.TargetTable,
-            Status = auditLog.Status,
-            EventId = auditLog.EventId,
             Timestamp = auditLog.Timestamp,
             LogData = auditLog.LogData
         };
 
         return Ok(dto);
     }
+
+    /// <summary>
+    /// Create batch audit log - accepts {TotalEvents, Events: [{eventId, actionType, targetTable, ...}]}
+    /// Saves as single Audit_Log with minified JSON in LogData
+    /// </summary>
+    [HttpPost]
+    public async Task<ActionResult> CreateBatchAuditLog([FromBody] object payload)
+    {
+        try 
+        {
+            // Get current user info
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out int userId))
+                return Unauthorized();
+
+            var roleName = User.FindFirst(ClaimTypes.Role)?.Value ?? "Unknown";
+
+            // Minify JSON
+            var options = new JsonSerializerOptions { WriteIndented = false };
+            var jsonString = JsonSerializer.Serialize(payload, options);
+
+            var auditLog = new Audit_Log
+            {
+                UserId = userId,
+                RoleName = roleName,
+                Timestamp = DateTime.UtcNow,
+                LogData = jsonString
+            };
+
+            _context.AuditLogs.Add(auditLog);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { success = true, id = auditLog.Id });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest($"Error saving batch log: {ex.Message}");
+        }
+    }
+
+    // NOTE: FlushBatch removed because it's no longer needed with immediate database persistence.
 }
 
 public class AuditLogDto
@@ -100,10 +134,6 @@ public class AuditLogDto
     public int UserId { get; set; }
     public string? UserName { get; set; }
     public string RoleName { get; set; } = string.Empty;
-    public string Action { get; set; } = string.Empty;
-    public string TargetTable { get; set; } = string.Empty;
-    public string Status { get; set; } = string.Empty;
-    public string EventId { get; set; } = string.Empty;
     public DateTime Timestamp { get; set; }
     public string? LogData { get; set; }
 }

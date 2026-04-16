@@ -6,15 +6,19 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using System.Text.Json;
 
+using QuanTriKhachSanN5.Interfaces;
+
 namespace QuanTriKhachSanN5.Filters
 {
     public class AuditLogFilter : IAsyncActionFilter
     {
         private readonly ApplicationDbContext _context;
+        private readonly IAuditBatchService _batchService;
 
-        public AuditLogFilter(ApplicationDbContext context)
+        public AuditLogFilter(ApplicationDbContext context, IAuditBatchService batchService)
         {
             _context = context;
+            _batchService = batchService;
         }
 
         public async Task OnActionExecutionAsync(
@@ -42,34 +46,15 @@ namespace QuanTriKhachSanN5.Filters
                     var controllerName = context.RouteData.Values["controller"]?.ToString() ?? "Unknown";
 
                     var actionType = method == "POST" ? "CREATE" : (method == "PUT" ? "UPDATE" : "DELETE");
-                    var actionDetailObj = new {
-                        eventId = Guid.NewGuid().ToString("N").Substring(0, 8),
-                        actionType = actionType,
+                    var eventId = Guid.NewGuid().ToString("N").Substring(0, 8);
+                    var eventObj = new {
+                        eventId,
+                        actionType,
                         targetTable = controllerName,
                         status = "Success",
                         timestamp = DateTime.UtcNow
                     };
-                    var auditLog = new Audit_Log
-                    {
-                        UserId = userId,
-                        RoleName = roleName,
-                        Action = actionType,
-                        TargetTable = controllerName,
-                        Status = "Success",
-                        EventId = Guid.NewGuid().ToString("N").Substring(0, 8),
-                        Timestamp = DateTime.UtcNow,
-                        LogData = actionDetailJson
-                    };
-                    
-                    _context.AuditLogs.Add(auditLog);
-                    try 
-                    {
-                        await _context.SaveChangesAsync();
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"AuditLog save error: {ex.Message}");
-                    }
+                    await _batchService.AddEventAsync(userId, roleName, eventObj);
                 }
             }
         }
