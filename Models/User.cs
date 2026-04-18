@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using QuanTriKhachSanN5.Models;
 
 public class User
 {
@@ -19,4 +21,5 @@ public class User
     public string PasswordHash { get; set; }
 
     public ICollection<User_Role> UserRoles { get; set; }
+    public ICollection<User_Permission> UserPermissions { get; set; }
 }
