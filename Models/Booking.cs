@@ -30,6 +30,8 @@ namespace QuanTriKhachSanN5.Models
         [Column("status")]
         public string? Status { get; set; } // Vd: Pending, Confirmed, Checked_in, Completed, Cancelled
 
+        public decimal DepositAmount { get; set; } = 0;
+
         // Navigation property (1 Booking có nhiều Chi tiết đặt phòng)
         public ICollection<BookingDetail>? BookingDetails { get; set; }
     }

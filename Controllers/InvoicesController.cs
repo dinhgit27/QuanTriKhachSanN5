@@ -64,6 +64,7 @@ namespace QuanTriKhachSanN5.Controllers
             var detailIds = booking.BookingDetails.Select(bd => bd.Id).ToList();
 
             // 1. TÍNH TIỀN PHÒNG
+            decimal depositAmount = booking.DepositAmount;
             decimal totalRoomAmount = 0;
             var roomDetailsList = new List<object>();
 
@@ -125,13 +126,15 @@ namespace QuanTriKhachSanN5.Controllers
             // 4. TỔNG KẾT
             decimal totalServicesAndPenalties = totalServiceAmount + totalPenaltyAmount;
             decimal taxAmount = (totalRoomAmount + totalServicesAndPenalties) * 0.08m;
-            decimal finalTotal = totalRoomAmount + totalServicesAndPenalties + taxAmount;
+            decimal finalTotal =
+                totalRoomAmount + totalServicesAndPenalties + taxAmount - depositAmount;
 
             return Ok(
                 new
                 {
                     bookingId = booking.Id,
                     bookingCode = booking.BookingCode,
+                    depositAmount = depositAmount,
                     guestName = booking.GuestName,
                     totalRoomAmount = totalRoomAmount,
                     totalServiceAmount = totalServiceAmount, // Gửi riêng lẻ

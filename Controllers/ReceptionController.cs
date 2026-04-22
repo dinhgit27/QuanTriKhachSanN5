@@ -71,6 +71,26 @@ namespace QuanTriKhachSanN5.Controllers
             }
         }
 
+        [HttpPost("deposit/{bookingId}")]
+        public async Task<IActionResult> AddDeposit(int bookingId, [FromBody] AddDepositDto req)
+        {
+            if (req == null)
+                return BadRequest(new { message = "Yêu cầu không hợp lệ!" });
+
+            var booking = await _context.Bookings.FindAsync(bookingId);
+            if (booking == null)
+                return NotFound(new { message = "Không tìm thấy booking!" });
+
+            if (req.Amount <= 0)
+                return BadRequest(new { message = "Số tiền không hợp lệ!" });
+
+            booking.DepositAmount += req.Amount;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Đã thêm tiền đặt cọc!", deposit = booking.DepositAmount });
+        }
+
         // LẤY DANH SÁCH DỊCH VỤ CHO DROPDOWN
         [HttpGet("services-list")]
         public async Task<IActionResult> GetServicesList()
@@ -110,5 +130,10 @@ namespace QuanTriKhachSanN5.Controllers
     {
         public string Description { get; set; }
         public decimal FineAmount { get; set; }
+    }
+
+    public class AddDepositDto
+    {
+        public decimal Amount { get; set; }
     }
 }
