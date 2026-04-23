@@ -21,6 +21,7 @@ namespace QuanTriKhachSanN5.Services
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Email, user.Email),
+                new Claim("FullName", user.FullName ?? ""),
             };
 
             // ✅ THÊM ROLE

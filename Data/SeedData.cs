@@ -197,7 +197,7 @@ public static class SeedData
                 new AttractionImage
                 {
                     AttractionId = attraction.Id,
-                    ImageUrl = attraction.MainImageUrl,
+                    ImageUrl = attraction.MainImageUrl ?? "",
                     CloudinaryPublicId = $"hotel-management/attractions/{attraction.Id}_main",
                     CreatedAt = DateTime.UtcNow,
                     IsDeleted = false
@@ -205,7 +205,7 @@ public static class SeedData
                 new AttractionImage
                 {
                     AttractionId = attraction.Id,
-                    ImageUrl = $"{attraction.MainImageUrl}?ixlib=rb-4.0.3&auto=format&fit=crop&w=600",
+                    ImageUrl = $"{attraction.MainImageUrl ?? ""}?ixlib=rb-4.0.3&auto=format&fit=crop&w=600",
                     CloudinaryPublicId = $"hotel-management/attractions/{attraction.Id}_secondary",
                     CreatedAt = DateTime.UtcNow,
                     IsDeleted = false

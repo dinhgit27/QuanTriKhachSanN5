@@ -45,7 +45,7 @@ namespace QuanTriKhachSanN5.Controllers
             var bookedRoomIds = await _context.BookingDetails
                 .Where(bd => bd.CheckInDate < req.CheckOut && bd.CheckOutDate > req.CheckIn && bd.Booking.Status != "Cancelled")
                 .Where(bd => bd.RoomId != null)
-                .Select(bd => bd.RoomId.Value)
+                .Select(bd => bd.RoomId!.Value)
                 .ToListAsync();
 
             var availableRoomTypes = await _context.RoomTypes
