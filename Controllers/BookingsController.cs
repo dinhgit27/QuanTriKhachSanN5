@@ -45,7 +45,7 @@ namespace QuanTriKhachSanN5.Controllers
             var bookedRoomIds = await _context.BookingDetails
                 .Where(bd => bd.CheckInDate < req.CheckOut && bd.CheckOutDate > req.CheckIn && bd.Booking.Status != "Cancelled")
                 .Where(bd => bd.RoomId != null)
-                .Select(bd => bd.RoomId.Value)
+                .Select(bd => bd.RoomId!.Value)
                 .ToListAsync();
 
             var availableRoomTypes = await _context.RoomTypes
@@ -70,10 +70,11 @@ namespace QuanTriKhachSanN5.Controllers
             var today = DateTime.Today;
             
             var arrivals = await _context.Bookings
-                .Include(b => b.BookingDetails).ThenInclude(bd => bd.RoomType)
-                .Include(b => b.BookingDetails).ThenInclude(bd => bd.Room) 
+                .Include(b => b.BookingDetails!).ThenInclude(bd => bd.RoomType!)
+                .Include(b => b.BookingDetails!).ThenInclude(bd => bd.Room!) 
                 // 🚨 ĐÃ FIX: Cho phép hiển thị cả Pending và Confirmed
                 .Where(b => (b.Status == "Confirmed" || b.Status == "Pending") 
+
                          && b.BookingDetails.Any(bd => bd.CheckInDate.Date == today))
                 .Select(b => new {
                     id = b.Id,
@@ -173,9 +174,12 @@ namespace QuanTriKhachSanN5.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetBookingDetail(int id)
         {
-            var booking = await _context.Bookings.Include(b => b.BookingDetails).ThenInclude(bd => bd.Room).Include(b => b.BookingDetails).ThenInclude(bd => bd.RoomType).FirstOrDefaultAsync(b => b.Id == id);
+            var booking = await _context.Bookings
+                .Include(b => b.BookingDetails!).ThenInclude(bd => bd.Room!)
+                .Include(b => b.BookingDetails!).ThenInclude(bd => bd.RoomType!)
+                .FirstOrDefaultAsync(b => b.Id == id);
             if (booking == null) return NotFound();
-            return Ok(new { id = booking.Id, bookingCode = booking.BookingCode, guestName = booking.GuestName, status = booking.Status, details = booking.BookingDetails.Select(d => new { roomNumber = d.Room?.RoomNumber, roomTypeName = d.RoomType?.Name, checkIn = d.CheckInDate, checkOut = d.CheckOutDate, pricePerNight = d.PricePerNight }) });
+            return Ok(new { id = booking.Id, bookingCode = booking.BookingCode, guestName = booking.GuestName, status = booking.Status, details = booking.BookingDetails!.Select(d => new { roomNumber = d.Room?.RoomNumber, roomTypeName = d.RoomType?.Name, checkIn = d.CheckInDate, checkOut = d.CheckOutDate, pricePerNight = d.PricePerNight }) });
         }
         // ==============================================================================
         // DANH SÁCH KHÁCH ĐANG LƯU TRÚ (IN-HOUSE)
@@ -184,7 +188,7 @@ namespace QuanTriKhachSanN5.Controllers
         public async Task<IActionResult> GetInHouseGuests()
         {
             var inHouse = await _context.Bookings
-                .Include(b => b.BookingDetails).ThenInclude(bd => bd.Room)
+                .Include(b => b.BookingDetails!).ThenInclude(bd => bd.Room!)
                 // 🚨 Bao lô cả tiếng Anh lẫn tiếng Việt cho chắc cú
                 .Where(b => b.Status == "Checked_in" || b.Status == "Đang ở")
                 .Select(b => new {

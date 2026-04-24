@@ -15,10 +15,12 @@ namespace QuanTriKhachSanN5.Services
     public class HRRBACService : IHRRBACService
     {
         private readonly ApplicationDbContext _context;
+        private readonly IAuditBatchService _batchService;
 
-        public HRRBACService(ApplicationDbContext context)
+        public HRRBACService(ApplicationDbContext context, IAuditBatchService batchService)
         {
             _context = context;
+            _batchService = batchService;
         }
 
         public async Task<User> GetUserByIdAsync(int id)
@@ -56,24 +58,43 @@ namespace QuanTriKhachSanN5.Services
         }
 
         public async Task LogActionAsync(
-            int userId,
+            int? userId,
             string action,
             string tableName,
             int recordId,
             string details
         )
         {
-            var log = new Audit_Log
+            string roleName = "Hệ thống";
+            string userName = "Hệ thống";
+
+            if (userId.HasValue && userId > 0)
             {
-                UserId = userId,
-                Action = action,
-                TableName = tableName,
-                RecordId = recordId,
-                Details = details,
-                Timestamp = System.DateTime.Now,
+                var user = await _context.Users
+                    .Include(u => u.UserRoles)
+                    .ThenInclude(ur => ur.Role)
+                    .FirstOrDefaultAsync(u => u.Id == userId.Value);
+
+                if (user != null)
+                {
+                    roleName = user.UserRoles?.FirstOrDefault()?.Role?.Name ?? "User";
+                    userName = user.FullName ?? "Unknown User";
+                }
+            }
+
+            var eventObj = new {
+                eventId = Guid.NewGuid().ToString("N").Substring(0, 8),
+                actionType = action,
+                targetTable = tableName,
+                recordId = recordId,
+                details = details,
+                userName = userName,
+                status = "Success",
+                timestamp = DateTime.UtcNow,
+                description = details
             };
-            _context.AuditLogs.Add(log);
-            await _context.SaveChangesAsync();
+
+            await _batchService.AddEventAsync(userId > 0 ? userId : null, roleName, eventObj);
         }
     }
 }

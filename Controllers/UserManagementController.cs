@@ -80,7 +80,7 @@ namespace QuanTriKhachSanN5.Controllers
                 return NotFound(new { message = "Không tìm thấy người dùng!" });
 
             // 1. Cập nhật thông tin cơ bản
-            user.FullName = request.FullName;
+            user.FullName = request.FullName ?? user.FullName;
             // user.PhoneNumber = request.PhoneNumber;
 
             // 2. Cập nhật chức vụ (Role) theo đúng luật EF Core: Xóa cũ -> Thêm mới

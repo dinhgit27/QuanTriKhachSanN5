@@ -25,7 +25,7 @@ namespace QuanTriKhachSanN5.Services
                 {
                     Id = r.Id,
                     UserId = r.UserId,
-                    Username = r.User.Username,
+                    Username = r.User.FullName,
                     RoomTypeId = r.RoomTypeId,
                     RoomTypeName = r.RoomType.Name,
                     Rating = r.Rating,
@@ -52,7 +52,7 @@ namespace QuanTriKhachSanN5.Services
                 {
                     Id = r.Id,
                     UserId = r.UserId,
-                    Username = r.User.Username,
+                    Username = r.User.FullName,
                     RoomTypeId = r.RoomTypeId,
                     RoomTypeName = r.RoomType.Name,
                     Rating = r.Rating,
@@ -79,7 +79,7 @@ namespace QuanTriKhachSanN5.Services
                 {
                     Id = r.Id,
                     UserId = r.UserId,
-                    Username = r.User.Username,
+                    Username = r.User.FullName,
                     RoomTypeId = r.RoomTypeId,
                     RoomTypeName = r.RoomType.Name,
                     Rating = r.Rating,
@@ -110,7 +110,7 @@ namespace QuanTriKhachSanN5.Services
             {
                 Id = review.Id,
                 UserId = review.UserId,
-                Username = review.User.Username,
+                Username = review.User.FullName,
                 RoomTypeId = review.RoomTypeId,
                 RoomTypeName = review.RoomType.Name,
                 Rating = review.Rating,

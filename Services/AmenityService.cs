@@ -26,7 +26,7 @@ namespace QuanTriKhachSanN5.Services
                 .Select(e => new AmenityDto
                 {
                     Id = e.Id,
-                    Name = e.Name,
+                    Name = e.Name ?? "Unknown",
                     Category = e.Category,
                     Unit = e.Unit,
                     ImageUrl = e.ImageUrl,
