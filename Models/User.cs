@@ -20,6 +20,14 @@ public class User
     [Column("password_hash")]
     public string PasswordHash { get; set; }
 
+    [Column("points")]
+    public int Points { get; set; } = 0;
+
+    [Column("membership_id")]
+    public int? MembershipId { get; set; }
+
+    public Membership Membership { get; set; }
+
     public ICollection<User_Role> UserRoles { get; set; }
     public ICollection<User_Permission> UserPermissions { get; set; }
 }
