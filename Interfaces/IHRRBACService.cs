@@ -14,6 +14,6 @@ namespace QuanTriKhachSanN5.Interfaces
         Task<List<Role>> GetRolesAsync();
         Task<List<Permission>> GetPermissionsByRoleAsync(int roleId);
         Task<bool> HasPermissionAsync(int userId, string permissionName);
-        Task LogActionAsync(int userId, string action, string tableName, int recordId, string details);
+        Task LogActionAsync(int? userId, string action, string tableName, int recordId, string details);
     }
 }

@@ -14,10 +14,12 @@ namespace QuanTriKhachSanN5.Controllers
     public class InvoicesController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly QuanTriKhachSanN5.Services.IMomoService _momoService;
 
-        public InvoicesController(ApplicationDbContext context)
+        public InvoicesController(ApplicationDbContext context, QuanTriKhachSanN5.Services.IMomoService momoService)
         {
             _context = context;
+            _momoService = momoService;
         }
 
         // ====================================================================
@@ -64,7 +66,7 @@ namespace QuanTriKhachSanN5.Controllers
             var detailIds = booking.BookingDetails.Select(bd => bd.Id).ToList();
 
             // 1. TÍNH TIỀN PHÒNG
-            decimal depositAmount = booking.DepositAmount;
+            decimal depositAmount = booking.DepositAmount ?? 0m;
             decimal totalRoomAmount = 0;
             var roomDetailsList = new List<object>();
 
@@ -248,7 +250,8 @@ namespace QuanTriKhachSanN5.Controllers
 
             decimal totalServicesCombined = totalServiceAmount + totalPenaltyAmount;
             decimal taxAmount = (totalRoomAmount + totalServicesCombined) * 0.08m;
-            decimal finalTotal = totalRoomAmount + totalServicesCombined + taxAmount;
+            decimal depositAmount = booking.DepositAmount ?? 0m;
+            decimal finalTotal = totalRoomAmount + totalServicesCombined + taxAmount - depositAmount;
 
             var newInvoice = new Invoice
             {
@@ -281,6 +284,68 @@ namespace QuanTriKhachSanN5.Controllers
             return Ok(
                 new { message = "Checkout và xuất hóa đơn thành công!", invoiceId = newInvoice.Id }
             );
+        }
+
+        // ====================================================================
+        // TẠO YÊU CẦU THANH TOÁN MOMO
+        // ====================================================================
+        [HttpPost("create-momo-payment/{bookingId}")]
+        public async Task<IActionResult> CreateMomoPayment(int bookingId)
+        {
+            var booking = await _context
+                .Bookings.Include(b => b.BookingDetails)
+                .FirstOrDefaultAsync(b => b.Id == bookingId);
+            if (booking == null)
+                return NotFound(new { message = "Không tìm thấy đơn!" });
+
+            var detailIds = booking.BookingDetails.Select(bd => bd.Id).ToList();
+
+            decimal totalRoomAmount = booking.BookingDetails.Sum(d =>
+                d.PricePerNight
+                * (
+                    (d.CheckOutDate.Date - d.CheckInDate.Date).Days <= 0
+                        ? 1
+                        : (d.CheckOutDate.Date - d.CheckInDate.Date).Days
+                )
+            );
+
+            decimal totalServiceAmount = await _context
+                .OrderServices.Where(os =>
+                    os.BookingDetailId != null && detailIds.Contains(os.BookingDetailId.Value)
+                )
+                .SumAsync(os => os.TotalAmount);
+
+            decimal totalPenaltyAmount = await _context
+                .LossAndDamages.Where(ld =>
+                    ld.BookingDetailId != null && detailIds.Contains(ld.BookingDetailId.Value)
+                )
+                .SumAsync(ld => ld.PenaltyAmount ?? 0m);
+
+            decimal totalServicesCombined = totalServiceAmount + totalPenaltyAmount;
+            decimal taxAmount = (totalRoomAmount + totalServicesCombined) * 0.08m;
+            decimal depositAmount = booking.DepositAmount ?? 0m;
+            decimal finalTotal = totalRoomAmount + totalServicesCombined + taxAmount - depositAmount;
+
+            long amountToPay = (long)Math.Round(finalTotal);
+            if (amountToPay <= 0) amountToPay = 1000; // MoMo requires at least 1000 VND
+
+            string orderInfo = $"Thanh toan hoa don {booking.BookingCode}";
+            string orderId = booking.BookingCode + "_" + DateTime.Now.Ticks.ToString();
+
+            var response = await _momoService.CreatePaymentAsync(orderId, amountToPay, orderInfo);
+
+            if (response != null && response.resultCode == 0)
+            {
+                return Ok(new
+                {
+                    payUrl = response.payUrl,
+                    qrCodeUrl = response.qrCodeUrl,
+                    deeplink = response.deeplink,
+                    amount = amountToPay
+                });
+            }
+
+            return BadRequest(new { message = "Lỗi kết nối đến cổng thanh toán MoMo: " + (response?.message ?? "Unknown error") });
         }
     }
 }

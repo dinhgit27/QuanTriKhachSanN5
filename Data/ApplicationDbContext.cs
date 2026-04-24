@@ -47,14 +47,8 @@ namespace QuanTriKhachSanN5.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-<<<<<<< HEAD
             modelBuilder.Entity<Booking>().ToTable("Bookings");
-            
-            modelBuilder.Entity<RoomType>().ToTable("Room_Types"); 
-=======
-
             modelBuilder.Entity<RoomType>().ToTable("Room_Types");
->>>>>>> origin/tuan
             modelBuilder.Entity<LossAndDamage>().ToTable("Loss_And_Damages");
             modelBuilder.Entity<BookingDetail>().ToTable("Booking_Details");
             modelBuilder.Entity<Room>().ToTable("Rooms");

@@ -28,6 +28,14 @@ namespace QuanTriKhachSanN5.Filters
             // 1. Trích xuất thông tin HTTP Request
             var method = context.HttpContext.Request.Method;
             var userIdClaim = context.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            
+            // 🚨 QUAN TRỌNG: Nếu không có UserId (chưa đăng nhập), KHÔNG LƯU DATABASE để tránh rác "Hệ thống"
+            if (string.IsNullOrEmpty(userIdClaim))
+            {
+                await next();
+                return;
+            }
+
             int.TryParse(userIdClaim, out int userId);
 
             // 2. Cho phép API (Controller) thực thi nghiệp vụ chính
@@ -36,29 +44,32 @@ namespace QuanTriKhachSanN5.Filters
             // 3. Nếu API chạy THÀNH CÔNG và LÀ THAO TÁC THAY ĐỔI DỮ LIỆU (CUD)
             if (
                 resultContext.Exception == null
+                && resultContext.HttpContext.Response.StatusCode >= 200 
+                && resultContext.HttpContext.Response.StatusCode < 300
                 && (method == "POST" || method == "PUT" || method == "DELETE")
             )
             {
-                if (userId > 0) // Chỉ log nếu thao tác do user đã đăng nhập thực hiện
-                {
-                    var roleName =
-                        context.HttpContext.User.FindFirst(ClaimTypes.Role)?.Value ?? "Unknown";
-                    var controllerName =
-                        context.RouteData.Values["controller"]?.ToString() ?? "Unknown";
+                var roleName = context.HttpContext.User.FindFirst(ClaimTypes.Role)?.Value ?? "Hệ thống";
+                var fullName = context.HttpContext.User.FindFirst("FullName")?.Value ?? "Hệ thống";
+                var controllerName = context.RouteData.Values["controller"]?.ToString() ?? "Unknown";
+                
+                // Tránh việc log chính các yêu cầu lưu log
+                if (controllerName == "AuditLogs") return;
 
-                    var actionType =
-                        method == "POST" ? "CREATE" : (method == "PUT" ? "UPDATE" : "DELETE");
-                    var eventId = Guid.NewGuid().ToString("N").Substring(0, 8);
-                    var eventObj = new
-                    {
-                        eventId,
-                        actionType,
-                        targetTable = controllerName,
-                        status = "Success",
-                        timestamp = DateTime.UtcNow,
-                    };
-                    await _batchService.AddEventAsync(userId, roleName, eventObj);
-                }
+                var actionType = method == "POST" ? "CREATE" : (method == "PUT" ? "UPDATE" : "DELETE");
+                var eventId = Guid.NewGuid().ToString("N").Substring(0, 8);
+                
+                var eventObj = new {
+                    eventId = eventId,
+                    actionType = actionType,
+                    targetTable = controllerName,
+                    userName = fullName,
+                    status = "Success",
+                    timestamp = DateTime.UtcNow,
+                    description = $"Thực hiện {actionType} trên {controllerName}"
+                };
+
+                await _batchService.AddEventAsync(userId > 0 ? userId : null, roleName, eventObj);
             }
         }
     }

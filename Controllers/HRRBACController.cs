@@ -75,7 +75,7 @@ namespace QuanTriKhachSanN5.Controllers
     // DTO cho request
     public class AuditRequest
     {
-        public int UserId { get; set; }
+        public int? UserId { get; set; }
         public string Action { get; set; }
         public string TableName { get; set; }
         public int RecordId { get; set; }
