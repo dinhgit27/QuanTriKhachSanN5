@@ -33,10 +33,16 @@ namespace QuanTriKhachSanN5.Models
         [Column("deposit_amount")]
         public decimal? DepositAmount { get; set; } = 0m;
 
+        public decimal DepositAmount { get; set; } = 0;
+
         // Navigation property (1 Booking có nhiều Chi tiết đặt phòng)
         public ICollection<BookingDetail>? BookingDetails { get; set; }
 
         
     }
+<<<<<<< HEAD
 
 }
+=======
+}
+>>>>>>> origin/tuan
