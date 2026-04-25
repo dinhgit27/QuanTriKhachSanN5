@@ -15,12 +15,10 @@ namespace QuanTriKhachSanN5.Services
     public class HRRBACService : IHRRBACService
     {
         private readonly ApplicationDbContext _context;
-        private readonly IAuditBatchService _batchService;
 
-        public HRRBACService(ApplicationDbContext context, IAuditBatchService batchService)
+        public HRRBACService(ApplicationDbContext context)
         {
             _context = context;
-            _batchService = batchService;
         }
 
         public async Task<User> GetUserByIdAsync(int id)
@@ -58,43 +56,31 @@ namespace QuanTriKhachSanN5.Services
         }
 
         public async Task LogActionAsync(
-            int? userId,
+            int userId,
             string action,
             string tableName,
             int recordId,
             string details
         )
         {
-            string roleName = "Hệ thống";
-            string userName = "Hệ thống";
+            var user = await GetUserByIdAsync(userId);
+            var roleName = user?.UserRoles?.FirstOrDefault()?.Role?.Name ?? "Unknown";
 
-            if (userId.HasValue && userId > 0)
+            var actionDetailObj = new
             {
-                var user = await _context.Users
-                    .Include(u => u.UserRoles)
-                    .ThenInclude(ur => ur.Role)
-                    .FirstOrDefaultAsync(u => u.Id == userId.Value);
-
-                if (user != null)
-                {
-                    roleName = user.UserRoles?.FirstOrDefault()?.Role?.Name ?? "User";
-                    userName = user.FullName ?? "Unknown User";
-                }
-            }
-
-            var eventObj = new {
                 eventId = Guid.NewGuid().ToString("N").Substring(0, 8),
                 actionType = action,
                 targetTable = tableName,
                 recordId = recordId,
                 details = details,
-                userName = userName,
                 status = "Success",
                 timestamp = DateTime.UtcNow,
-                description = details
             };
+            var actionDetailJson = System.Text.Json.JsonSerializer.Serialize(actionDetailObj);
 
-            await _batchService.AddEventAsync(userId > 0 ? userId : null, roleName, eventObj);
+            await _context.Database.ExecuteSqlInterpolatedAsync(
+                $"EXEC [dbo].[sp_InsertBatchedAuditLog] @UserId = {userId}, @RoleName = {roleName}, @ActionDetail = {actionDetailJson}"
+            );
         }
     }
 }

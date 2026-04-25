@@ -15,14 +15,15 @@ namespace QuanTriKhachSanN5.Services
             _context = context;
         }
 
-        public async Task AddEventAsync(int? userId, string role, object eventObj)
+        public async Task AddEventAsync(int userId, string role, object eventObj)
         {
             // Lấy ngày hiện tại (không lấy giờ)
             var today = DateTime.UtcNow.Date;
 
-            // Tìm record log của user này (hoặc system nếu userId null) trong ngày hôm nay
-            var auditLog = await _context.AuditLogs
-                .FirstOrDefaultAsync(l => l.UserId == userId && l.Timestamp.Date == today);
+            // Tìm record log của user này trong ngày hôm nay
+            var auditLog = await _context.AuditLogs.FirstOrDefaultAsync(l =>
+                l.UserId == userId && l.Timestamp.Date == today
+            );
 
             AuditLogPayload payload;
 
@@ -70,13 +71,10 @@ namespace QuanTriKhachSanN5.Services
         }
     }
 
-    // Class phụ trợ để Map dữ liệu JSON với format lowercase
+    // Class phụ trợ để Map dữ liệu JSON
     public class AuditLogPayload
     {
-        [System.Text.Json.Serialization.JsonPropertyName("totalEvents")]
         public int TotalEvents { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("events")]
         public List<object> Events { get; set; } = new List<object>();
     }
 }

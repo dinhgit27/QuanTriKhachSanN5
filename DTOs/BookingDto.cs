@@ -19,7 +19,6 @@ namespace QuanTriKhachSanN5.DTOs
         public DateTime CheckIn { get; set; }
         public DateTime CheckOut { get; set; }
         public List<int> SelectedRoomIds { get; set; } 
-        public decimal? DepositAmount { get; set; }
     }
 
     // 🚨 THÊM THẰNG NÀY VÀO ĐÂY LÀ HẾT LỖI 🚨

@@ -68,7 +68,6 @@ builder.Services.AddScoped<CheckoutService>();
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IAuditBatchService, AuditBatchService>();
-builder.Services.AddScoped<IMomoService, MomoService>();
 
 // AuditLogFilter registered globally above
 

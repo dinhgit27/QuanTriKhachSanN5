@@ -51,7 +51,7 @@ namespace QuanTriKhachSanN5.Controllers
                     && bd.Booking.Status != "Cancelled"
                 )
                 .Where(bd => bd.RoomId != null)
-                .Select(bd => bd.RoomId!.Value)
+                .Select(bd => bd.RoomId.Value)
                 .ToListAsync();
 
             var availableRoomTypes = await _context
@@ -135,7 +135,6 @@ namespace QuanTriKhachSanN5.Controllers
                 GuestPhone = req.GuestPhone,
                 GuestEmail = req.GuestEmail,
                 BookingCode = bookingCode,
-                DepositAmount = req.DepositAmount,
                 // 🚨 ĐÃ FIX: Trả lại tiếng Anh chuẩn (Pending) để Frontend nhận diện màu sắc
                 Status = "Pending",
                 BookingDetails = new List<BookingDetail>(),
