@@ -1,12 +1,11 @@
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc.Filters;
-using QuanTriKhachSanN5.Data;
-using QuanTriKhachSanN5.Models;
-using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using System.Text.Json;
-
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.EntityFrameworkCore;
+using QuanTriKhachSanN5.Data;
 using QuanTriKhachSanN5.Interfaces;
+using QuanTriKhachSanN5.Models;
 
 namespace QuanTriKhachSanN5.Filters
 {

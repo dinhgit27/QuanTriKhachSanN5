@@ -1,11 +1,11 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuanTriKhachSanN5.Data;
 using QuanTriKhachSanN5.Models;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Collections.Generic;
 
 namespace QuanTriKhachSanN5.Controllers
 {
@@ -14,11 +14,14 @@ namespace QuanTriKhachSanN5.Controllers
     public class InvoicesController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly QuanTriKhachSanN5.Services.IMomoService _momoService;
 
-        public InvoicesController(ApplicationDbContext context)
+        public InvoicesController(ApplicationDbContext context, QuanTriKhachSanN5.Services.IMomoService momoService)
         {
             _context = context;
+            _momoService = momoService;
         }
+
         // ====================================================================
         // LẤY DANH SÁCH TẤT CẢ HÓA ĐƠN (CHO TRANG LỊCH SỬ)
         // ====================================================================
@@ -28,14 +31,14 @@ namespace QuanTriKhachSanN5.Controllers
             try
             {
                 // Lấy toàn bộ hóa đơn, sắp xếp hóa đơn mới nhất lên đầu tiên
-                var invoices = await _context.Invoices
-                    .OrderByDescending(i => i.Id)
-                    .Select(i => new 
+                var invoices = await _context
+                    .Invoices.OrderByDescending(i => i.Id)
+                    .Select(i => new
                     {
                         id = i.Id,
                         bookingId = i.BookingId,
                         finalTotal = i.FinalTotal,
-                        status = i.Status
+                        status = i.Status,
                     })
                     .ToListAsync();
 
@@ -50,58 +53,73 @@ namespace QuanTriKhachSanN5.Controllers
         [HttpGet("preview/{bookingId}")]
         public async Task<IActionResult> GetInvoicePreview(int bookingId)
         {
-            var booking = await _context.Bookings
-                .Include(b => b.BookingDetails!).ThenInclude(bd => bd.Room)
-                .Include(b => b.BookingDetails!).ThenInclude(bd => bd.RoomType)
+            var booking = await _context
+                .Bookings.Include(b => b.BookingDetails!)
+                    .ThenInclude(bd => bd.Room)
+                .Include(b => b.BookingDetails!)
+                    .ThenInclude(bd => bd.RoomType)
                 .FirstOrDefaultAsync(b => b.Id == bookingId);
 
-            if (booking == null) return NotFound(new { message = "Không tìm thấy đơn!" });
+            if (booking == null)
+                return NotFound(new { message = "Không tìm thấy đơn!" });
 
             var detailIds = booking.BookingDetails.Select(bd => bd.Id).ToList();
-            
+
             // 1. TÍNH TIỀN PHÒNG
+            decimal depositAmount = booking.DepositAmount ?? 0m;
             decimal totalRoomAmount = 0;
             var roomDetailsList = new List<object>();
 
             foreach (var detail in booking.BookingDetails)
             {
                 int nights = (detail.CheckOutDate.Date - detail.CheckInDate.Date).Days;
-                if (nights <= 0) nights = 1; 
+                if (nights <= 0)
+                    nights = 1;
                 decimal roomTotal = detail.PricePerNight * nights;
                 totalRoomAmount += roomTotal;
 
-                roomDetailsList.Add(new {
-                    roomNumber = detail.Room?.RoomNumber,
-                    roomTypeName = detail.RoomType?.Name,
-                    nights = nights,
-                    pricePerNight = detail.PricePerNight,
-                    lineTotal = roomTotal
-                });
+                roomDetailsList.Add(
+                    new
+                    {
+                        roomNumber = detail.Room?.RoomNumber,
+                        roomTypeName = detail.RoomType?.Name,
+                        nights = nights,
+                        pricePerNight = detail.PricePerNight,
+                        lineTotal = roomTotal,
+                    }
+                );
             }
 
             // 2. LẤY CHI TIẾT DỊCH VỤ (MINI BAR) TÁCH RỜI
-            var serviceDetails = await _context.OrderServiceDetails
-                .Include(osd => osd.Service)
+            var serviceDetails = await _context
+                .OrderServiceDetails.Include(osd => osd.Service)
                 .Include(osd => osd.OrderService)
-                .Where(osd => osd.OrderService.BookingDetailId != null && detailIds.Contains(osd.OrderService.BookingDetailId.Value))
-                .Select(osd => new {
+                .Where(osd =>
+                    osd.OrderService.BookingDetailId != null
+                    && detailIds.Contains(osd.OrderService.BookingDetailId.Value)
+                )
+                .Select(osd => new
+                {
                     serviceName = osd.Service != null ? osd.Service.Name : "Dịch vụ",
                     quantity = osd.Quantity,
                     unitPrice = osd.UnitPrice,
-                    total = osd.Quantity * osd.UnitPrice
+                    total = osd.Quantity * osd.UnitPrice,
                 })
                 .ToListAsync();
 
             decimal totalServiceAmount = serviceDetails.Sum(s => s.total);
 
             // 3. LẤY CHI TIẾT ĐỀN BÚ / PHỤ THU TÁCH RỜI
-            var penaltyDetails = await _context.LossAndDamages
-                .Where(ld => ld.BookingDetailId != null && detailIds.Contains(ld.BookingDetailId.Value))
-                .Select(ld => new {
-                    itemName = ld.Description ?? "Phạt / Đền bù", 
-                    quantity = 1, 
-                    
-                    penaltyAmount = ld.PenaltyAmount ?? 0m
+            var penaltyDetails = await _context
+                .LossAndDamages.Where(ld =>
+                    ld.BookingDetailId != null && detailIds.Contains(ld.BookingDetailId.Value)
+                )
+                .Select(ld => new
+                {
+                    itemName = ld.Description ?? "Phạt / Đền bù",
+                    quantity = 1,
+
+                    penaltyAmount = ld.PenaltyAmount ?? 0m,
                 })
                 .ToListAsync();
 
@@ -109,26 +127,31 @@ namespace QuanTriKhachSanN5.Controllers
 
             // 4. TỔNG KẾT
             decimal totalServicesAndPenalties = totalServiceAmount + totalPenaltyAmount;
-            decimal taxAmount = (totalRoomAmount + totalServicesAndPenalties) * 0.08m; 
-            decimal finalTotal = totalRoomAmount + totalServicesAndPenalties + taxAmount;
+            decimal taxAmount = (totalRoomAmount + totalServicesAndPenalties) * 0.08m;
+            decimal finalTotal =
+                totalRoomAmount + totalServicesAndPenalties + taxAmount - depositAmount;
 
-            return Ok(new
-            {
-                bookingId = booking.Id,
-                bookingCode = booking.BookingCode,
-                guestName = booking.GuestName,
-                totalRoomAmount = totalRoomAmount,
-                totalServiceAmount = totalServiceAmount, // Gửi riêng lẻ
-                totalPenaltyAmount = totalPenaltyAmount, // Gửi riêng lẻ
-                discountAmount = 0m,
-                taxAmount = taxAmount,
-                finalTotal = finalTotal,
-                roomDetails = roomDetailsList,
-                serviceDetails = serviceDetails,   // 🚨 TRẢ VỀ MẢNG CHI TIẾT CHO REACT MAP RA BẢNG
-                penaltyDetails = penaltyDetails,   // 🚨 TRẢ VỀ MẢNG CHI TIẾT ĐỀN BÙ
-                note = $"Ghi nhận tiêu thụ hợp lệ"
-            });
+            return Ok(
+                new
+                {
+                    bookingId = booking.Id,
+                    bookingCode = booking.BookingCode,
+                    depositAmount = depositAmount,
+                    guestName = booking.GuestName,
+                    totalRoomAmount = totalRoomAmount,
+                    totalServiceAmount = totalServiceAmount, // Gửi riêng lẻ
+                    totalPenaltyAmount = totalPenaltyAmount, // Gửi riêng lẻ
+                    discountAmount = 0m,
+                    taxAmount = taxAmount,
+                    finalTotal = finalTotal,
+                    roomDetails = roomDetailsList,
+                    serviceDetails = serviceDetails, // 🚨 TRẢ VỀ MẢNG CHI TIẾT CHO REACT MAP RA BẢNG
+                    penaltyDetails = penaltyDetails, // 🚨 TRẢ VỀ MẢNG CHI TIẾT ĐỀN BÙ
+                    note = $"Ghi nhận tiêu thụ hợp lệ",
+                }
+            );
         }
+
         // ====================================================================
         // ĐỌC THÔNG TIN HÓA ĐƠN ĐỂ IN (DÙNG LẠI LOGIC CỦA PREVIEW)
         // ====================================================================
@@ -136,11 +159,13 @@ namespace QuanTriKhachSanN5.Controllers
         public async Task<IActionResult> GetInvoiceById(int invoiceId)
         {
             var invoice = await _context.Invoices.FindAsync(invoiceId);
-            if (invoice == null) return NotFound(new { message = "Không tìm thấy hóa đơn!" });
+            if (invoice == null)
+                return NotFound(new { message = "Không tìm thấy hóa đơn!" });
 
             // Tuyệt chiêu: Tái sử dụng hàm Preview để gom toàn bộ Phòng, Dịch vụ, Đền bù của Booking này
             return await GetInvoicePreview(invoice.BookingId);
         }
+
         // ====================================================================
         // NÚT BỎ HÓA ĐƠN (HOÀN TÁC TRẢ PHÒNG)
         // ====================================================================
@@ -148,13 +173,15 @@ namespace QuanTriKhachSanN5.Controllers
         public async Task<IActionResult> CancelInvoice(int invoiceId)
         {
             // 1. Tìm hóa đơn và thông tin đặt phòng đi kèm
-            var invoice = await _context.Invoices
-                .Include(i => i.Booking)
-                .ThenInclude(b => b.BookingDetails)
+            var invoice = await _context
+                .Invoices.Include(i => i.Booking)
+                    .ThenInclude(b => b.BookingDetails)
                 .FirstOrDefaultAsync(i => i.Id == invoiceId);
 
-            if (invoice == null) return NotFound(new { message = "Không tìm thấy hóa đơn!" });
-            if (invoice.Status == "Cancelled") return BadRequest(new { message = "Hóa đơn này đã bị hủy từ trước!" });
+            if (invoice == null)
+                return NotFound(new { message = "Không tìm thấy hóa đơn!" });
+            if (invoice.Status == "Cancelled")
+                return BadRequest(new { message = "Hóa đơn này đã bị hủy từ trước!" });
 
             // 2. Đánh dấu hóa đơn là đã hủy (Không xóa hẳn để còn lưu log đối soát)
             invoice.Status = "Cancelled";
@@ -174,39 +201,57 @@ namespace QuanTriKhachSanN5.Controllers
                         {
                             room.Status = "Occupied"; // Khóa phòng lại màu đỏ
                             // Xóa cờ báo Dơ (Dirty) vì khách vẫn đang ở
-                            if (room.CleaningStatus == "Dirty") room.CleaningStatus = "Clean"; 
+                            if (room.CleaningStatus == "Dirty")
+                                room.CleaningStatus = "Clean";
                         }
                     }
                 }
             }
 
             await _context.SaveChangesAsync();
-            return Ok(new { message = "Đã hủy hóa đơn và khôi phục phòng về danh sách Trả phòng!" });
+            return Ok(
+                new { message = "Đã hủy hóa đơn và khôi phục phòng về danh sách Trả phòng!" }
+            );
         }
 
         [HttpPost("checkout/{bookingId}")]
         public async Task<IActionResult> CheckoutAndCreateInvoice(int bookingId)
         {
-            var booking = await _context.Bookings.Include(b => b.BookingDetails).FirstOrDefaultAsync(b => b.Id == bookingId);
-            if (booking == null) return NotFound(new { message = "Không tìm thấy đơn!" });
-            if (booking.Status == "Completed") return BadRequest(new { message = "Đơn này đã checkout rồi!" });
+            var booking = await _context
+                .Bookings.Include(b => b.BookingDetails)
+                .FirstOrDefaultAsync(b => b.Id == bookingId);
+            if (booking == null)
+                return NotFound(new { message = "Không tìm thấy đơn!" });
+            if (booking.Status == "Completed")
+                return BadRequest(new { message = "Đơn này đã checkout rồi!" });
 
             var detailIds = booking.BookingDetails.Select(bd => bd.Id).ToList();
 
-            decimal totalRoomAmount = booking.BookingDetails.Sum(d => 
-                d.PricePerNight * ((d.CheckOutDate.Date - d.CheckInDate.Date).Days <= 0 ? 1 : (d.CheckOutDate.Date - d.CheckInDate.Date).Days));
+            decimal totalRoomAmount = booking.BookingDetails.Sum(d =>
+                d.PricePerNight
+                * (
+                    (d.CheckOutDate.Date - d.CheckInDate.Date).Days <= 0
+                        ? 1
+                        : (d.CheckOutDate.Date - d.CheckInDate.Date).Days
+                )
+            );
 
-            decimal totalServiceAmount = await _context.OrderServices
-                .Where(os => os.BookingDetailId != null && detailIds.Contains(os.BookingDetailId.Value))
+            decimal totalServiceAmount = await _context
+                .OrderServices.Where(os =>
+                    os.BookingDetailId != null && detailIds.Contains(os.BookingDetailId.Value)
+                )
                 .SumAsync(os => os.TotalAmount);
-                
-            decimal totalPenaltyAmount = await _context.LossAndDamages
-                .Where(ld => ld.BookingDetailId != null && detailIds.Contains(ld.BookingDetailId.Value))
+
+            decimal totalPenaltyAmount = await _context
+                .LossAndDamages.Where(ld =>
+                    ld.BookingDetailId != null && detailIds.Contains(ld.BookingDetailId.Value)
+                )
                 .SumAsync(ld => ld.PenaltyAmount ?? 0m);
-            
+
             decimal totalServicesCombined = totalServiceAmount + totalPenaltyAmount;
             decimal taxAmount = (totalRoomAmount + totalServicesCombined) * 0.08m;
-            decimal finalTotal = totalRoomAmount + totalServicesCombined + taxAmount;
+            decimal depositAmount = booking.DepositAmount ?? 0m;
+            decimal finalTotal = totalRoomAmount + totalServicesCombined + taxAmount - depositAmount;
 
             var newInvoice = new Invoice
             {
@@ -216,7 +261,7 @@ namespace QuanTriKhachSanN5.Controllers
                 DiscountAmount = 0m,
                 TaxAmount = taxAmount,
                 FinalTotal = finalTotal,
-                Status = "Paid" 
+                Status = "Paid",
             };
             _context.Invoices.Add(newInvoice);
 
@@ -230,13 +275,77 @@ namespace QuanTriKhachSanN5.Controllers
                     if (room != null)
                     {
                         room.Status = "Available";
-                        room.CleaningStatus = "Dirty"; 
+                        room.CleaningStatus = "Dirty";
                     }
                 }
             }
 
             await _context.SaveChangesAsync();
-            return Ok(new { message = "Checkout và xuất hóa đơn thành công!", invoiceId = newInvoice.Id });
+            return Ok(
+                new { message = "Checkout và xuất hóa đơn thành công!", invoiceId = newInvoice.Id }
+            );
+        }
+
+        // ====================================================================
+        // TẠO YÊU CẦU THANH TOÁN MOMO
+        // ====================================================================
+        [HttpPost("create-momo-payment/{bookingId}")]
+        public async Task<IActionResult> CreateMomoPayment(int bookingId)
+        {
+            var booking = await _context
+                .Bookings.Include(b => b.BookingDetails)
+                .FirstOrDefaultAsync(b => b.Id == bookingId);
+            if (booking == null)
+                return NotFound(new { message = "Không tìm thấy đơn!" });
+
+            var detailIds = booking.BookingDetails.Select(bd => bd.Id).ToList();
+
+            decimal totalRoomAmount = booking.BookingDetails.Sum(d =>
+                d.PricePerNight
+                * (
+                    (d.CheckOutDate.Date - d.CheckInDate.Date).Days <= 0
+                        ? 1
+                        : (d.CheckOutDate.Date - d.CheckInDate.Date).Days
+                )
+            );
+
+            decimal totalServiceAmount = await _context
+                .OrderServices.Where(os =>
+                    os.BookingDetailId != null && detailIds.Contains(os.BookingDetailId.Value)
+                )
+                .SumAsync(os => os.TotalAmount);
+
+            decimal totalPenaltyAmount = await _context
+                .LossAndDamages.Where(ld =>
+                    ld.BookingDetailId != null && detailIds.Contains(ld.BookingDetailId.Value)
+                )
+                .SumAsync(ld => ld.PenaltyAmount ?? 0m);
+
+            decimal totalServicesCombined = totalServiceAmount + totalPenaltyAmount;
+            decimal taxAmount = (totalRoomAmount + totalServicesCombined) * 0.08m;
+            decimal depositAmount = booking.DepositAmount ?? 0m;
+            decimal finalTotal = totalRoomAmount + totalServicesCombined + taxAmount - depositAmount;
+
+            long amountToPay = (long)Math.Round(finalTotal);
+            if (amountToPay <= 0) amountToPay = 1000; // MoMo requires at least 1000 VND
+
+            string orderInfo = $"Thanh toan hoa don {booking.BookingCode}";
+            string orderId = booking.BookingCode + "_" + DateTime.Now.Ticks.ToString();
+
+            var response = await _momoService.CreatePaymentAsync(orderId, amountToPay, orderInfo);
+
+            if (response != null && response.resultCode == 0)
+            {
+                return Ok(new
+                {
+                    payUrl = response.payUrl,
+                    qrCodeUrl = response.qrCodeUrl,
+                    deeplink = response.deeplink,
+                    amount = amountToPay
+                });
+            }
+
+            return BadRequest(new { message = "Lỗi kết nối đến cổng thanh toán MoMo: " + (response?.message ?? "Unknown error") });
         }
     }
 }
