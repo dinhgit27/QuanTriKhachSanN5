@@ -1,8 +1,8 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using QuanTriKhachSanN5.Data;
-using QuanTriKhachSanN5.Interfaces;
 using QuanTriKhachSanN5.Models;
+using QuanTriKhachSanN5.Interfaces;
 
 namespace QuanTriKhachSanN5.Services
 {
@@ -32,7 +32,7 @@ namespace QuanTriKhachSanN5.Services
                 payload = new AuditLogPayload
                 {
                     TotalEvents = 1,
-                    Events = new List<object> { eventObj },
+                    Events = new List<object> { eventObj }
                 };
 
                 auditLog = new Audit_Log
@@ -40,7 +40,7 @@ namespace QuanTriKhachSanN5.Services
                     UserId = userId,
                     RoleName = role,
                     Timestamp = DateTime.UtcNow,
-                    LogData = JsonSerializer.Serialize(payload),
+                    LogData = JsonSerializer.Serialize(payload)
                 };
 
                 _context.AuditLogs.Add(auditLog);
@@ -48,11 +48,10 @@ namespace QuanTriKhachSanN5.Services
             else
             {
                 // Nếu đã có, giải mã JSON cũ và thêm event mới vào
-                try
+                try 
                 {
-                    payload =
-                        JsonSerializer.Deserialize<AuditLogPayload>(auditLog.LogData)
-                        ?? new AuditLogPayload();
+                    payload = JsonSerializer.Deserialize<AuditLogPayload>(auditLog.LogData) 
+                             ?? new AuditLogPayload();
                 }
                 catch
                 {

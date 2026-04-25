@@ -1,10 +1,10 @@
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuanTriKhachSanN5.Data;
 using QuanTriKhachSanN5.Models;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace QuanTriKhachSanN5.Controllers
 {
@@ -23,13 +23,8 @@ namespace QuanTriKhachSanN5.Controllers
         [HttpGet]
         public async Task<IActionResult> GetRoles()
         {
-            var roles = await _context
-                .Roles.Select(r => new
-                {
-                    id = r.Id,
-                    name = r.Name,
-                    description = r.Description,
-                })
+            var roles = await _context.Roles
+                .Select(r => new { id = r.Id, name = r.Name, description = r.Description })
                 .ToListAsync();
             return Ok(roles);
         }
@@ -38,8 +33,8 @@ namespace QuanTriKhachSanN5.Controllers
         [HttpGet("permissions")]
         public async Task<IActionResult> GetAllPermissions()
         {
-            var permissions = await _context
-                .Permissions.Select(p => new { id = p.Id, name = p.Name }) // Name ở đây là "BOOKINGS_MANAGE", "INVOICES_MANAGE"...
+            var permissions = await _context.Permissions
+                .Select(p => new { id = p.Id, name = p.Name }) // Name ở đây là "BOOKINGS_MANAGE", "INVOICES_MANAGE"...
                 .ToListAsync();
             return Ok(permissions);
         }
@@ -48,8 +43,8 @@ namespace QuanTriKhachSanN5.Controllers
         [HttpGet("{roleId}/permissions")]
         public async Task<IActionResult> GetRolePermissions(int roleId)
         {
-            var permissionIds = await _context
-                .RolePermissions.Where(rp => rp.RoleId == roleId)
+            var permissionIds = await _context.RolePermissions
+                .Where(rp => rp.RoleId == roleId)
                 .Select(rp => rp.PermissionId)
                 .ToListAsync();
             return Ok(permissionIds);
@@ -57,10 +52,7 @@ namespace QuanTriKhachSanN5.Controllers
 
         // 4. LƯU LẠI QUYỀN MỚI (Khi bấm nút "Lưu thay đổi")
         [HttpPost("{roleId}/permissions")]
-        public async Task<IActionResult> UpdateRolePermissions(
-            int roleId,
-            [FromBody] List<int> permissionIds
-        )
+        public async Task<IActionResult> UpdateRolePermissions(int roleId, [FromBody] List<int> permissionIds)
         {
             // Bước A: Xóa sạch các quyền cũ của Role này
             var oldPermissions = _context.RolePermissions.Where(rp => rp.RoleId == roleId);
@@ -70,7 +62,7 @@ namespace QuanTriKhachSanN5.Controllers
             var newPermissions = permissionIds.Select(pId => new Role_Permission
             {
                 RoleId = roleId,
-                PermissionId = pId,
+                PermissionId = pId
             });
             _context.RolePermissions.AddRange(newPermissions);
 

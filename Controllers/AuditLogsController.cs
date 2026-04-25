@@ -1,11 +1,11 @@
-using System.Security.Claims;
-using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
+using System.Text.Json;
 using QuanTriKhachSanN5.Data;
-using QuanTriKhachSanN5.Interfaces;
 using QuanTriKhachSanN5.Models;
+using QuanTriKhachSanN5.Interfaces;
 
 namespace QuanTriKhachSanN5.Controllers;
 
@@ -29,17 +29,18 @@ public class AuditLogsController : ControllerBase
         [FromQuery] DateTime? fromDate = null,
         [FromQuery] DateTime? toDate = null,
         [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 20
-    )
+        [FromQuery] int pageSize = 20)
     {
-        var query = _context.AuditLogs.Include(al => al.User).AsQueryable();
+        var query = _context.AuditLogs
+            .Include(al => al.User)
+            .AsQueryable();
 
         if (userId.HasValue)
             query = query.Where(al => al.UserId == userId.Value);
-
+        
         if (fromDate.HasValue)
             query = query.Where(al => al.Timestamp >= fromDate.Value);
-
+        
         if (toDate.HasValue)
             query = query.Where(al => al.Timestamp <= toDate.Value);
 
@@ -55,26 +56,18 @@ public class AuditLogsController : ControllerBase
                 UserName = al.User != null ? al.User.FullName : (al.UserId == null ? "Hệ thống" : "Unknown"),
                 RoleName = al.RoleName,
                 Timestamp = al.Timestamp,
-                LogData = al.LogData,
+                LogData = al.LogData
             })
             .ToListAsync();
 
-        return Ok(
-            new
-            {
-                Data = logs,
-                Total = total,
-                Page = page,
-                PageSize = pageSize,
-            }
-        );
+        return Ok(new { Data = logs, Total = total, Page = page, PageSize = pageSize });
     }
 
     [HttpGet("{id}")]
     public async Task<ActionResult<AuditLogDto>> GetAuditLog(int id)
     {
-        var auditLog = await _context
-            .AuditLogs.Include(al => al.User)
+        var auditLog = await _context.AuditLogs
+            .Include(al => al.User)
             .FirstOrDefaultAsync(al => al.Id == id);
 
         if (auditLog == null)
@@ -87,7 +80,7 @@ public class AuditLogsController : ControllerBase
             UserName = auditLog.User != null ? auditLog.User.FullName : (auditLog.UserId == null ? "Hệ thống" : "Unknown"),
             RoleName = auditLog.RoleName,
             Timestamp = auditLog.Timestamp,
-            LogData = auditLog.LogData,
+            LogData = auditLog.LogData
         };
 
         return Ok(dto);
@@ -100,7 +93,7 @@ public class AuditLogsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult> CreateBatchAuditLog([FromBody] AuditLogPayloadRequest payload)
     {
-        try
+        try 
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             int.TryParse(userIdClaim, out int userId);
