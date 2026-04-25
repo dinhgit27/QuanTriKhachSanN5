@@ -67,6 +67,8 @@ builder.Services.AddScoped<CheckoutService>();
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IAuditBatchService, AuditBatchService>();
+builder.Services.Configure<VietQRConfig>(builder.Configuration.GetSection("VietQR"));
+builder.Services.AddScoped<IVietQRService, VietQRService>();
 // AuditLogFilter registered globally above
 
 // --- AUTHENTICATION & AUTHORIZATION ---
