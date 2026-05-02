@@ -64,7 +64,7 @@ namespace QuanTriKhachSanN5.Controllers
             var detailIds = booking.BookingDetails.Select(bd => bd.Id).ToList();
 
             // 1. TÍNH TIỀN PHÒNG
-            decimal depositAmount = booking.DepositAmount;
+            decimal depositAmount = booking.DepositAmount ?? 0m;
             decimal totalRoomAmount = 0;
             var roomDetailsList = new List<object>();
 
