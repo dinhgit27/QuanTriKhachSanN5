@@ -28,7 +28,7 @@ namespace QuanTriKhachSanN5.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Order_Service>>> GetAll()
         {
-        return await _context
+            return await _context
                 .OrderServices.Include(o => o.Details!)
                     .ThenInclude(d => d.Service)
                 .OrderByDescending(o => o.OrderDate)

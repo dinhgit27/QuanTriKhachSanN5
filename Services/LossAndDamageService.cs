@@ -19,8 +19,8 @@ namespace QuanTriKhachSanN5.Services
         public async Task<List<LossAndDamage>> GetAllLossAndDamagesAsync()
         {
             // 🚨 BÙA CHÚ CẤP CAO: Ép C# phải kiểm tra NULL tuyệt đối trên mọi mặt trận
-            var rawData = await _context.LossAndDamages
-                .Select(ld => new 
+            var rawData = await _context
+                .LossAndDamages.Select(ld => new
                 {
                     Id = ld.Id,
                     BookingDetailId = ld.BookingDetailId,
@@ -31,23 +31,25 @@ namespace QuanTriKhachSanN5.Services
                     Description = ld.Description != null ? ld.Description : "Không có mô tả",
                     CreatedAt = ld.CreatedAt,
                     ImageUrl = ld.ImageUrl != null ? ld.ImageUrl : "",
-                    Status = ld.Status != null ? ld.Status : "Chưa đền bù"
+                    Status = ld.Status != null ? ld.Status : "Chưa đền bù",
                 })
                 .ToListAsync();
 
             // Lắp ráp trả về cho Lễ tân
-            return rawData.Select(x => new LossAndDamage 
-            {
-                Id = x.Id,
-                BookingDetailId = x.BookingDetailId,
-                RoomInventoryId = x.RoomInventoryId,
-                Quantity = x.Quantity,
-                PenaltyAmount = x.PenaltyAmount,
-                Description = x.Description,
-                CreatedAt = x.CreatedAt,
-                ImageUrl = x.ImageUrl,
-                Status = x.Status
-            }).ToList();
+            return rawData
+                .Select(x => new LossAndDamage
+                {
+                    Id = x.Id,
+                    BookingDetailId = x.BookingDetailId,
+                    RoomInventoryId = x.RoomInventoryId,
+                    Quantity = x.Quantity,
+                    PenaltyAmount = x.PenaltyAmount,
+                    Description = x.Description,
+                    CreatedAt = x.CreatedAt,
+                    ImageUrl = x.ImageUrl,
+                    Status = x.Status,
+                })
+                .ToList();
         }
 
         public async Task<LossAndDamage> GetLossAndDamageByIdAsync(int id)
@@ -79,7 +81,7 @@ namespace QuanTriKhachSanN5.Services
             data.PenaltyAmount = model.PenaltyAmount;
             data.Description = model.Description;
             data.ImageUrl = model.ImageUrl;
-            data.Status = model.Status; 
+            data.Status = model.Status;
 
             await _context.SaveChangesAsync();
             return data;

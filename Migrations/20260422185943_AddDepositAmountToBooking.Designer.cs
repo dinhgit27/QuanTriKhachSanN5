@@ -12,8 +12,8 @@ using QuanTriKhachSanN5.Data;
 namespace QuanTriKhachSanN5.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260321064508_AddAttractionsEnhancements")]
-    partial class AddAttractionsEnhancements
+    [Migration("20260422185943_AddDepositAmountToBooking")]
+    partial class AddDepositAmountToBooking
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,6 +25,23 @@ namespace QuanTriKhachSanN5.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Permission", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Permissions");
+                });
+
             modelBuilder.Entity("QuanTriKhachSanN5.Models.Amenity", b =>
                 {
                     b.Property<int>("Id")
@@ -33,17 +50,45 @@ namespace QuanTriKhachSanN5.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("Category")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("category");
+
+                    b.Property<decimal?>("CompensationPrice")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("compensation_price");
+
+                    b.Property<string>("IconUrl")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("icon_url");
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("image_url");
+
+                    b.Property<decimal?>("ImportPrice")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("import_price");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("is_active");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<decimal>("Price")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<string>("Supplier")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("supplier");
+
+                    b.Property<int>("TotalQuantity")
+                        .HasColumnType("int")
+                        .HasColumnName("total_quantity");
+
+                    b.Property<string>("Unit")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("unit");
 
                     b.HasKey("Id");
 
@@ -107,9 +152,6 @@ namespace QuanTriKhachSanN5.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("Description")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
@@ -140,7 +182,7 @@ namespace QuanTriKhachSanN5.Migrations
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)");
 
-                    b.Property<DateTime?>("UpdatedAt")
+                    b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
@@ -185,36 +227,34 @@ namespace QuanTriKhachSanN5.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("id");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Action")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("LogData")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("log_data");
 
-                    b.Property<string>("Details")
+                    b.Property<string>("RoleName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("RecordId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("TableName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("role_name");
 
                     b.Property<DateTime>("Timestamp")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("datetime2")
+                        .HasColumnName("log_date");
 
                     b.Property<int>("UserId")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("user_id");
 
                     b.HasKey("Id");
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("AuditLogs");
+                    b.ToTable("Audit_Logs", (string)null);
                 });
 
             modelBuilder.Entity("QuanTriKhachSanN5.Models.Booking", b =>
@@ -225,39 +265,43 @@ namespace QuanTriKhachSanN5.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("CheckInDate")
-                        .HasColumnType("datetime2");
+                    b.Property<string>("BookingCode")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("booking_code");
 
-                    b.Property<DateTime>("CheckOutDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("GuestId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("RoomId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("TotalAmount")
-                        .HasPrecision(18, 2)
+                    b.Property<decimal>("DepositAmount")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<string>("GuestEmail")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("guest_email");
+
+                    b.Property<string>("GuestName")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("guest_name");
+
+                    b.Property<string>("GuestPhone")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("guest_phone");
+
+                    b.Property<string>("Status")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("status");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int")
+                        .HasColumnName("user_id");
+
+                    b.Property<int?>("VoucherId")
+                        .HasColumnType("int")
+                        .HasColumnName("voucher_id");
+
                     b.HasKey("Id");
-
-                    b.HasIndex("GuestId");
-
-                    b.HasIndex("RoomId");
 
                     b.ToTable("Bookings");
                 });
 
-            modelBuilder.Entity("QuanTriKhachSanN5.Models.Booking_Detail", b =>
+            modelBuilder.Entity("QuanTriKhachSanN5.Models.BookingDetail", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -266,23 +310,28 @@ namespace QuanTriKhachSanN5.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("BookingId")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("booking_id");
 
                     b.Property<DateTime>("CheckInDate")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("datetime2")
+                        .HasColumnName("check_in_date");
 
                     b.Property<DateTime>("CheckOutDate")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("datetime2")
+                        .HasColumnName("check_out_date");
 
-                    b.Property<decimal>("Price")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<decimal>("PricePerNight")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("price_per_night");
 
                     b.Property<int?>("RoomId")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("room_id");
 
-                    b.Property<int>("RoomTypeId")
-                        .HasColumnType("int");
+                    b.Property<int?>("RoomTypeId")
+                        .HasColumnType("int")
+                        .HasColumnName("room_type_id");
 
                     b.HasKey("Id");
 
@@ -292,7 +341,7 @@ namespace QuanTriKhachSanN5.Migrations
 
                     b.HasIndex("RoomTypeId");
 
-                    b.ToTable("BookingDetails");
+                    b.ToTable("Booking_Details", (string)null);
                 });
 
             modelBuilder.Entity("QuanTriKhachSanN5.Models.Category", b =>
@@ -317,6 +366,70 @@ namespace QuanTriKhachSanN5.Migrations
                     b.ToTable("Categories");
                 });
 
+            modelBuilder.Entity("QuanTriKhachSanN5.Models.Equipment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal?>("BasePrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Category")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("DamagedQuantity")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("DefaultPriceIfLost")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("InStockQuantity")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("int");
+
+                    b.Property<int?>("InUseQuantity")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("int");
+
+                    b.Property<bool?>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ItemCode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("LiquidatedQuantity")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Supplier")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("TotalQuantity")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Unit")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Equipments");
+                });
+
             modelBuilder.Entity("QuanTriKhachSanN5.Models.Invoice", b =>
                 {
                     b.Property<int>("Id")
@@ -326,45 +439,42 @@ namespace QuanTriKhachSanN5.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("BookingId")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("booking_id");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<decimal?>("DiscountAmount")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("discount_amount");
 
-                    b.Property<decimal>("DamageFee")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("RoomTotalCost")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("ServicesCost")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<decimal?>("FinalTotal")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("final_total");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("status");
 
-                    b.Property<decimal>("TotalAmount")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<decimal?>("TaxAmount")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("tax_amount");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<decimal?>("TotalRoomAmount")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("total_room_amount");
 
-                    b.Property<decimal>("VoucherDiscount")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<decimal?>("TotalServiceAmount")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("total_service_amount");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Invoices");
+                    b.HasIndex("BookingId");
+
+                    b.ToTable("Invoices", (string)null);
                 });
 
-            modelBuilder.Entity("QuanTriKhachSanN5.Models.Loss_And_Damage", b =>
+            modelBuilder.Entity("QuanTriKhachSanN5.Models.LossAndDamage", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -373,37 +483,44 @@ namespace QuanTriKhachSanN5.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int?>("BookingDetailId")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("booking_detail_id");
 
-                    b.Property<int>("BookingId")
-                        .HasColumnType("int");
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
 
                     b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("description");
+
+                    b.Property<string>("ImageUrl")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("ImageUrl");
 
-                    b.Property<decimal>("FineAmount")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<decimal?>("PenaltyAmount")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("penalty_amount");
 
-                    b.Property<int>("Quantity")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("ReportedDate")
-                        .HasColumnType("datetime2");
+                    b.Property<int?>("Quantity")
+                        .HasColumnType("int")
+                        .HasColumnName("quantity");
 
                     b.Property<int?>("RoomInventoryId")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("room_inventory_id");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("status");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BookingId");
+                    b.HasIndex("BookingDetailId");
 
-                    b.ToTable("LossAndDamages");
+                    b.ToTable("Loss_And_Damages", (string)null);
                 });
 
             modelBuilder.Entity("QuanTriKhachSanN5.Models.Membership", b =>
@@ -415,7 +532,6 @@ namespace QuanTriKhachSanN5.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("DiscountPercent")
-                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Level")
@@ -444,27 +560,24 @@ namespace QuanTriKhachSanN5.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int?>("BookingDetailId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("BookingId")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("booking_detail_id");
 
                     b.Property<DateTime>("OrderDate")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("datetime2")
+                        .HasColumnName("order_date");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("TotalAmount")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("total_amount");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BookingId");
-
-                    b.ToTable("OrderServices");
+                    b.ToTable("Order_Services", (string)null);
                 });
 
             modelBuilder.Entity("QuanTriKhachSanN5.Models.Order_Service_Detail", b =>
@@ -476,17 +589,19 @@ namespace QuanTriKhachSanN5.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("OrderServiceId")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("order_service_id");
 
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
 
                     b.Property<int>("ServiceId")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("service_id");
 
                     b.Property<decimal>("UnitPrice")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("unit_price");
 
                     b.HasKey("Id");
 
@@ -494,41 +609,39 @@ namespace QuanTriKhachSanN5.Migrations
 
                     b.HasIndex("ServiceId");
 
-                    b.ToTable("OrderServiceDetails");
+                    b.ToTable("Order_Service_Details", (string)null);
                 });
 
             modelBuilder.Entity("QuanTriKhachSanN5.Models.Payment", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("id");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("AmountPaid")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("amount_paid");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<int?>("InvoiceId")
+                        .HasColumnType("int")
+                        .HasColumnName("invoice_id");
 
-                    b.Property<int>("InvoiceId")
-                        .HasColumnType("int");
+                    b.Property<DateTime?>("PaymentDate")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("payment_date");
 
                     b.Property<string>("PaymentMethod")
-                        .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("payment_method");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("TransactionId")
-                        .IsRequired()
+                    b.Property<string>("TransactionCode")
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("transaction_code");
 
                     b.HasKey("Id");
 
@@ -549,7 +662,7 @@ namespace QuanTriKhachSanN5.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Permissions");
+                    b.ToTable("Permission");
                 });
 
             modelBuilder.Entity("QuanTriKhachSanN5.Models.Post", b =>
@@ -653,7 +766,7 @@ namespace QuanTriKhachSanN5.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Roles");
+                    b.ToTable("Role");
                 });
 
             modelBuilder.Entity("QuanTriKhachSanN5.Models.Role_Permission", b =>
@@ -676,7 +789,7 @@ namespace QuanTriKhachSanN5.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("RolePermissions");
+                    b.ToTable("Role_Permission");
                 });
 
             modelBuilder.Entity("QuanTriKhachSanN5.Models.Room", b =>
@@ -687,53 +800,97 @@ namespace QuanTriKhachSanN5.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("CleaningStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("cleaning_status");
+
+                    b.Property<string>("ExtensionNumber")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("extension_number");
+
+                    b.Property<int>("Floor")
+                        .HasColumnType("int")
+                        .HasColumnName("floor");
+
                     b.Property<string>("RoomNumber")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("room_number");
 
                     b.Property<int>("RoomTypeId")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("room_type_id");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("status");
 
                     b.HasKey("Id");
 
                     b.HasIndex("RoomTypeId");
 
-                    b.ToTable("Rooms");
+                    b.ToTable("Rooms", (string)null);
                 });
 
             modelBuilder.Entity("QuanTriKhachSanN5.Models.RoomType", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("id");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("BasePrice")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("base_price");
+
+                    b.Property<string>("BedType")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("bed_type");
 
                     b.Property<int>("CapacityAdults")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("capacity_adults");
 
                     b.Property<int>("CapacityChildren")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("capacity_children");
+
+                    b.Property<string>("Content")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("content");
 
                     b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("description");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("is_active");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("name");
+
+                    b.Property<double?>("SizeSqm")
+                        .HasColumnType("float")
+                        .HasColumnName("size_sqm");
+
+                    b.Property<string>("Slug")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("slug");
+
+                    b.Property<string>("ViewType")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("view_type");
 
                     b.HasKey("Id");
 
-                    b.ToTable("RoomTypes");
+                    b.ToTable("Room_Types", (string)null);
                 });
 
             modelBuilder.Entity("QuanTriKhachSanN5.Models.Room_Image", b =>
@@ -746,17 +903,24 @@ namespace QuanTriKhachSanN5.Migrations
 
                     b.Property<string>("ImageUrl")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("image_url");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("is_active");
 
                     b.Property<bool>("IsPrimary")
-                        .HasColumnType("bit");
+                        .HasColumnType("bit")
+                        .HasColumnName("is_primary");
 
-                    b.Property<int>("RoomId")
-                        .HasColumnType("int");
+                    b.Property<int>("RoomTypeId")
+                        .HasColumnType("int")
+                        .HasColumnName("room_type_id");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("RoomId");
+                    b.HasIndex("RoomTypeId");
 
                     b.ToTable("RoomImages");
                 });
@@ -769,26 +933,38 @@ namespace QuanTriKhachSanN5.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AmenityId")
+                    b.Property<int>("EquipmentId")
                         .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("ItemType")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("item_type");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("PriceIfLost")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("price_if_lost");
 
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
 
                     b.Property<int>("RoomId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("int")
+                        .HasColumnName("room_id");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AmenityId");
+                    b.HasIndex("EquipmentId");
 
                     b.HasIndex("RoomId");
 
-                    b.ToTable("RoomInventories");
+                    b.ToTable("Room_Inventory");
                 });
 
             modelBuilder.Entity("QuanTriKhachSanN5.Models.Service", b =>
@@ -800,22 +976,15 @@ namespace QuanTriKhachSanN5.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("CategoryId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("int")
+                        .HasColumnName("category_id");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("Price")
-                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
 
                     b.Property<string>("Unit")
                         .HasColumnType("nvarchar(max)");
@@ -841,39 +1010,25 @@ namespace QuanTriKhachSanN5.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ServiceCategories");
+                    b.ToTable("Service_Categories");
                 });
 
-            modelBuilder.Entity("QuanTriKhachSanN5.Models.User", b =>
+            modelBuilder.Entity("QuanTriKhachSanN5.Models.User_Permission", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<int>("UserId")
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<int>("PermissionId")
+                        .HasColumnType("int");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
 
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.HasKey("UserId", "PermissionId");
 
-                    b.Property<string>("PasswordHash")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.HasIndex("PermissionId");
 
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Username")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Users");
+                    b.ToTable("UserPermissions");
                 });
 
             modelBuilder.Entity("QuanTriKhachSanN5.Models.User_Role", b =>
@@ -896,7 +1051,7 @@ namespace QuanTriKhachSanN5.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserRoles");
+                    b.ToTable("User_Role");
                 });
 
             modelBuilder.Entity("QuanTriKhachSanN5.Models.Voucher", b =>
@@ -911,16 +1066,8 @@ namespace QuanTriKhachSanN5.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<decimal>("DiscountAmount")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<decimal>("DiscountPercent")
-                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime>("ExpiryDate")
-                        .HasColumnType("datetime2");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -928,6 +1075,93 @@ namespace QuanTriKhachSanN5.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Vouchers");
+                });
+
+            modelBuilder.Entity("Role", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Roles");
+                });
+
+            modelBuilder.Entity("Role_Permission", b =>
+                {
+                    b.Property<int>("RoleId")
+                        .HasColumnType("int")
+                        .HasColumnName("role_id");
+
+                    b.Property<int>("PermissionId")
+                        .HasColumnType("int")
+                        .HasColumnName("permission_id");
+
+                    b.HasKey("RoleId", "PermissionId");
+
+                    b.HasIndex("PermissionId");
+
+                    b.ToTable("Role_Permissions");
+                });
+
+            modelBuilder.Entity("User", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("email");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("full_name");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("status");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("password_hash");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("User_Role", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("int")
+                        .HasColumnName("user_id");
+
+                    b.Property<int>("RoleId")
+                        .HasColumnType("int")
+                        .HasColumnName("role_id");
+
+                    b.HasKey("UserId", "RoleId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("User_Roles", (string)null);
                 });
 
             modelBuilder.Entity("QuanTriKhachSanN5.Models.Article", b =>
@@ -944,7 +1178,7 @@ namespace QuanTriKhachSanN5.Migrations
             modelBuilder.Entity("QuanTriKhachSanN5.Models.AttractionImage", b =>
                 {
                     b.HasOne("QuanTriKhachSanN5.Models.Attraction", "Attraction")
-                        .WithMany("Images")
+                        .WithMany()
                         .HasForeignKey("AttractionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -954,7 +1188,7 @@ namespace QuanTriKhachSanN5.Migrations
 
             modelBuilder.Entity("QuanTriKhachSanN5.Models.Audit_Log", b =>
                 {
-                    b.HasOne("QuanTriKhachSanN5.Models.User", "User")
+                    b.HasOne("User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -963,26 +1197,7 @@ namespace QuanTriKhachSanN5.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("QuanTriKhachSanN5.Models.Booking", b =>
-                {
-                    b.HasOne("QuanTriKhachSanN5.Models.User", "Guest")
-                        .WithMany()
-                        .HasForeignKey("GuestId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("QuanTriKhachSanN5.Models.Room", "Room")
-                        .WithMany()
-                        .HasForeignKey("RoomId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Guest");
-
-                    b.Navigation("Room");
-                });
-
-            modelBuilder.Entity("QuanTriKhachSanN5.Models.Booking_Detail", b =>
+            modelBuilder.Entity("QuanTriKhachSanN5.Models.BookingDetail", b =>
                 {
                     b.HasOne("QuanTriKhachSanN5.Models.Booking", "Booking")
                         .WithMany("BookingDetails")
@@ -997,8 +1212,7 @@ namespace QuanTriKhachSanN5.Migrations
                     b.HasOne("QuanTriKhachSanN5.Models.RoomType", "RoomType")
                         .WithMany()
                         .HasForeignKey("RoomTypeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Booking");
 
@@ -1007,7 +1221,7 @@ namespace QuanTriKhachSanN5.Migrations
                     b.Navigation("RoomType");
                 });
 
-            modelBuilder.Entity("QuanTriKhachSanN5.Models.Loss_And_Damage", b =>
+            modelBuilder.Entity("QuanTriKhachSanN5.Models.Invoice", b =>
                 {
                     b.HasOne("QuanTriKhachSanN5.Models.Booking", "Booking")
                         .WithMany()
@@ -1018,26 +1232,24 @@ namespace QuanTriKhachSanN5.Migrations
                     b.Navigation("Booking");
                 });
 
+            modelBuilder.Entity("QuanTriKhachSanN5.Models.LossAndDamage", b =>
+                {
+                    b.HasOne("QuanTriKhachSanN5.Models.BookingDetail", "BookingDetail")
+                        .WithMany()
+                        .HasForeignKey("BookingDetailId");
+
+                    b.Navigation("BookingDetail");
+                });
+
             modelBuilder.Entity("QuanTriKhachSanN5.Models.Membership", b =>
                 {
-                    b.HasOne("QuanTriKhachSanN5.Models.User", "User")
-                        .WithMany("Memberships")
+                    b.HasOne("User", "User")
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("QuanTriKhachSanN5.Models.Order_Service", b =>
-                {
-                    b.HasOne("QuanTriKhachSanN5.Models.Booking", "Booking")
-                        .WithMany()
-                        .HasForeignKey("BookingId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Booking");
                 });
 
             modelBuilder.Entity("QuanTriKhachSanN5.Models.Order_Service_Detail", b =>
@@ -1082,7 +1294,7 @@ namespace QuanTriKhachSanN5.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("QuanTriKhachSanN5.Models.User", "User")
+                    b.HasOne("User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1127,20 +1339,20 @@ namespace QuanTriKhachSanN5.Migrations
 
             modelBuilder.Entity("QuanTriKhachSanN5.Models.Room_Image", b =>
                 {
-                    b.HasOne("QuanTriKhachSanN5.Models.Room", "Room")
+                    b.HasOne("QuanTriKhachSanN5.Models.RoomType", "RoomType")
                         .WithMany()
-                        .HasForeignKey("RoomId")
+                        .HasForeignKey("RoomTypeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Room");
+                    b.Navigation("RoomType");
                 });
 
             modelBuilder.Entity("QuanTriKhachSanN5.Models.Room_Inventory", b =>
                 {
-                    b.HasOne("QuanTriKhachSanN5.Models.Amenity", "Amenity")
+                    b.HasOne("QuanTriKhachSanN5.Models.Equipment", "Equipment")
                         .WithMany()
-                        .HasForeignKey("AmenityId")
+                        .HasForeignKey("EquipmentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1150,7 +1362,7 @@ namespace QuanTriKhachSanN5.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Amenity");
+                    b.Navigation("Equipment");
 
                     b.Navigation("Room");
                 });
@@ -1166,6 +1378,25 @@ namespace QuanTriKhachSanN5.Migrations
                     b.Navigation("Category");
                 });
 
+            modelBuilder.Entity("QuanTriKhachSanN5.Models.User_Permission", b =>
+                {
+                    b.HasOne("QuanTriKhachSanN5.Models.Permission", "Permission")
+                        .WithMany()
+                        .HasForeignKey("PermissionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("User", "User")
+                        .WithMany("UserPermissions")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Permission");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("QuanTriKhachSanN5.Models.User_Role", b =>
                 {
                     b.HasOne("QuanTriKhachSanN5.Models.Role", "Role")
@@ -1174,7 +1405,45 @@ namespace QuanTriKhachSanN5.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("QuanTriKhachSanN5.Models.User", "User")
+                    b.HasOne("User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Role");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Role_Permission", b =>
+                {
+                    b.HasOne("Permission", "Permission")
+                        .WithMany("RolePermissions")
+                        .HasForeignKey("PermissionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Role", "Role")
+                        .WithMany("RolePermissions")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Permission");
+
+                    b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("User_Role", b =>
+                {
+                    b.HasOne("Role", "Role")
+                        .WithMany("UserRoles")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("User", "User")
                         .WithMany("UserRoles")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1185,14 +1454,14 @@ namespace QuanTriKhachSanN5.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Permission", b =>
+                {
+                    b.Navigation("RolePermissions");
+                });
+
             modelBuilder.Entity("QuanTriKhachSanN5.Models.Article_Category", b =>
                 {
                     b.Navigation("Articles");
-                });
-
-            modelBuilder.Entity("QuanTriKhachSanN5.Models.Attraction", b =>
-                {
-                    b.Navigation("Images");
                 });
 
             modelBuilder.Entity("QuanTriKhachSanN5.Models.Booking", b =>
@@ -1232,9 +1501,16 @@ namespace QuanTriKhachSanN5.Migrations
                     b.Navigation("Services");
                 });
 
-            modelBuilder.Entity("QuanTriKhachSanN5.Models.User", b =>
+            modelBuilder.Entity("Role", b =>
                 {
-                    b.Navigation("Memberships");
+                    b.Navigation("RolePermissions");
+
+                    b.Navigation("UserRoles");
+                });
+
+            modelBuilder.Entity("User", b =>
+                {
+                    b.Navigation("UserPermissions");
 
                     b.Navigation("UserRoles");
                 });

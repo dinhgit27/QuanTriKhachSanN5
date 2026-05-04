@@ -3,14 +3,13 @@ using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.IdentityModel.Tokens;
 using QuanTriKhachSanN5.API.Services;
 using QuanTriKhachSanN5.Data;
 using QuanTriKhachSanN5.Interfaces;
 using QuanTriKhachSanN5.Models;
 using QuanTriKhachSanN5.Services;
-using Microsoft.Extensions.Caching.Memory;
-
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,7 +35,9 @@ builder.Services.AddCors(options =>
 });
 
 builder
-    .Services.AddControllers(options => options.Filters.Add<QuanTriKhachSanN5.Filters.AuditLogFilter>())
+    .Services.AddControllers(options =>
+        options.Filters.Add<QuanTriKhachSanN5.Filters.AuditLogFilter>()
+    )
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
@@ -69,6 +70,8 @@ builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IAuditBatchService, AuditBatchService>();
 builder.Services.Configure<VietQRConfig>(builder.Configuration.GetSection("VietQR"));
 builder.Services.AddScoped<IVietQRService, VietQRService>();
+builder.Services.AddScoped<IMomoService, MomoService>();
+
 // AuditLogFilter registered globally above
 
 // --- AUTHENTICATION & AUTHORIZATION ---

@@ -230,19 +230,18 @@ namespace QuanTriKhachSanN5.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("LogData")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("log_data");
-
-                    b.Property<DateTime>("LogDate")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("log_date");
 
                     b.Property<string>("RoleName")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("role_name");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("log_date");
 
                     b.Property<int>("UserId")
                         .HasColumnType("int")
@@ -266,6 +265,9 @@ namespace QuanTriKhachSanN5.Migrations
                     b.Property<string>("BookingCode")
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("booking_code");
+
+                    b.Property<decimal>("DepositAmount")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("GuestEmail")
                         .HasColumnType("nvarchar(max)")
