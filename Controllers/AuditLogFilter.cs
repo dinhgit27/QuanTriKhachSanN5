@@ -43,10 +43,16 @@ namespace QuanTriKhachSanN5.Filters
             var resultContext = await next();
 
             // 3. Nếu API chạy THÀNH CÔNG và LÀ THAO TÁC THAY ĐỔI DỮ LIỆU (CUD)
+            int actualStatusCode = resultContext.HttpContext.Response.StatusCode;
+            if (resultContext.Result is Microsoft.AspNetCore.Mvc.Infrastructure.IStatusCodeActionResult statusCodeResult && statusCodeResult.StatusCode.HasValue)
+            {
+                actualStatusCode = statusCodeResult.StatusCode.Value;
+            }
+
             if (
                 resultContext.Exception == null
-                && resultContext.HttpContext.Response.StatusCode >= 200 
-                && resultContext.HttpContext.Response.StatusCode < 300
+                && actualStatusCode >= 200 
+                && actualStatusCode < 300
                 && (method == "POST" || method == "PUT" || method == "DELETE")
             )
             {
