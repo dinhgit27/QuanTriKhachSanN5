@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using QuanTriKhachSanN5.Data;
 
@@ -11,9 +12,11 @@ using QuanTriKhachSanN5.Data;
 namespace QuanTriKhachSanN5.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260507190831_UpdateModels")]
+    partial class UpdateModels
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -234,6 +237,7 @@ namespace QuanTriKhachSanN5.Migrations
                         .HasColumnName("log_data");
 
                     b.Property<string>("RoleName")
+                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("role_name");
@@ -265,10 +269,6 @@ namespace QuanTriKhachSanN5.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("booking_code");
 
-                    b.Property<decimal?>("DepositAmount")
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("DepositAmount");
-
                     b.Property<string>("GuestEmail")
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("guest_email");
@@ -295,7 +295,7 @@ namespace QuanTriKhachSanN5.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Bookings", (string)null);
+                    b.ToTable("Bookings");
                 });
 
             modelBuilder.Entity("QuanTriKhachSanN5.Models.BookingDetail", b =>
