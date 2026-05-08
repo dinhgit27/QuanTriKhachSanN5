@@ -1,6 +1,6 @@
+using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using QuanTriKhachSanN5.Models;
-using System.Linq;
 
 namespace QuanTriKhachSanN5.Data
 {
@@ -16,9 +16,9 @@ namespace QuanTriKhachSanN5.Data
         public DbSet<RoomType> RoomTypes { get; set; }
         public DbSet<Booking> Bookings { get; set; }
         public DbSet<Equipment> Equipments { get; set; }
-        
+
         public DbSet<BookingDetail> BookingDetails { get; set; }
-        
+
         public DbSet<Article> Articles { get; set; }
         public DbSet<Article_Category> ArticleCategories { get; set; }
         public DbSet<Attraction> Attractions { get; set; }
@@ -47,12 +47,12 @@ namespace QuanTriKhachSanN5.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-            
-            modelBuilder.Entity<RoomType>().ToTable("Room_Types"); 
+            modelBuilder.Entity<Booking>().ToTable("Bookings");
+            modelBuilder.Entity<RoomType>().ToTable("Room_Types");
             modelBuilder.Entity<LossAndDamage>().ToTable("Loss_And_Damages");
             modelBuilder.Entity<BookingDetail>().ToTable("Booking_Details");
-            modelBuilder.Entity<Room>().ToTable("Rooms"); 
-            
+            modelBuilder.Entity<Room>().ToTable("Rooms");
+
             // 🚨 Bổ sung ép tên bảng cho chắc cú
             modelBuilder.Entity<Invoice>().ToTable("Invoices");
             modelBuilder.Entity<Order_Service>().ToTable("Order_Services");
@@ -86,9 +86,10 @@ namespace QuanTriKhachSanN5.Data
 
             modelBuilder.Entity<Role_Permission>().HasKey(x => new { x.RoleId, x.PermissionId });
             modelBuilder.Entity<User_Permission>().HasKey(x => new { x.UserId, x.PermissionId });
-            
+
             // Explicitly resolve relationship ambiguity for User_Permission
-            modelBuilder.Entity<User_Permission>()
+            modelBuilder
+                .Entity<User_Permission>()
                 .HasOne(up => up.User)
                 .WithMany(u => u.UserPermissions)
                 .HasForeignKey(up => up.UserId);

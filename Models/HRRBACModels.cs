@@ -9,8 +9,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace QuanTriKhachSanN5.Models
 {
-
-
     // Bảng Roles: Nhóm quyền
     public class Role
     {
