@@ -31,7 +31,10 @@ namespace QuanTriKhachSanN5.Controllers
                     id = b.Id,
                     bookingCode = b.BookingCode,
                     guestName = b.GuestName,
+                    guestEmail = b.GuestEmail,
                     checkInDate = b.BookingDetails.Any() ? b.BookingDetails.Min(d => d.CheckInDate) : (DateTime?)null,
+                    checkOutDate = b.BookingDetails.Any() ? b.BookingDetails.Max(d => d.CheckOutDate) : (DateTime?)null,
+                    totalAmount = b.BookingDetails.Sum(d => d.PricePerNight * EF.Functions.DateDiffDay(d.CheckInDate, d.CheckOutDate)),
                     status = b.Status
                 })
                 .ToListAsync();
@@ -67,15 +70,15 @@ namespace QuanTriKhachSanN5.Controllers
         [HttpGet("arrivals")]
         public async Task<IActionResult> GetArrivalsToday()
         {
-            var today = DateTime.Today;
+            // Lấy khoảng thời gian từ 00:00:00 đến 23:59:59 của ngày hôm nay (giờ máy chủ)
+            var startOfDay = DateTime.Today;
+            var endOfDay = startOfDay.AddDays(1).AddTicks(-1);
             
             var arrivals = await _context.Bookings
                 .Include(b => b.BookingDetails!).ThenInclude(bd => bd.RoomType!)
                 .Include(b => b.BookingDetails!).ThenInclude(bd => bd.Room!) 
-                // 🚨 ĐÃ FIX: Cho phép hiển thị cả Pending và Confirmed
                 .Where(b => (b.Status == "Confirmed" || b.Status == "Pending") 
-
-                         && b.BookingDetails.Any(bd => bd.CheckInDate.Date == today))
+                         && b.BookingDetails.Any(bd => bd.CheckInDate >= startOfDay && bd.CheckInDate <= endOfDay))
                 .Select(b => new {
                     id = b.Id,
                     bookingCode = b.BookingCode,
@@ -103,6 +106,15 @@ namespace QuanTriKhachSanN5.Controllers
             if (!req.SelectedRoomIds.Any())
                 return BadRequest(new { message = "Vui lòng chọn ít nhất 1 phòng!" });
 
+            // 🚨 KIỂM TRA OVERBOOKING: Kiểm tra xem các phòng này đã có ai đặt chưa trong tầm ngày này
+            var overlappingBookings = await _context.BookingDetails
+                .Where(bd => req.SelectedRoomIds.Contains(bd.RoomId ?? 0))
+                .Where(bd => bd.CheckInDate < req.CheckOut && bd.CheckOutDate > req.CheckIn && bd.Booking.Status != "Cancelled")
+                .AnyAsync();
+
+            if (overlappingBookings)
+                return BadRequest(new { message = "Một hoặc nhiều phòng bạn chọn đã được người khác đặt trong khoảng thời gian này. Vui lòng chọn ngày khác hoặc phòng khác!" });
+
             string bookingCode = $"BK-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000,9999)}";
 
             var newBooking = new Booking
@@ -111,7 +123,6 @@ namespace QuanTriKhachSanN5.Controllers
                 GuestPhone = req.GuestPhone,
                 GuestEmail = req.GuestEmail,
                 BookingCode = bookingCode,
-                // 🚨 ĐÃ FIX: Trả lại tiếng Anh chuẩn (Pending) để Frontend nhận diện màu sắc
                 Status = "Pending", 
                 BookingDetails = new List<BookingDetail>() 
             };

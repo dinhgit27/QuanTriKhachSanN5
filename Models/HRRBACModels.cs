@@ -67,9 +67,9 @@ namespace QuanTriKhachSanN5.Models
 
         [Column("role_name")]
         [StringLength(255)]
-        public string RoleName { get; set; }
+        public string? RoleName { get; set; }
 
         [Column("log_data")]
-        public string? LogData { get; set; } = null!;
+        public string? LogData { get; set; }
     }
 }
