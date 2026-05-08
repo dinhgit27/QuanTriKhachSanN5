@@ -74,8 +74,6 @@ builder.Services.AddScoped<IMomoService, MomoService>();
 
 // AuditLogFilter registered globally above
 
-
-// --- AUTHENTICATION & AUTHORIZATION ---
 builder
     .Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
