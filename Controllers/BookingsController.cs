@@ -32,7 +32,6 @@ namespace QuanTriKhachSanN5.Controllers
                     id = b.Id,
                     bookingCode = b.BookingCode,
                     guestName = b.GuestName,
-<<<<<<< HEAD
                     guestEmail = b.GuestEmail,
                     checkInDate = b.BookingDetails.Any() ? b.BookingDetails.Min(d => d.CheckInDate) : (DateTime?)null,
                     checkOutDate = b.BookingDetails.Any() ? b.BookingDetails.Max(d => d.CheckOutDate) : (DateTime?)null,
