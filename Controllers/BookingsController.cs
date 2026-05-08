@@ -140,7 +140,7 @@ namespace QuanTriKhachSanN5.Controllers
                 GuestPhone = req.GuestPhone,
                 GuestEmail = req.GuestEmail,
                 BookingCode = bookingCode,
-                DepositAmount = req.DepositAmount,
+                //DepositAmount = req.DepositAmount,
                 Status = "Pending", 
                 BookingDetails = new List<BookingDetail>() 
             };
