@@ -97,13 +97,11 @@ public class AuditLogsController : ControllerBase
     /// Create batch audit log - accepts {TotalEvents, Events: [{eventId, actionType, targetTable, ...}]}
     /// Saves using AuditBatchService to handle daily merging
     /// </summary>
-[HttpPost]
+    [HttpPost]
     public async Task<ActionResult> CreateBatchAuditLog([FromBody] AuditLogPayloadRequest payload)
     {
         try
         {
-            if (payload == null)
-                return BadRequest(new { message = "Payload is null" });
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             int.TryParse(userIdClaim, out int userId);
             var roleName = User.FindFirst(ClaimTypes.Role)?.Value ?? "Hệ thống";
@@ -128,8 +126,7 @@ public class AuditLogsController : ControllerBase
         }
         catch (Exception ex)
         {
-            // Tránh gây "empty response" ở frontend: luôn trả JSON lỗi rõ ràng
-            return StatusCode(500, new { message = $"Error saving batch log: {ex.Message}", detail = ex.ToString() });
+            return BadRequest(new { message = $"Error saving batch log: {ex.Message}" });
         }
     }
 
