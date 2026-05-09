@@ -48,6 +48,10 @@ namespace QuanTriKhachSanN5.Data
         {
             base.OnModelCreating(modelBuilder);
             modelBuilder.Entity<Booking>().ToTable("Bookings");
+
+
+
+
             modelBuilder.Entity<RoomType>().ToTable("Room_Types");
             modelBuilder.Entity<LossAndDamage>().ToTable("Loss_And_Damages");
             modelBuilder.Entity<BookingDetail>().ToTable("Booking_Details");

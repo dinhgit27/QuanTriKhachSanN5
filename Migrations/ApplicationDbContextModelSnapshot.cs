@@ -242,7 +242,7 @@ namespace QuanTriKhachSanN5.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("log_date");
 
-                    b.Property<int?>("UserId")
+                    b.Property<int>("UserId")
                         .HasColumnType("int")
                         .HasColumnName("user_id");
 
@@ -1197,7 +1197,9 @@ namespace QuanTriKhachSanN5.Migrations
                 {
                     b.HasOne("User", "User")
                         .WithMany()
-                        .HasForeignKey("UserId");
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("User");
                 });

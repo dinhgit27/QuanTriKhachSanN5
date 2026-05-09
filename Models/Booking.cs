@@ -30,7 +30,8 @@ namespace QuanTriKhachSanN5.Models
         [Column("status")]
         public string? Status { get; set; } // Vd: Pending, Confirmed, Checked_in, Completed, Cancelled
         
-        [Column("DepositAmount")]
+        // Cột này không tồn tại trong DB, chỉ dùng để tính toán trong code
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
         public decimal? DepositAmount { get; set; } = 0m;
 
         // Navigation property (1 Booking có nhiều Chi tiết đặt phòng)

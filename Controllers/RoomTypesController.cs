@@ -18,8 +18,8 @@ namespace QuanTriKhachSanN5.Controllers
             _roomTypeService = roomTypeService;
         }
 
-        // GET: api/RoomTypes - Lấy danh sách tất cả loại phòng (Admin, Receptionist)
-        [Authorize(Roles = "Admin,Receptionist")]
+        // GET: api/RoomTypes - Lấy danh sách tất cả loại phòng (Admin, Receptionist, Guest)
+        [Authorize(Roles = "Admin,Receptionist,Guest")]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<RoomTypeDTO>>> GetRoomTypes()
         {
@@ -28,7 +28,7 @@ namespace QuanTriKhachSanN5.Controllers
         }
 
         // GET: api/RoomTypes/5 - Lấy chi tiết loại phòng
-        [Authorize(Roles = "Admin,Receptionist")]
+        [Authorize(Roles = "Admin,Receptionist,Guest")]
         [HttpGet("{id}")]
         public async Task<ActionResult<RoomTypeDTO>> GetRoomType(int id)
         {

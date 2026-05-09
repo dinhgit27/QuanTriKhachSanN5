@@ -17,57 +17,67 @@ namespace QuanTriKhachSanN5.Services
 
         public async Task AddEventAsync(int userId, string role, object eventObj)
         {
-            // Lấy ngày hiện tại (không lấy giờ)
-            var today = DateTime.UtcNow.Date;
-
-            // Tìm record log của user này trong ngày hôm nay
-            var auditLog = await _context.AuditLogs.FirstOrDefaultAsync(l =>
-                l.UserId == userId && l.Timestamp.Date == today
-            );
-
-            AuditLogPayload payload;
-
-            if (auditLog == null)
+            try
             {
-                // Nếu chưa có, tạo mới
-                payload = new AuditLogPayload
-                {
-                    TotalEvents = 1,
-                    Events = new List<object> { eventObj },
-                };
+                // Lấy ngày hiện tại (không lấy giờ)
+                var today = DateTime.UtcNow.Date;
+                var tomorrow = today.AddDays(1);
 
-                auditLog = new Audit_Log
-                {
-                    UserId = userId,
-                    RoleName = role,
-                    Timestamp = DateTime.UtcNow,
-                    LogData = JsonSerializer.Serialize(payload),
-                };
+                // Tìm record log của user này trong ngày hôm nay
+                // Dùng range so sánh thay vì .Date để tránh lỗi EF Core translation
+                var auditLog = await _context.AuditLogs.FirstOrDefaultAsync(l =>
+                    l.UserId == userId && l.Timestamp >= today && l.Timestamp < tomorrow
+                );
 
-                _context.AuditLogs.Add(auditLog);
+                AuditLogPayload payload;
+
+                if (auditLog == null)
+                {
+                    // Nếu chưa có, tạo mới
+                    payload = new AuditLogPayload
+                    {
+                        TotalEvents = 1,
+                        Events = new List<object> { eventObj },
+                    };
+
+                    auditLog = new Audit_Log
+                    {
+                        UserId = userId,
+                        RoleName = role,
+                        Timestamp = DateTime.UtcNow,
+                        LogData = JsonSerializer.Serialize(payload),
+                    };
+
+                    _context.AuditLogs.Add(auditLog);
+                }
+                else
+                {
+                    // Nếu đã có, giải mã JSON cũ và thêm event mới vào
+                    try
+                    {
+                        payload =
+                            JsonSerializer.Deserialize<AuditLogPayload>(auditLog.LogData)
+                            ?? new AuditLogPayload();
+                    }
+                    catch
+                    {
+                        payload = new AuditLogPayload();
+                    }
+
+                    payload.Events.Add(eventObj);
+                    payload.TotalEvents = payload.Events.Count;
+
+                    auditLog.LogData = JsonSerializer.Serialize(payload);
+                    _context.AuditLogs.Update(auditLog);
+                }
+
+                await _context.SaveChangesAsync();
             }
-            else
+            catch (Exception ex)
             {
-                // Nếu đã có, giải mã JSON cũ và thêm event mới vào
-                try
-                {
-                    payload =
-                        JsonSerializer.Deserialize<AuditLogPayload>(auditLog.LogData)
-                        ?? new AuditLogPayload();
-                }
-                catch
-                {
-                    payload = new AuditLogPayload();
-                }
-
-                payload.Events.Add(eventObj);
-                payload.TotalEvents = payload.Events.Count;
-
-                auditLog.LogData = JsonSerializer.Serialize(payload);
-                _context.AuditLogs.Update(auditLog);
+                // Không để lỗi audit làm gián đoạn luồng nghiệp vụ chính
+                Console.WriteLine($"[AuditBatch] Lỗi ghi audit log: {ex.Message}");
             }
-
-            await _context.SaveChangesAsync();
         }
     }
 
