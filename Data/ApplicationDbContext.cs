@@ -96,6 +96,17 @@ namespace QuanTriKhachSanN5.Data
 
             modelBuilder.Entity<Audit_Log>().ToTable("Audit_Logs");
 
+            // Configure Membership relationships
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.Membership)
+                .WithMany()
+                .HasForeignKey(u => u.MembershipId);
+
+            modelBuilder.Entity<Membership>()
+                .HasOne(m => m.User)
+                .WithMany()
+                .HasForeignKey(m => m.UserId);
+            
             // Định dạng tất cả kiểu thập phân thành decimal(18,2)
             foreach (
                 var property in modelBuilder

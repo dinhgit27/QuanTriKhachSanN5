@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using QuanTriKhachSanN5.Data;
 
@@ -11,9 +12,11 @@ using QuanTriKhachSanN5.Data;
 namespace QuanTriKhachSanN5.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260508060315_MergePhihungChanges")]
+    partial class MergePhihungChanges
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -267,7 +270,7 @@ namespace QuanTriKhachSanN5.Migrations
 
                     b.Property<decimal?>("DepositAmount")
                         .HasColumnType("decimal(18,2)")
-                        .HasColumnName("DepositAmount");
+                        .HasColumnName("deposit_amount");
 
                     b.Property<string>("GuestEmail")
                         .HasColumnType("nvarchar(max)")

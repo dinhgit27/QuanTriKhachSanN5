@@ -52,7 +52,7 @@ public class AuditLogsController : ControllerBase
             {
                 Id = al.Id,
                 UserId = al.UserId,
-                UserName = al.User != null ? al.User.FullName : (al.UserId == null ? "Hệ thống" : "Unknown"),
+                UserName = al.User != null ? al.User.FullName : null,
                 RoleName = al.RoleName,
                 Timestamp = al.Timestamp,
                 LogData = al.LogData,
@@ -84,7 +84,7 @@ public class AuditLogsController : ControllerBase
         {
             Id = auditLog.Id,
             UserId = auditLog.UserId,
-            UserName = auditLog.User != null ? auditLog.User.FullName : (auditLog.UserId == null ? "Hệ thống" : "Unknown"),
+            UserName = auditLog.User != null ? auditLog.User.FullName : null,
             RoleName = auditLog.RoleName,
             Timestamp = auditLog.Timestamp,
             LogData = auditLog.LogData,
@@ -95,38 +95,40 @@ public class AuditLogsController : ControllerBase
 
     /// <summary>
     /// Create batch audit log - accepts {TotalEvents, Events: [{eventId, actionType, targetTable, ...}]}
-    /// Saves using AuditBatchService to handle daily merging
+    /// Saves as single Audit_Log with minified JSON in LogData
     /// </summary>
     [HttpPost]
-    public async Task<ActionResult> CreateBatchAuditLog([FromBody] AuditLogPayloadRequest payload)
+    public async Task<ActionResult> CreateBatchAuditLog([FromBody] object payload)
     {
         try
         {
+            // Get current user info
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            int.TryParse(userIdClaim, out int userId);
-            var roleName = User.FindFirst(ClaimTypes.Role)?.Value ?? "Hệ thống";
+            if (!int.TryParse(userIdClaim, out int userId))
+                return Unauthorized();
 
-            if (payload.Events == null || !payload.Events.Any())
-                return BadRequest("No events provided.");
+            var roleName = User.FindFirst(ClaimTypes.Role)?.Value ?? "Unknown";
 
-            var processedEvents = payload.Events.Select(e => new {
-                eventId = e.GetProperty("eventId").GetString(),
-                actionType = e.GetProperty("actionType").GetString(),
-                description = e.TryGetProperty("description", out var desc) ? desc.GetString() : "",
-                userName = e.TryGetProperty("userName", out var user) ? user.GetString() : "System",
-                timestamp = e.GetProperty("timestamp").GetDateTime()
-            }).ToList();
+            // Minify JSON
+            var options = new JsonSerializerOptions { WriteIndented = false };
+            var jsonString = JsonSerializer.Serialize(payload, options);
 
-            foreach (var evt in processedEvents)
+            var auditLog = new Audit_Log
             {
-                await _batchService.AddEventAsync(userId > 0 ? userId : null, roleName, evt);
-            }
+                UserId = userId,
+                RoleName = roleName,
+                Timestamp = DateTime.UtcNow,
+                LogData = jsonString,
+            };
 
-            return Ok(new { success = true });
+            _context.AuditLogs.Add(auditLog);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { success = true, id = auditLog.Id });
         }
         catch (Exception ex)
         {
-            return BadRequest(new { message = $"Error saving batch log: {ex.Message}" });
+            return BadRequest($"Error saving batch log: {ex.Message}");
         }
     }
 
@@ -136,15 +138,9 @@ public class AuditLogsController : ControllerBase
 public class AuditLogDto
 {
     public int Id { get; set; }
-    public int? UserId { get; set; }
+    public int UserId { get; set; }
     public string? UserName { get; set; }
     public string RoleName { get; set; } = string.Empty;
     public DateTime Timestamp { get; set; }
     public string? LogData { get; set; }
-}
-
-public class AuditLogPayloadRequest
-{
-    public int TotalEvents { get; set; }
-    public List<JsonElement> Events { get; set; } = new List<JsonElement>();
 }

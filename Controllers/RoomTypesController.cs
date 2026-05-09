@@ -91,5 +91,15 @@ namespace QuanTriKhachSanN5.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
+        // GET: api/RoomTypes/public - Dành cho khách hàng xem trên trang chủ (Không cần đăng nhập)
+        [AllowAnonymous]
+        [HttpGet("public")]
+        public async Task<ActionResult<IEnumerable<RoomTypeDTO>>> GetPublicRoomTypes()
+        {
+            var roomTypes = await _roomTypeService.GetAllRoomTypesAsync();
+            // Ở hệ thống thực tế, bạn có thể viết riêng một hàm GetActiveRoomTypesAsync() để chỉ lấy những phòng IsActive = true
+            return Ok(roomTypes);
+        }
     }
 }

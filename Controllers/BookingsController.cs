@@ -32,10 +32,11 @@ namespace QuanTriKhachSanN5.Controllers
                     id = b.Id,
                     bookingCode = b.BookingCode,
                     guestName = b.GuestName,
-                    checkInDate = b.BookingDetails.Any()
-                        ? b.BookingDetails.Min(d => d.CheckInDate)
-                        : (DateTime?)null,
-                    status = b.Status,
+                    guestEmail = b.GuestEmail,
+                    checkInDate = b.BookingDetails.Any() ? b.BookingDetails.Min(d => d.CheckInDate) : (DateTime?)null,
+                    checkOutDate = b.BookingDetails.Any() ? b.BookingDetails.Max(d => d.CheckOutDate) : (DateTime?)null,
+                    totalAmount = b.BookingDetails.Sum(d => d.PricePerNight * EF.Functions.DateDiffDay(d.CheckInDate, d.CheckOutDate)),
+                    status = b.Status
                 })
                 .ToListAsync();
             return Ok(bookings);
@@ -51,7 +52,7 @@ namespace QuanTriKhachSanN5.Controllers
                     && bd.Booking.Status != "Cancelled"
                 )
                 .Where(bd => bd.RoomId != null)
-                .Select(bd => bd.RoomId!.Value)
+                .Select(bd => bd.RoomId.Value)
                 .ToListAsync();
 
             var availableRoomTypes = await _context
@@ -87,18 +88,13 @@ namespace QuanTriKhachSanN5.Controllers
         {
             var today = DateTime.Today;
 
-            var arrivals = await _context
-                .Bookings.Include(b => b.BookingDetails!)
-                    .ThenInclude(bd => bd.RoomType!)
-                .Include(b => b.BookingDetails!)
-                    .ThenInclude(bd => bd.Room!)
-                // 🚨 ĐÃ FIX: Cho phép hiển thị cả Pending và Confirmed
-                .Where(b =>
-                    (b.Status == "Confirmed" || b.Status == "Pending")
-                    && b.BookingDetails.Any(bd => bd.CheckInDate.Date == today)
-                )
-                .Select(b => new
-                {
+            var arrivals = await _context.Bookings
+                .Include(b => b.BookingDetails!).ThenInclude(bd => bd.RoomType!)
+                .Include(b => b.BookingDetails!).ThenInclude(bd => bd.Room!) 
+                // Cho phép hiển thị cả Pending và Confirmed
+                .Where(b => (b.Status == "Confirmed" || b.Status == "Pending") 
+                         && b.BookingDetails.Any(bd => bd.CheckInDate.Date == today))
+                .Select(b => new {
                     id = b.Id,
                     bookingCode = b.BookingCode,
                     guestName = b.GuestName,
@@ -127,6 +123,15 @@ namespace QuanTriKhachSanN5.Controllers
             if (!req.SelectedRoomIds.Any())
                 return BadRequest(new { message = "Vui lòng chọn ít nhất 1 phòng!" });
 
+            // 🚨 KIỂM TRA OVERBOOKING: Kiểm tra xem các phòng này đã có ai đặt chưa trong tầm ngày này
+            var overlappingBookings = await _context.BookingDetails
+                .Where(bd => req.SelectedRoomIds.Contains(bd.RoomId ?? 0))
+                .Where(bd => bd.CheckInDate < req.CheckOut && bd.CheckOutDate > req.CheckIn && bd.Booking.Status != "Cancelled")
+                .AnyAsync();
+
+            if (overlappingBookings)
+                return BadRequest(new { message = "Một hoặc nhiều phòng bạn chọn đã được người khác đặt trong khoảng thời gian này. Vui lòng chọn ngày khác hoặc phòng khác!" });
+
             string bookingCode = $"BK-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}";
 
             var newBooking = new Booking
@@ -135,10 +140,9 @@ namespace QuanTriKhachSanN5.Controllers
                 GuestPhone = req.GuestPhone,
                 GuestEmail = req.GuestEmail,
                 BookingCode = bookingCode,
-                DepositAmount = req.DepositAmount,
-                // 🚨 ĐÃ FIX: Trả lại tiếng Anh chuẩn (Pending) để Frontend nhận diện màu sắc
-                Status = "Pending",
-                BookingDetails = new List<BookingDetail>(),
+                //DepositAmount = req.DepositAmount,
+                Status = "Pending", 
+                BookingDetails = new List<BookingDetail>() 
             };
 
             foreach (var roomId in req.SelectedRoomIds)

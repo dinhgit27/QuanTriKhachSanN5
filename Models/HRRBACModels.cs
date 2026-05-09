@@ -55,19 +55,19 @@ namespace QuanTriKhachSanN5.Models
         public int Id { get; set; }
 
         [Column("user_id")]
-        public int? UserId { get; set; }
+        public int UserId { get; set; }
 
         [ForeignKey("UserId")]
-        public User? User { get; set; }
+        public User User { get; set; }
 
         [Column("log_date")]
         public DateTime Timestamp { get; set; }
 
         [Column("role_name")]
         [StringLength(255)]
-        public string RoleName { get; set; }
+        public string? RoleName { get; set; }
 
         [Column("log_data")]
-        public string? LogData { get; set; } = null!;
+        public string? LogData { get; set; }
     }
 }

@@ -7,6 +7,7 @@ using QuanTriKhachSanN5.Data;
 using QuanTriKhachSanN5.DTOs;
 using QuanTriKhachSanN5.Models;
 using QuanTriKhachSanN5.Services;
+using System.Security.Claims;
 
 namespace QuanTriKhachSanN5.Controllers
 {
@@ -159,6 +160,42 @@ namespace QuanTriKhachSanN5.Controllers
                     permissions = permissions,
                 }
             );
+        }
+
+        [HttpGet("profile")]
+        public async Task<IActionResult> GetProfile()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                return Unauthorized(new { message = "Không tìm thấy thông tin user!" });
+
+            var user = await _context.Users
+                .Include(u => u.UserRoles)
+                .ThenInclude(ur => ur.Role)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+                return NotFound(new { message = "User không tồn tại!" });
+
+            var membership = await _context.Memberships
+                .Where(m => m.Id == user.MembershipId)
+                .FirstOrDefaultAsync();
+
+            return Ok(new
+            {
+                id = user.Id,
+                email = user.Email,
+                fullName = user.FullName,
+                points = user.Points,
+                membership = membership != null ? new
+                {
+                    id = membership.Id,
+                    tierName = membership.Level, // Giả sử Level là tier_name
+                    minPoints = membership.Points, // Giả sử Points là min_points
+                    discountPercent = membership.DiscountPercent
+                } : null,
+                roleName = user.UserRoles.FirstOrDefault()?.Role.Name
+            });
         }
     }
 }
