@@ -46,7 +46,7 @@ namespace QuanTriKhachSanN5.Models
         public Role Role { get; set; }
     }
 
-    // Bảng Audit_Logs: Log hệ thống (Fixed to match DB schema)
+    // Bảng Audit_Logs: Log hệ thống (Đồng bộ cấu trúc cột mới)
     [Table("Audit_Logs")]
     public class Audit_Log
     {
@@ -55,19 +55,29 @@ namespace QuanTriKhachSanN5.Models
         public int Id { get; set; }
 
         [Column("user_id")]
-        public int UserId { get; set; }
+        public int? UserId { get; set; }
 
         [ForeignKey("UserId")]
-        public User User { get; set; }
+        public User? User { get; set; }
 
-        [Column("log_date")]
-        public DateTime Timestamp { get; set; }
+        [Column("action")]
+        [StringLength(50)]
+        public string Action { get; set; } = string.Empty;
 
-        [Column("role_name")]
-        [StringLength(255)]
-        public string? RoleName { get; set; }
+        [Column("table_name")]
+        [StringLength(100)]
+        public string TableName { get; set; } = string.Empty;
 
-        [Column("log_data")]
-        public string? LogData { get; set; }
+        [Column("record_id")]
+        public int? RecordId { get; set; }
+
+        [Column("old_value")]
+        public string? OldValue { get; set; }
+
+        [Column("new_value")]
+        public string? NewValue { get; set; }
+
+        [Column("created_at")]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

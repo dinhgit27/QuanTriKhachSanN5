@@ -127,93 +127,55 @@ public static class SeedData
             {
                 Name = "Tháp Trầm Hương",
                 Description = "Tháp cổ kính 9 tầng với kiến trúc châu Á đặc sắc, nằm trên đỉnh đồi Trầm Hương",
-                Location = "Nha Trang",
-                GooglePlaceId = "ChIJ7aFvPHNIVjARqnO_3zrGEcU",
-                Latitude = 12.2427,
-                Longitude = 109.2032,
-                MainImageUrl = "https://res.cloudinary.com/demo/image/fetch/c_limit,w_400/https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Thap_Tran_Huong.jpg/1024px-Thap_Tran_Huong.jpg",
-                IsDeleted = false,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                Address = "Nha Trang",
+                Latitude = 12.2427m,
+                Longitude = 109.2032m,
+                DistanceKm = 1.2m,
+                IsActive = true
             },
             new Attraction
             {
                 Name = "Bãi biển Nha Trang",
-                Description = "Bãi biển nổi tiếng với cát trắng và nước trong xanh, lý tưởng cho bơi lội",
-                Location = "Nha Trang",
-                Latitude = 12.2485,
-                Longitude = 109.1800,
-                MainImageUrl = "https://res.cloudinary.com/demo/image/fetch/c_limit,w_400/https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Nha_Trang_beach.jpg/1024px-Nha_Trang_beach.jpg",
-                IsDeleted = false,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                Description = "Bãi biển nổi tiếng with cát trắng và nước trong xanh, lý tưởng cho bơi lội",
+                Address = "Nha Trang",
+                Latitude = 12.2485m,
+                Longitude = 109.1800m,
+                DistanceKm = 0.5m,
+                IsActive = true
             },
             new Attraction
             {
                 Name = "Núi Niêm",
                 Description = "Ngọn núi ngoài khơi với mệnh danh 'bảo tàng địa chất tự nhiên'",
-                Location = "Nha Trang",
-                Latitude = 12.3600,
-                Longitude = 109.1200,
-                MainImageUrl = "https://res.cloudinary.com/demo/image/fetch/c_limit,w_400/https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Monkey_island.jpg/1024px-Monkey_island.jpg",
-                IsDeleted = false,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                Address = "Nha Trang",
+                Latitude = 12.3600m,
+                Longitude = 109.1200m,
+                DistanceKm = 15.0m,
+                IsActive = true
             },
             new Attraction
             {
                 Name = "Lâu đài nước Tràm Huơng",
                 Description = "Công viên nước hiện đại với nhiều trò chơi thú vị cho gia đình",
-                Location = "Nha Trang",
-                Latitude = 12.2100,
-                Longitude = 109.1900,
-                MainImageUrl = "https://res.cloudinary.com/demo/image/fetch/c_limit,w_400/https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Water_park.jpg/1024px-Water_park.jpg",
-                IsDeleted = false,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                Address = "Nha Trang",
+                Latitude = 12.2100m,
+                Longitude = 109.1900m,
+                DistanceKm = 5.0m,
+                IsActive = true
             },
             new Attraction
             {
                 Name = "Nhà thờ Đá",
                 Description = "Nhà thờ được xây dựng bằng đá, là một trong những công trình kiến trúc độc đáo",
-                Location = "Nha Trang",
-                Latitude = 12.2347,
-                Longitude = 109.1956,
-                MainImageUrl = "https://res.cloudinary.com/demo/image/fetch/c_limit,w_400/https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Stone_church.jpg/1024px-Stone_church.jpg",
-                IsDeleted = false,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                Address = "Nha Trang",
+                Latitude = 12.2347m,
+                Longitude = 109.1956m,
+                DistanceKm = 2.3m,
+                IsActive = true
             }
         };
 
         context.Attractions.AddRange(attractions);
-        context.SaveChanges();
-
-        // ============ SEED ATTRACTION IMAGES ============
-        foreach (var attraction in attractions)
-        {
-            var images = new List<AttractionImage>
-            {
-                new AttractionImage
-                {
-                    AttractionId = attraction.Id,
-                    ImageUrl = attraction.MainImageUrl ?? "",
-                    CloudinaryPublicId = $"hotel-management/attractions/{attraction.Id}_main",
-                    CreatedAt = DateTime.UtcNow,
-                    IsDeleted = false
-                },
-                new AttractionImage
-                {
-                    AttractionId = attraction.Id,
-                    ImageUrl = $"{attraction.MainImageUrl ?? ""}?ixlib=rb-4.0.3&auto=format&fit=crop&w=600",
-                    CloudinaryPublicId = $"hotel-management/attractions/{attraction.Id}_secondary",
-                    CreatedAt = DateTime.UtcNow,
-                    IsDeleted = false
-                }
-            };
-
-            context.AttractionImages.AddRange(images);
-        }
         context.SaveChanges();
 
         // ============ SEED CATEGORIES AND POSTS (Already done above) ============
@@ -223,6 +185,7 @@ public static class SeedData
         Console.WriteLine($"   - {rooms.Count} phòng");
         Console.WriteLine($"   - {categories.Count} danh mục");
         Console.WriteLine($"   - {posts.Count} bài viết");
-        Console.WriteLine($"   - {attractions.Count} điểm du lịch (với hình ảnh)");
+        Console.WriteLine($"   - {attractions.Count} điểm du lịch");
     }
 }
+

@@ -2,45 +2,67 @@
 // MODULE 1: TRẢI NGHIỆM DU LỊCH & CMS - MODELS
 // =========================================================================
 
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace QuanTriKhachSanN5.Models
 {
     // Bảng Articles: Bài viết blog, thông tin phòng
+    [Table("Articles")]
     public class Article
     {
+        [Key]
+        [Column("id")]
         public int Id { get; set; }
-        public string Title { get; set; }
-        public string Content { get; set; }
+
+        [Required]
+        [MaxLength(250)]
+        [Column("title")]
+        public string Title { get; set; } = string.Empty;
+
+        [Required]
+        [Column("content")]
+        public string Content { get; set; } = string.Empty;
+
+        [Column("category_id")]
         public int CategoryId { get; set; }
-        public Article_Category Category { get; set; }
-        public DateTime CreatedAt { get; set; }
+
+        [ForeignKey(nameof(CategoryId))]
+        public Article_Category? Category { get; set; }
+
+        [Column("author_id")]
+        public int AuthorId { get; set; }
+
+        [Required]
+        [MaxLength(250)]
+        [Column("slug")]
+        public string Slug { get; set; } = string.Empty;
+
+        [Column("thumbnail_url")]
+        public string? ThumbnailUrl { get; set; }
+
+        [Column("published_at")]
+        public DateTime PublishedAt { get; set; }
+
+        [Column("is_active")]
+        public bool? IsActive { get; set; }
     }
 
     // Bảng Article_Categories: Danh mục bài viết
+    [Table("Article_Categories")]
     public class Article_Category
     {
+        [Key]
+        [Column("id")]
         public int Id { get; set; }
-        public string Name { get; set; }
-        public ICollection<Article> Articles { get; set; }
+
+        [Required]
+        [MaxLength(200)]
+        [Column("name")]
+        public string Name { get; set; } = string.Empty;
+
+        public ICollection<Article>? Articles { get; set; }
     }
-
-    // Bảng Attractions: Địa điểm tham quan lân cận
-    // public class Attraction
-    // {
-    //     public int Id { get; set; }
-    //     public string Name { get; set; }
-    //     public string Description { get; set; }
-    //     public string Location { get; set; }
-    // }
-
-    // Bảng Reviews: Đánh giá phòng của khách
-    // public class Review
-    // {
-    //     public int Id { get; set; }
-    //     public int RoomId { get; set; }
-    //     public Room Room { get; set; }
-    //     public int GuestId { get; set; } // Giả sử có User cho Guest
-    //     public int Rating { get; set; } // 1-5 sao
-    //     public string Comment { get; set; }
-    //     public DateTime CreatedAt { get; set; }
-    // }
 }

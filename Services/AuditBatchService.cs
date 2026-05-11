@@ -17,64 +17,76 @@ namespace QuanTriKhachSanN5.Services
 
         public async Task AddEventAsync(int userId, string role, object eventObj)
         {
-            // Lấy ngày hiện tại (không lấy giờ)
-            var today = DateTime.UtcNow.Date;
-
-            // Tìm record log của user này trong ngày hôm nay
-            var auditLog = await _context.AuditLogs.FirstOrDefaultAsync(l =>
-                l.UserId == userId && l.Timestamp.Date == today
-            );
-
-            AuditLogPayload payload;
-
-            if (auditLog == null)
+            try
             {
-                // Nếu chưa có, tạo mới
-                payload = new AuditLogPayload
-                {
-                    TotalEvents = 1,
-                    Events = new List<object> { eventObj },
-                };
+                // Parse properties dynamically from incoming payload (often anonymous objects or DTOs)
+                string action = "OTHER";
+                string tableName = "System";
+                int? recordId = null;
+                string oldValue = "{}";
+                string newValue = "{}";
 
-                auditLog = new Audit_Log
+                if (eventObj != null)
                 {
-                    UserId = userId,
-                    RoleName = role,
-                    Timestamp = DateTime.UtcNow,
-                    LogData = JsonSerializer.Serialize(payload),
+                    var options = new JsonSerializerOptions { WriteIndented = false };
+                    var jsonString = JsonSerializer.Serialize(eventObj, options);
+                    using var doc = JsonDocument.Parse(jsonString);
+                    var root = doc.RootElement;
+
+                    if (root.TryGetProperty("actionType", out var actProp))
+                        action = actProp.GetString() ?? "OTHER";
+                    else if (root.TryGetProperty("action", out var actProp2))
+                        action = actProp2.GetString() ?? "OTHER";
+
+                    if (root.TryGetProperty("module", out var modProp))
+                        tableName = modProp.GetString() ?? "System";
+                    else if (root.TryGetProperty("targetTable", out var tblProp))
+                        tableName = tblProp.GetString() ?? "System";
+
+                    if (root.TryGetProperty("recordId", out var recProp))
+                    {
+                        if (recProp.ValueKind == JsonValueKind.Number)
+                            recordId = recProp.GetInt32();
+                        else if (recProp.ValueKind == JsonValueKind.String && int.TryParse(recProp.GetString(), out int parsedId))
+                            recordId = parsedId;
+                    }
+
+                    if (root.TryGetProperty("oldValue", out var oldProp))
+                        oldValue = oldProp.ValueKind == JsonValueKind.String ? (oldProp.GetString() ?? "{}") : oldProp.ToString();
+                    if (root.TryGetProperty("newValue", out var newProp))
+                        newValue = newProp.ValueKind == JsonValueKind.String ? (newProp.GetString() ?? "{}") : newProp.ToString();
+                    else if (root.TryGetProperty("description", out var descProp))
+                        newValue = descProp.GetString() ?? "{}";
+                }
+
+                var auditLog = new Audit_Log
+                {
+                    UserId = userId == 0 ? (int?)null : userId,
+                    Action = action,
+                    TableName = tableName,
+                    RecordId = recordId,
+                    OldValue = oldValue,
+                    NewValue = newValue,
+                    CreatedAt = DateTime.UtcNow
                 };
 
                 _context.AuditLogs.Add(auditLog);
+                await _context.SaveChangesAsync();
             }
-            else
+            catch (Exception ex)
             {
-                // Nếu đã có, giải mã JSON cũ và thêm event mới vào
-                try
+                // Fallback safe logger in case of parsing error to ensure application safety
+                var fallbackLog = new Audit_Log
                 {
-                    payload =
-                        JsonSerializer.Deserialize<AuditLogPayload>(auditLog.LogData)
-                        ?? new AuditLogPayload();
-                }
-                catch
-                {
-                    payload = new AuditLogPayload();
-                }
-
-                payload.Events.Add(eventObj);
-                payload.TotalEvents = payload.Events.Count;
-
-                auditLog.LogData = JsonSerializer.Serialize(payload);
-                _context.AuditLogs.Update(auditLog);
+                    UserId = userId == 0 ? (int?)null : userId,
+                    Action = "OTHER",
+                    TableName = "System",
+                    NewValue = $"Fallback log due to error: {ex.Message}. Raw event: " + JsonSerializer.Serialize(eventObj),
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.AuditLogs.Add(fallbackLog);
+                await _context.SaveChangesAsync();
             }
-
-            await _context.SaveChangesAsync();
         }
-    }
-
-    // Class phụ trợ để Map dữ liệu JSON
-    public class AuditLogPayload
-    {
-        public int TotalEvents { get; set; }
-        public List<object> Events { get; set; } = new List<object>();
     }
 }

@@ -63,24 +63,19 @@ namespace QuanTriKhachSanN5.Services
             string details
         )
         {
-            var user = await GetUserByIdAsync(userId);
-            var roleName = user?.UserRoles?.FirstOrDefault()?.Role?.Name ?? "Unknown";
-
-            var actionDetailObj = new
+            var auditLog = new Audit_Log
             {
-                eventId = Guid.NewGuid().ToString("N").Substring(0, 8),
-                actionType = action,
-                targetTable = tableName,
-                recordId = recordId,
-                details = details,
-                status = "Success",
-                timestamp = DateTime.UtcNow,
+                UserId = userId,
+                Action = action,
+                TableName = tableName,
+                RecordId = recordId,
+                OldValue = "{}",
+                NewValue = details,
+                CreatedAt = DateTime.UtcNow
             };
-            var actionDetailJson = System.Text.Json.JsonSerializer.Serialize(actionDetailObj);
 
-            await _context.Database.ExecuteSqlInterpolatedAsync(
-                $"EXEC [dbo].[sp_InsertBatchedAuditLog] @UserId = {userId}, @RoleName = {roleName}, @ActionDetail = {actionDetailJson}"
-            );
+            _context.AuditLogs.Add(auditLog);
+            await _context.SaveChangesAsync();
         }
     }
 }

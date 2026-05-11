@@ -18,14 +18,43 @@ namespace QuanTriKhachSanN5.Controllers
         }
 
         // ==============================
-        // LẤY DANH SÁCH SERVICES
+        // LẤY DANH SÁCH SERVICES (công khai - cho trang chủ)
         // ==============================
         // GET: api/services
-        [AllowAnonymous] // Ai cũng xem được danh sách dịch vụ (Khách vãng lai trên web)
+        [AllowAnonymous]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Service>>> GetServices()
         {
-            return await _context.Services.Where(s => s.Status == 1).ToListAsync();
+            // Status bị [NotMapped] nên không filter ở DB, lấy tất cả
+            return await _context.Services.ToListAsync();
+        }
+
+        // ==============================
+        // LẤY DỊCH VỤ NHÓM THEO DANH MỤC (cho trang chủ)
+        // ==============================
+        // GET: api/services/categories/public
+        [AllowAnonymous]
+        [HttpGet("categories/public")]
+        public async Task<IActionResult> GetServicesByCategory()
+        {
+            var categories = await _context.ServiceCategories
+                .Include(c => c.Services)
+                .Select(c => new
+                {
+                    id = c.Id,
+                    name = c.Name,
+                    services = c.Services!.Select(s => new
+                    {
+                        id = s.Id,
+                        name = s.Name,
+                        price = s.Price,
+                        unit = s.Unit,
+                        categoryId = s.CategoryId
+                    }).ToList()
+                })
+                .ToListAsync();
+
+            return Ok(categories);
         }
 
         // ==============================

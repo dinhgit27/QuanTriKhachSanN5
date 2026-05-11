@@ -261,7 +261,7 @@ namespace QuanTriKhachSanN5.Controllers
                 DiscountAmount = 0m,
                 TaxAmount = taxAmount,
                 FinalTotal = finalTotal,
-                Status = "Paid",
+                Status = "Pending",
             };
             _context.Invoices.Add(newInvoice);
 
@@ -284,6 +284,26 @@ namespace QuanTriKhachSanN5.Controllers
             return Ok(
                 new { message = "Checkout và xuất hóa đơn thành công!", invoiceId = newInvoice.Id }
             );
+        }
+
+        // ====================================================================
+        // XÁC NHẬN ĐÃ THANH TOÁN (LỄ TÂN XÁC NHẬN)
+        // ====================================================================
+        [HttpPost("confirm-payment/{invoiceId}")]
+        public async Task<IActionResult> ConfirmPayment(int invoiceId)
+        {
+            var invoice = await _context.Invoices.FindAsync(invoiceId);
+            if (invoice == null)
+                return NotFound(new { message = "Không tìm thấy hóa đơn!" });
+            if (invoice.Status == "Paid")
+                return BadRequest(new { message = "Hóa đơn này đã được thanh toán!" });
+            if (invoice.Status == "Cancelled")
+                return BadRequest(new { message = "Không thể xác nhận hóa đơn đã hủy!" });
+
+            invoice.Status = "Paid";
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Xác nhận thanh toán thành công!", invoiceId = invoice.Id });
         }
 
         // ====================================================================

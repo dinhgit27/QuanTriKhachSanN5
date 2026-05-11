@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using QuanTriKhachSanN5.Interfaces;
 using QuanTriKhachSanN5.Models;
 
-namespace QuanTriKhachSanN5.Controllers.Disabled
+namespace QuanTriKhachSanN5.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]

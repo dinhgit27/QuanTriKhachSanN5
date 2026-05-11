@@ -21,7 +21,8 @@ public class AttractionService : IAttractionService
         {
             Name = dto.Name.Trim(),
             Description = dto.Description?.Trim(),
-            Location = dto.Location?.Trim(),
+            Address = dto.Location?.Trim(),
+            IsActive = true
         };
 
         _db.Attractions.Add(entity);
@@ -43,11 +44,12 @@ public class AttractionService : IAttractionService
 
     public async Task<IEnumerable<AttractionDTO>> GetAllAsync()
     {
-        return await _db
-            .Attractions.AsNoTracking()
-            .OrderByDescending(x => x.CreatedAt)
-            .Select(x => Map(x))
+        var list = await _db.Attractions
+            .AsNoTracking()
+            .OrderBy(x => x.DistanceKm ?? 999)
             .ToListAsync();
+
+        return list.Select(Map);
     }
 
     public async Task<AttractionDTO?> GetByIdAsync(int id)
@@ -65,7 +67,7 @@ public class AttractionService : IAttractionService
 
         entity.Name = dto.Name.Trim();
         entity.Description = dto.Description?.Trim();
-        entity.Location = dto.Location?.Trim();
+        entity.Address = dto.Location?.Trim();
 
         await _db.SaveChangesAsync();
         return true;
@@ -77,7 +79,12 @@ public class AttractionService : IAttractionService
             Id = entity.Id,
             Name = entity.Name,
             Description = entity.Description,
-            Location = entity.Location,
-            CreatedAt = entity.CreatedAt,
+            DistanceKm = entity.DistanceKm,
+            MapEmbedLink = entity.MapEmbedLink,
+            Latitude = entity.Latitude,
+            Longitude = entity.Longitude,
+            Address = entity.Address,
+            IsActive = entity.IsActive,
         };
 }
+
