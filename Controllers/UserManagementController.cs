@@ -32,7 +32,7 @@ namespace QuanTriKhachSanN5.Controllers
                     roleName = u.UserRoles.FirstOrDefault() != null
                         ? u.UserRoles.FirstOrDefault().Role.Name
                         : "Chưa cấp quyền",
-                    isActive = true, // Tạm thời cho True (Hoặc u.IsActive nếu DB ní có cột này)
+                    isActive = u.IsActive, 
                 })
                 .ToListAsync();
 

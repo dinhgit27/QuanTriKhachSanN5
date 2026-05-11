@@ -10,7 +10,7 @@ using QuanTriKhachSanN5.Models;
 namespace QuanTriKhachSanN5.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/audit-logs")]
 [Authorize]
 public class AuditLogsController : ControllerBase
 {
