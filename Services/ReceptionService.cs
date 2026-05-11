@@ -112,7 +112,10 @@ namespace QuanTriKhachSanN5.API.Services
                 BookingDetailId = detailId,
                 Description = description,
                 PenaltyAmount = fineAmount,
+                Quantity = 1, // Gán mặc định là 1 để tránh lỗi NOT NULL
                 CreatedAt = DateTime.Now,
+                Status = "Pending",
+                ImageUrl = ""
             };
 
             _context.LossAndDamages.Add(damage);

@@ -118,6 +118,20 @@ namespace QuanTriKhachSanN5.Controllers
                 .ToListAsync();
             return Ok(rooms);
         }
+        // LẤY DANH SÁCH VẬT DỤNG CHO DROPDOWN BÁO HỎNG
+        [HttpGet("equipments-list")]
+        public async Task<IActionResult> GetEquipmentsList()
+        {
+            var equipments = await _context.Equipments
+                .Where(e => e.IsActive == true)
+                .Select(e => new {
+                    id = e.Id,
+                    name = e.Name,
+                    price = e.DefaultPriceIfLost ?? 0
+                })
+                .ToListAsync();
+            return Ok(equipments);
+        }
     }
 
     public class ServiceRequest

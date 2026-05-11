@@ -136,6 +136,7 @@ namespace QuanTriKhachSanN5.Controllers
 
             var newBooking = new Booking
             {
+                UserId = req.UserId,
                 GuestName = req.GuestName,
                 GuestPhone = req.GuestPhone,
                 GuestEmail = req.GuestEmail,
