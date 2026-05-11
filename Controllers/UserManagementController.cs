@@ -72,35 +72,49 @@ namespace QuanTriKhachSanN5.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserRequest request)
         {
-            var user = await _context
-                .Users.Include(u => u.UserRoles)
-                .FirstOrDefaultAsync(u => u.Id == id);
-
-            if (user == null)
-                return NotFound(new { message = "Không tìm thấy người dùng!" });
-
-            // 1. Cập nhật thông tin cơ bản
-            user.FullName = request.FullName;
-            // user.PhoneNumber = request.PhoneNumber;
-
-            // 2. Cập nhật chức vụ (Role) theo đúng luật EF Core: Xóa cũ -> Thêm mới
-            var currentRole = user.UserRoles?.FirstOrDefault();
-            
-            // Bước A: Nếu có role cũ thì xóa nó đi
-            if (currentRole != null)
+            try
             {
-                _context.UserRoles.Remove(currentRole);
-            }
+                var user = await _context
+                    .Users.Include(u => u.UserRoles)
+                    .FirstOrDefaultAsync(u => u.Id == id);
 
-            // Bước B: Thêm role mới vào
-            if (request.RoleId > 0)
+                if (user == null)
+                    return NotFound(new { message = "Không tìm thấy người dùng!" });
+
+                // 1. Cập nhật thông tin cơ bản
+                user.FullName = request.FullName;
+                if (request.PhoneNumber != null)
+                    user.PhoneNumber = request.PhoneNumber;
+
+                // 2. Cập nhật chức vụ (Role)
+                var currentRole = user.UserRoles?.FirstOrDefault();
+
+                if (currentRole != null && currentRole.RoleId != request.RoleId)
+                {
+                    // Xóa role cũ trước, save ngay để tránh EF tracking conflict
+                    _context.UserRoles.Remove(currentRole);
+                    await _context.SaveChangesAsync();
+
+                    // Sau đó thêm role mới
+                    if (request.RoleId > 0)
+                    {
+                        _context.UserRoles.Add(new User_Role { UserId = user.Id, RoleId = request.RoleId });
+                    }
+                }
+                else if (currentRole == null && request.RoleId > 0)
+                {
+                    _context.UserRoles.Add(new User_Role { UserId = user.Id, RoleId = request.RoleId });
+                }
+
+                // 3. Lưu lại vào Database
+                await _context.SaveChangesAsync();
+                return Ok(new { message = "Cập nhật thành công!" });
+            }
+            catch (Exception ex)
             {
-                _context.UserRoles.Add(new User_Role { UserId = user.Id, RoleId = request.RoleId });
+                var exactError = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                return StatusCode(500, new { message = "Lỗi Database: " + exactError });
             }
-
-            // 3. Lưu lại vào Database
-            await _context.SaveChangesAsync();
-            return Ok(new { message = "Cập nhật thành công!" });
         }
 
         // ĐÃ ĐƯA HÀM NÀY VÀO BÊN TRONG CLASS CONTROLLER

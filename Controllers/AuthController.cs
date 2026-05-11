@@ -8,6 +8,7 @@ using QuanTriKhachSanN5.DTOs;
 using QuanTriKhachSanN5.Models;
 using QuanTriKhachSanN5.Services;
 using System.Security.Claims;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace QuanTriKhachSanN5.Controllers
 {
@@ -17,19 +18,91 @@ namespace QuanTriKhachSanN5.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly JwtService _jwt;
+        private readonly IMemoryCache _cache;
+        private readonly IEmailService _emailService;
 
-        public AuthController(ApplicationDbContext context, JwtService jwt)
+        public AuthController(ApplicationDbContext context, JwtService jwt, IMemoryCache cache, IEmailService emailService)
         {
             _context = context;
             _jwt = jwt;
+            _cache = cache;
+            _emailService = emailService;
+        }
+
+        [HttpPost("send-otp")]
+        public async Task<IActionResult> SendOtp([FromBody] SendOtpDTO dto)
+        {
+            if (string.IsNullOrEmpty(dto.Email))
+                return BadRequest(new { message = "Email không được để trống!" });
+
+            string email = dto.Email.Trim().ToLower();
+            
+            // Nếu là tài khoản test (@hotel.com), bỏ qua cấp OTP ngẫu nhiên, set cứng OTP là 123456
+            if (email.EndsWith("@hotel.com"))
+            {
+                _cache.Set(email, "123456", TimeSpan.FromMinutes(5));
+                return Ok(new { message = "Đã gửi mã OTP (Tài khoản Test: Mặc định là 123456)" });
+            }
+
+            // Nếu không phải @gmail.com thì chặn
+            if (!email.EndsWith("@gmail.com"))
+            {
+                return BadRequest(new { message = "Chỉ chấp nhận đăng ký bằng tài khoản @gmail.com hoặc email test!" });
+            }
+
+            // Sinh mã OTP 6 số ngẫu nhiên
+            var random = new Random();
+            string otp = random.Next(100000, 999999).ToString();
+
+            // Lưu vào Cache 5 phút
+            _cache.Set(email, otp, TimeSpan.FromMinutes(5));
+
+            // Gọi hàm gửi email
+            string subject = "Mã xác nhận đăng ký tài khoản IT HOTEL";
+            string body = $@"
+                <h3>Chào bạn,</h3>
+                <p>Cảm ơn bạn đã đăng ký tài khoản tại hệ thống IT HOTEL.</p>
+                <p>Mã xác thực OTP của bạn là: <b style='font-size: 20px; color: #e6b83b;'>{otp}</b></p>
+                <p>Mã này có hiệu lực trong vòng 5 phút.</p>
+                <p>Trân trọng,<br>IT HOTEL Team</p>
+            ";
+
+            try
+            {
+                await _emailService.SendEmailAsync(email, subject, body);
+                return Ok(new { message = "Mã OTP đã được gửi đến email của bạn!" });
+            }
+            catch (Exception ex)
+            {
+                // Nếu lỗi SMTP (do chưa điền mật khẩu thật), báo lỗi chi tiết
+                return StatusCode(500, new { message = "Lỗi khi gửi email: " + ex.Message });
+            }
         }
 
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterDTO dto)
         {
+            if (string.IsNullOrEmpty(dto.Otp))
+                return BadRequest(new { message = "Vui lòng nhập mã OTP!" });
+
+            string email = dto.Email.Trim().ToLower();
+
+            // 1. Kiểm tra OTP
+            if (!_cache.TryGetValue(email, out string savedOtp))
+            {
+                return BadRequest(new { message = "Mã OTP đã hết hạn hoặc không tồn tại. Vui lòng lấy mã mới!" });
+            }
+
+            if (dto.Otp != savedOtp)
+            {
+                return BadRequest(new { message = "Mã OTP không chính xác!" });
+            }
+
+            // 2. Xóa OTP sau khi dùng thành công
+            _cache.Remove(email);
+
             var exist = await _context.Users.FirstOrDefaultAsync(x => x.Email == dto.Email);
             if (exist != null)
-                // Trả về dạng JSON (new { message = ... }) để Frontend React dễ bắt lỗi
                 return BadRequest(new { message = "Email đã tồn tại!" });
 
             var user = new User

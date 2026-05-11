@@ -67,6 +67,7 @@ builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<CheckoutService>();
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddMemoryCache();
+builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IAuditBatchService, AuditBatchService>();
 builder.Services.Configure<VietQRConfig>(builder.Configuration.GetSection("VietQR"));
 builder.Services.AddScoped<IVietQRService, VietQRService>();
