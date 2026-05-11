@@ -83,8 +83,6 @@ namespace QuanTriKhachSanN5.Controllers
 
                 // 1. Cập nhật thông tin cơ bản
                 user.FullName = request.FullName;
-                if (request.PhoneNumber != null)
-                    user.PhoneNumber = request.PhoneNumber;
 
                 // 2. Cập nhật chức vụ (Role)
                 var currentRole = user.UserRoles?.FirstOrDefault();
