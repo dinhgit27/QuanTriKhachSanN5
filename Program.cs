@@ -102,6 +102,7 @@ builder.Services.AddAuthorization(options =>
         "MANAGE_BOOKINGS",
         policy => policy.RequireClaim("Permission", "MANAGE_BOOKINGS")
     );
+    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
 });
 
 // --- SWAGGER (BẢN RÚT GỌN ĐỂ VƯỢT ẢI BUILD) ---
@@ -109,6 +110,28 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.CustomSchemaIds(type => type.FullName); // Tránh xung đột nếu có class trùng tên ở namespace khác
+    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token in the text input below.\r\n\r\nExample: \"Bearer 12345abcdef\"",
+        Name = "Authorization",
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+    });
 });
 
 var app = builder.Build();
@@ -138,6 +161,7 @@ using (var scope = app.Services.CreateScope())
     var context = services.GetRequiredService<ApplicationDbContext>();
     try
     {
+        context.Database.EnsureCreated();
         SeedData(context);
     }
     catch (Exception ex)
@@ -157,6 +181,16 @@ void SeedData(ApplicationDbContext context)
             new Role { Name = "Guest" },
             new Role { Name = "Receptionist" },
             new Role { Name = "Housekeeping" }
+        );
+        context.SaveChanges();
+    }
+
+    if (!context.Permissions.Any())
+    {
+        context.Permissions.AddRange(
+            new Permission { Name = "MANAGE_ROOMS" },
+            new Permission { Name = "MANAGE_USERS" },
+            new Permission { Name = "MANAGE_BOOKINGS" }
         );
         context.SaveChanges();
     }
@@ -189,6 +223,18 @@ void SeedData(ApplicationDbContext context)
             }
         );
         context.SaveChanges();
-        Console.WriteLine("✅ Seed tài khoản mẫu thành công!");
+    }
+
+    // Ensure we have users up to ID 5 so TC_UROLE_002 does not fail due to FK constraints
+    while (context.Users.Count() < 5)
+    {
+        int nextNum = context.Users.Count() + 1;
+        context.Users.Add(new User
+        {
+            FullName = $"Seed User {nextNum}",
+            Email = $"seeduser{nextNum}@hotel.com",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456")
+        });
+        context.SaveChanges();
     }
 }
