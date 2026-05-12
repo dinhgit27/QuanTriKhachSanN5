@@ -1,4 +1,4 @@
-namespace QUANTRIKHACHSANN5.Models
+namespace QuanTriKhachSanN5.Models
 {
     public class Voucher
     {

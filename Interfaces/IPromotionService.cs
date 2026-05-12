@@ -1,6 +1,6 @@
-using QUANTRIKHACHSANN5.DTOs.Promotion;
+using QuanTriKhachSanN5.DTOs.Promotion;
 
-namespace QUANTRIKHACHSANN5.Interfaces
+namespace QuanTriKhachSanN5.Interfaces
 {
     public interface IPromotionService
     {

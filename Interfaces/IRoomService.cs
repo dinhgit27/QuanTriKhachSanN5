@@ -1,11 +1,16 @@
-using QUANTRIKHACHSANN5.DTOs.Room;
-using QUANTRIKHACHSANN5.Models; 
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using QuanTriKhachSanN5.Models;
 
-namespace QUANTRIKHACHSANN5.Interfaces
+namespace QuanTriKhachSanN5.Interfaces
 {
     public interface IRoomService
     {
-        
-        Task<IEnumerable<Room>> GetAvailableRoomsAsync(SearchRoomDTO searchDTO);
+        Task<List<Room>> GetRoomsAsync();
+        Task<Room> GetRoomByIdAsync(int id);
+        Task CreateRoomAsync(Room room);
+        Task UpdateRoomStatusAsync(int id, string status);
+        Task UpdateRoomAsync(Room room);
+        Task DeleteRoomAsync(int id);
     }
 }

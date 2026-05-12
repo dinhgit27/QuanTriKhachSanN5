@@ -1,10 +1,12 @@
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using QUANTRIKHACHSANN5.Data;
-using QUANTRIKHACHSANN5.DTOs.Room;
-using QUANTRIKHACHSANN5.Interfaces;
-using QUANTRIKHACHSANN5.Models;
+using QuanTriKhachSanN5.Data;
+using QuanTriKhachSanN5.Interfaces;
+using QuanTriKhachSanN5.Models;
 
-namespace QUANTRIKHACHSANN5.Services
+namespace QuanTriKhachSanN5.Services
 {
     public class RoomService : IRoomService
     {
@@ -15,23 +17,47 @@ namespace QUANTRIKHACHSANN5.Services
             _context = context;
         }
 
-        public async Task<IEnumerable<Room>> GetAvailableRoomsAsync(SearchRoomDTO searchDTO)
+        public async Task<List<Room>> GetRoomsAsync()
         {
-            
-            var bookedRoomIds = await _context.BookingDetails
-                .Include(bd => bd.Booking)
-                .Where(bd => bd.Booking.CheckInDate < searchDTO.CheckOutDate 
-                          && bd.Booking.CheckOutDate > searchDTO.CheckInDate)
-                .Select(bd => bd.RoomId)
-                .Distinct()
-                .ToListAsync();
+            return await _context.Rooms.ToListAsync();
+        }
 
-            
-            var availableRooms = await _context.Rooms
-                .Where(r => !bookedRoomIds.Contains(r.Id))
-                .ToListAsync();
+        public async Task<Room> GetRoomByIdAsync(int id)
+        {
+            return await _context.Rooms.FirstOrDefaultAsync(r => r.Id == id);
+        }
 
-            return availableRooms;
+        public async Task CreateRoomAsync(Room room)
+        {
+            _context.Rooms.Add(room);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdateRoomStatusAsync(int id, string status)
+        {
+            var room = await _context.Rooms.FindAsync(id);
+            if (room != null)
+            {
+                room.Status = status;
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task UpdateRoomAsync(Room room)
+        {
+            _context.Rooms.Update(room);
+            await _context.SaveChangesAsync();
+        }
+
+        // Hàm xử lý logic Xóa phòng
+        public async Task DeleteRoomAsync(int id)
+        {
+            var room = await _context.Rooms.FindAsync(id);
+            if (room != null)
+            {
+                _context.Rooms.Remove(room);
+                await _context.SaveChangesAsync();
+            }
         }
     }
 }

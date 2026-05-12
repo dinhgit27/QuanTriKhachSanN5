@@ -1,9 +1,15 @@
-using QUANTRIKHACHSANN5.Data;
-using QUANTRIKHACHSANN5.DTOs.Booking;
-using QUANTRIKHACHSANN5.Interfaces;
-using QUANTRIKHACHSANN5.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using QuanTriKhachSanN5.Data;
+using QuanTriKhachSanN5.DTOs;
+using QuanTriKhachSanN5.DTOs.Room;
+using QuanTriKhachSanN5.Interfaces;
+using QuanTriKhachSanN5.Models;
 
-namespace QUANTRIKhACHSANN5.Services
+namespace QuanTriKhachSanN5.Services
 {
     public class BookingService : IBookingService
     {
@@ -14,56 +20,97 @@ namespace QUANTRIKhACHSANN5.Services
             _context = context;
         }
 
-        public async Task<bool> CreateBookingAsync(CreateBookingDTO bookingDTO)
+        // =========================================================================
+        // THUẬT TOÁN 1: TÌM LOẠI PHÒNG TRỐNG CHO WEBSITE
+        // =========================================================================
+        public async Task<
+            ApiResponse<List<AvailableRoomTypeResponseDTO>>
+        > SearchAvailableRoomTypesAsync(SearchRoomRequestDTO request)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
-            try
+            if (request.CheckInDate >= request.CheckOutDate)
             {
-                
-                var booking = new Booking
+                return new ApiResponse<List<AvailableRoomTypeResponseDTO>>
                 {
-                    CustomerName = bookingDTO.CustomerName,
-                    CheckInDate = bookingDTO.CheckInDate,
-                    CheckOutDate = bookingDTO.CheckOutDate,
-                    VoucherCode = bookingDTO.VoucherCode,
-                    TotalAmount = 0 
+                    Success = false,
+                    Message = "Ngày Check-out phải lớn hơn Check-in",
                 };
-                
-                _context.Bookings.Add(booking);
-                await _context.SaveChangesAsync(); 
+            }
 
-                
-                decimal total = 0;
-                foreach (var roomId in bookingDTO.RoomIds)
+            // Dùng LINQ để thực thi câu Query đếm phòng trống
+            var availableRoomTypes = await _context
+                .RoomTypes.Where(rt =>
+                    rt.CapacityAdults >= request.Adults && rt.CapacityChildren >= request.Children
+                )
+                .Select(rt => new
                 {
-                    var room = await _context.Rooms.FindAsync(roomId);
-                    if (room == null) throw new Exception($"Phòng {roomId} không tồn tại");
+                    RoomType = rt,
+                    // Đếm tổng số phòng vật lý của loại này (Không tính phòng đang bảo trì)
+                    TotalPhysicalRooms = _context.Rooms.Count(r =>
+                        r.RoomTypeId == rt.Id && r.Status != "Maintenance"
+                    ),
 
-                    var bookingDetail = new BookingDetail
-                    {
-                        BookingId = booking.Id,
-                        RoomId = roomId,
-                        Price = room.Price 
-                    };
-                    _context.BookingDetails.Add(bookingDetail);
-                    total += room.Price;
-                }
+                    // Đếm số phòng đã bị đặt (Công thức Overlap)
+                    BookedRoomsCount = _context
+                        .BookingDetails.Where(bd =>
+                            bd.RoomTypeId == rt.Id
+                            && bd.Booking.Status != "Cancelled" // Bỏ qua các booking đã hủy
+                            && bd.CheckInDate < request.CheckOutDate
+                            && bd.CheckOutDate > request.CheckInDate
+                        ) // LOGIC OVERLAP CHÍNH LÀ ĐÂY
+                        .Count(),
+                })
+                .Where(x => (x.TotalPhysicalRooms - x.BookedRoomsCount) > 0) // Chỉ lấy loại phòng còn dư
+                .Select(x => new AvailableRoomTypeResponseDTO
+                {
+                    RoomTypeId = x.RoomType.Id,
+                    Name = x.RoomType.Name,
+                    BasePrice = x.RoomType.BasePrice,
+                    AvailableCount = x.TotalPhysicalRooms - x.BookedRoomsCount, // Tính ra số phòng trống
+                })
+                .ToListAsync();
 
-                
-                booking.TotalAmount = total;
-                _context.Bookings.Update(booking);
-
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync(); 
-
-                return true;
-            }
-            catch (Exception ex)
+            return new ApiResponse<List<AvailableRoomTypeResponseDTO>>
             {
-                await transaction.RollbackAsync(); 
-                
-                return false;
-            }
+                Success = true,
+                Message = "Tìm phòng thành công",
+                Data = availableRoomTypes,
+            };
+        }
+
+        // =========================================================================
+        // THUẬT TOÁN 2: TÌM PHÒNG VẬT LÝ CHO LỄ TÂN (CHECK-IN)
+        // =========================================================================
+        public async Task<ApiResponse<List<Room>>> GetAvailablePhysicalRoomsAsync(
+            int roomTypeId,
+            DateTime checkIn,
+            DateTime checkOut
+        )
+        {
+            // 1. Lấy danh sách ID các phòng VẬT LÝ đã bị khóa trong khoảng thời gian này
+            var bookedRoomIds = await _context.BookingDetails
+                .Where(bd => bd.RoomTypeId == roomTypeId 
+                          && bd.Booking.Status != "Cancelled" 
+                          && bd.RoomId > 0 // Chỉ xét những booking đã được Lễ tân gán số phòng
+                          && bd.CheckInDate < checkOut 
+                          && bd.CheckOutDate > checkIn) // LOGIC OVERLAP
+                .Select(bd => bd.RoomId)
+                .ToListAsync();
+
+            // 2. Tìm các phòng thuộc Loại phòng này, nhưng ID KHÔNG NẰM TRONG danh sách đã đặt ở trên
+            var availablePhysicalRooms = await _context
+                .Rooms.Where(r =>
+                    r.RoomTypeId == roomTypeId
+                    && r.Status != "Maintenance"
+                    && !bookedRoomIds.Contains(r.Id)
+                ) // Tương đương lệnh NOT IN trong SQL
+                .ToListAsync();
+
+            return new ApiResponse<List<Room>>
+            {
+                Success = true,
+                Message = "Lấy danh sách phòng vật lý thành công",
+                Data = availablePhysicalRooms,
+            };
         }
     }
 }

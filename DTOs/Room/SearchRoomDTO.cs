@@ -1,4 +1,4 @@
-namespace QUANTRIKHACHSANN5.DTOs.Room
+namespace QuanTriKhachSanN5.DTOs.Room
 {
     public class SearchRoomDTO
     {

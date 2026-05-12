@@ -1,4 +1,4 @@
-namespace QUANTRIKHACHSANN5.DTOs.Promotion
+namespace QuanTriKhachSanN5.DTOs.Promotion
 {
     public class CalculateDiscountDTO
     {

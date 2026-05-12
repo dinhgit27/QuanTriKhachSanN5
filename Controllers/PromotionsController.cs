@@ -1,8 +1,9 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using QUANTRIKHACHSANN5.DTOs.Promotion;
-using QUANTRIKHACHSANN5.Interfaces;
+using QuanTriKhachSanN5.DTOs.Promotion;
+using QuanTriKhachSanN5.Interfaces;
 
-namespace QUANTRIKHACHSANN5.Controllers
+namespace QuanTriKhachSanN5.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -19,11 +20,14 @@ namespace QUANTRIKHACHSANN5.Controllers
         public async Task<IActionResult> CalculateDiscount([FromBody] CalculateDiscountDTO dto)
         {
             var finalAmount = await _promotionService.CalculateFinalAmountAsync(dto);
-            return Ok(new { 
-                OriginalAmount = dto.OriginalAmount,
-                FinalAmount = finalAmount,
-                DiscountAmount = dto.OriginalAmount - finalAmount
-            });
+            return Ok(
+                new
+                {
+                    OriginalAmount = dto.OriginalAmount,
+                    FinalAmount = finalAmount,
+                    DiscountAmount = dto.OriginalAmount - finalAmount,
+                }
+            );
         }
     }
 }
