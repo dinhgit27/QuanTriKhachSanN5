@@ -82,9 +82,10 @@ namespace QuanTriKhachSanN5.Controllers
                     return NotFound(new { message = "Không tìm thấy người dùng!" });
 
                 // 1. Cập nhật thông tin cơ bản
-                user.FullName = request.FullName;
-                if (request.PhoneNumber != null)
-                    user.PhoneNumber = request.PhoneNumber;
+                if (request.FullName != null)
+                {
+                    user.FullName = request.FullName;
+                }
 
                 // 2. Cập nhật chức vụ (Role)
                 var currentRole = user.UserRoles?.FirstOrDefault();
@@ -144,7 +145,6 @@ namespace QuanTriKhachSanN5.Controllers
     public class UpdateUserRequest
     {
         public string? FullName { get; set; }
-        public string? PhoneNumber { get; set; }
         public int RoleId { get; set; }
     }
 }
