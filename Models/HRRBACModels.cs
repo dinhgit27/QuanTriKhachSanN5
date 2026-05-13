@@ -46,7 +46,7 @@ namespace QuanTriKhachSanN5.Models
         public Role Role { get; set; }
     }
 
-    // Bảng Audit_Logs: Log hệ thống (Đồng bộ cấu trúc cột mới)
+    // Bảng Audit_Logs: Log hệ thống (Đồng bộ cấu trúc cột thực tế trong SQL Server)
     [Table("Audit_Logs")]
     public class Audit_Log
     {
@@ -60,24 +60,75 @@ namespace QuanTriKhachSanN5.Models
         [ForeignKey("UserId")]
         public User? User { get; set; }
 
-        [Column("action")]
-        [StringLength(50)]
-        public string Action { get; set; } = string.Empty;
+        [Column("log_date")]
+        public DateTime LogDate { get; set; } = DateTime.UtcNow;
 
-        [Column("table_name")]
-        [StringLength(100)]
-        public string TableName { get; set; } = string.Empty;
+        [Column("log_data")]
+        public string LogData { get; set; } = string.Empty;
 
-        [Column("record_id")]
-        public int? RecordId { get; set; }
+        // Bọc NotMapped để tương thích hoàn toàn với các class gọi đến nó
+        [NotMapped]
+        public string Action 
+        { 
+            get => ExtractJson("action"); 
+            set => UpdateJson("action", value); 
+        }
 
-        [Column("old_value")]
-        public string? OldValue { get; set; }
+        [NotMapped]
+        public string TableName 
+        { 
+            get => ExtractJson("tableName"); 
+            set => UpdateJson("tableName", value); 
+        }
 
-        [Column("new_value")]
-        public string? NewValue { get; set; }
+        [NotMapped]
+        public int? RecordId 
+        { 
+            get => int.TryParse(ExtractJson("recordId"), out int r) ? r : null; 
+            set => UpdateJson("recordId", value?.ToString() ?? ""); 
+        }
 
-        [Column("created_at")]
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        [NotMapped]
+        public string? OldValue 
+        { 
+            get => ExtractJson("oldValue"); 
+            set => UpdateJson("oldValue", value ?? ""); 
+        }
+
+        [NotMapped]
+        public string? NewValue 
+        { 
+            get => ExtractJson("newValue"); 
+            set => UpdateJson("newValue", value ?? ""); 
+        }
+
+        [NotMapped]
+        public DateTime CreatedAt 
+        { 
+            get => LogDate; 
+            set => LogDate = value; 
+        }
+
+        private string ExtractJson(string prop)
+        {
+            try {
+                if (string.IsNullOrEmpty(LogData)) return "";
+                using var doc = System.Text.Json.JsonDocument.Parse(LogData);
+                if (doc.RootElement.TryGetProperty(prop, out var p)) return p.GetString() ?? p.ToString();
+                return "";
+            } catch { return ""; }
+        }
+
+        private void UpdateJson(string prop, string val)
+        {
+            try {
+                var dict = new Dictionary<string, object>();
+                if (!string.IsNullOrEmpty(LogData)) {
+                    try { dict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(LogData) ?? new(); } catch {}
+                }
+                dict[prop] = val;
+                LogData = System.Text.Json.JsonSerializer.Serialize(dict);
+            } catch {}
+        }
     }
 }

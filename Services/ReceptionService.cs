@@ -8,15 +8,19 @@ using QuanTriKhachSanN5.DTOs;
 using QuanTriKhachSanN5.Interfaces;
 using QuanTriKhachSanN5.Models;
 
+using QuanTriKhachSanN5.Services;
+
 namespace QuanTriKhachSanN5.API.Services
 {
     public class ReceptionService : IReceptionService
     {
         private readonly ApplicationDbContext _context;
+        private readonly IEmailService _emailService;
 
-        public ReceptionService(ApplicationDbContext context)
+        public ReceptionService(ApplicationDbContext context, IEmailService emailService)
         {
             _context = context;
+            _emailService = emailService;
         }
 
         public async Task CheckInBookingAsync(int bookingId, int roomId)
@@ -46,6 +50,52 @@ namespace QuanTriKhachSanN5.API.Services
 
                     // Lưu tất cả thay đổi vào SQL cùng một lúc
                     await _context.SaveChangesAsync();
+
+                    // 🚨 GỬI EMAIL THÔNG BÁO CHECK-IN THÀNH CÔNG 🚨
+                    if (!string.IsNullOrEmpty(booking.GuestEmail))
+                    {
+                        try
+                        {
+                            string emailSubject = $"Thông báo Check-in thành công - Mã đơn: {booking.BookingCode}";
+                            string emailBody = $@"
+                            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1);'>
+                                <div style='background-color: #52c41a; color: white; padding: 20px; text-align: center;'>
+                                    <h2 style='margin: 0;'>Khách sạn N5 Luxury</h2>
+                                    <p style='margin: 5px 0 0;'>Thủ tục Check-in hoàn tất</p>
+                                </div>
+                                <div style='padding: 25px; color: #333;'>
+                                    <p>Xin chào <b>{booking.GuestName}</b>,</p>
+                                    <p>Thủ tục nhận phòng của bạn đã hoàn tất thành công. Dưới đây là thông tin chi tiết phòng của bạn:</p>
+                                    <table style='width: 100%; border-collapse: collapse; margin: 20px 0;'>
+                                        <tr style='border-bottom: 1px solid #eee;'>
+                                            <td style='padding: 10px 0; color: #666;'>Mã Đặt Phòng:</td>
+                                            <td style='padding: 10px 0; font-weight: bold; color: #1890ff; text-align: right;'>{booking.BookingCode}</td>
+                                        </tr>
+                                        <tr style='border-bottom: 1px solid #eee;'>
+                                            <td style='padding: 10px 0; color: #666;'>Phòng Của Bạn:</td>
+                                            <td style='padding: 10px 0; font-weight: bold; color: #52c41a; font-size: 18px; text-align: right;'>Phòng {room?.RoomNumber}</td>
+                                        </tr>
+                                        <tr style='border-bottom: 1px solid #eee;'>
+                                            <td style='padding: 10px 0; color: #666;'>Giờ Nhận Phòng:</td>
+                                            <td style='padding: 10px 0; font-weight: bold; text-align: right;'>{DateTime.Now:dd/MM/yyyy HH:mm}</td>
+                                        </tr>
+                                    </table>
+                                    <p style='background-color: #e6f7ff; border: 1px solid #91d5ff; padding: 15px; border-radius: 8px; color: #1890ff; text-align: center;'>
+                                        Wifi Miễn Phí: <b>N5_Luxury_Free</b> | Mật khẩu: <b>88888888</b>
+                                    </p>
+                                    <p style='margin-top: 25px; font-size: 14px; color: #777; text-align: center;'>
+                                        Lễ tân trực 24/7. Vui lòng bấm phím 0 trên điện thoại bàn nếu cần hỗ trợ.<br>
+                                        Chúc bạn có những trải nghiệm tuyệt vời tại khách sạn!
+                                    </p>
+                                </div>
+                            </div>";
+                            await _emailService.SendEmailAsync(booking.GuestEmail, emailSubject, emailBody);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"[EMAIL ERROR]: {ex.Message}");
+                        }
+                    }
                 }
             }
         }

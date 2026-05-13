@@ -8,6 +8,8 @@ using QuanTriKhachSanN5.Data;
 using QuanTriKhachSanN5.DTOs;
 using QuanTriKhachSanN5.Models;
 
+using QuanTriKhachSanN5.Services;
+
 namespace QuanTriKhachSanN5.Controllers
 {
     [Route("api/[controller]")]
@@ -15,10 +17,12 @@ namespace QuanTriKhachSanN5.Controllers
     public class BookingsController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly IEmailService _emailService;
 
-        public BookingsController(ApplicationDbContext context)
+        public BookingsController(ApplicationDbContext context, IEmailService emailService)
         {
             _context = context;
+            _emailService = emailService;
         }
 
         [HttpGet]
@@ -49,6 +53,7 @@ namespace QuanTriKhachSanN5.Controllers
                 .BookingDetails.Where(bd =>
                     bd.CheckInDate < req.CheckOut
                     && bd.CheckOutDate > req.CheckIn
+                    && bd.Booking != null 
                     && bd.Booking.Status != "Cancelled"
                 )
                 .Where(bd => bd.RoomId != null)
@@ -63,7 +68,7 @@ namespace QuanTriKhachSanN5.Controllers
                 .ToListAsync();
 
             var result = availableRoomTypes
-                .Where(rt => rt.Rooms.Any())
+                .Where(rt => rt.Rooms != null && rt.Rooms.Any())
                 .Select(rt => new
                 {
                     RoomTypeId = rt.Id,
@@ -71,14 +76,12 @@ namespace QuanTriKhachSanN5.Controllers
                     PricePerNight = rt.BasePrice,
                     CapacityAdults = rt.CapacityAdults,
                     CapacityChildren = rt.CapacityChildren,
-                    AvailableRooms = rt
-                        .Rooms.Select(r => new
-                        {
-                            r.Id,
-                            r.RoomNumber,
-                            r.Floor,
-                        })
-                        .ToList(),
+                    AvailableRooms = rt.Rooms != null ? (object)rt.Rooms.Select(r => new
+                    {
+                        r.Id,
+                        r.RoomNumber,
+                        r.Floor,
+                    }).ToList() : (object)new List<object>()
                 });
             return Ok(result);
         }
@@ -126,7 +129,7 @@ namespace QuanTriKhachSanN5.Controllers
             // 🚨 KIỂM TRA OVERBOOKING: Kiểm tra xem các phòng này đã có ai đặt chưa trong tầm ngày này
             var overlappingBookings = await _context.BookingDetails
                 .Where(bd => req.SelectedRoomIds.Contains(bd.RoomId ?? 0))
-                .Where(bd => bd.CheckInDate < req.CheckOut && bd.CheckOutDate > req.CheckIn && bd.Booking.Status != "Cancelled")
+                .Where(bd => bd.CheckInDate < req.CheckOut && bd.CheckOutDate > req.CheckIn && bd.Booking != null && bd.Booking.Status != "Cancelled")
                 .AnyAsync();
 
             if (overlappingBookings)
@@ -141,7 +144,6 @@ namespace QuanTriKhachSanN5.Controllers
                 GuestPhone = req.GuestPhone,
                 GuestEmail = req.GuestEmail,
                 BookingCode = bookingCode,
-                //DepositAmount = req.DepositAmount,
                 Status = "Pending", 
                 BookingDetails = new List<BookingDetail>() 
             };
@@ -153,10 +155,6 @@ namespace QuanTriKhachSanN5.Controllers
                     .FirstOrDefaultAsync(r => r.Id == roomId);
                 if (room != null && room.RoomType != null)
                 {
-                    // 🚨 ĐÃ FIX LOGIC: XÓA LỆNH room.Status = "Occupied" TẠI ĐÂY!
-                    // Lễ tân mới đặt trước thôi, không được đổi trạng thái phòng vật lý thành Đang Ở.
-                    // Chỉ khi nào qua trang Arrivals bấm "Check-in" thì phòng mới chuyển sang Occupied.
-
                     newBooking.BookingDetails.Add(
                         new BookingDetail
                         {
@@ -172,6 +170,56 @@ namespace QuanTriKhachSanN5.Controllers
 
             _context.Bookings.Add(newBooking);
             await _context.SaveChangesAsync();
+
+            // 🚨 GỬI EMAIL THÔNG BÁO TẠO ĐƠN ĐẶT PHÒNG THÀNH CÔNG 🚨
+            if (!string.IsNullOrEmpty(newBooking.GuestEmail))
+            {
+                try
+                {
+                    string emailSubject = $"Xác nhận đặt phòng thành công - Mã đơn: {newBooking.BookingCode}";
+                    string emailBody = $@"
+                    <div style='font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1);'>
+                        <div style='background-color: #1890ff; color: white; padding: 20px; text-align: center;'>
+                            <h2 style='margin: 0;'>Khách sạn N5 Luxury</h2>
+                            <p style='margin: 5px 0 0;'>Xác nhận yêu cầu đặt phòng</p>
+                        </div>
+                        <div style='padding: 25px; color: #333;'>
+                            <p>Xin chào <b>{newBooking.GuestName}</b>,</p>
+                            <p>Cảm ơn bạn đã lựa chọn Khách sạn N5. Yêu cầu đặt phòng của bạn đã được ghi nhận thành công trên hệ thống với thông tin chi tiết như sau:</p>
+                            <table style='width: 100%; border-collapse: collapse; margin: 20px 0;'>
+                                <tr style='border-bottom: 1px solid #eee;'>
+                                    <td style='padding: 10px 0; color: #666;'>Mã Đặt Phòng:</td>
+                                    <td style='padding: 10px 0; font-weight: bold; color: #1890ff; text-align: right;'>{newBooking.BookingCode}</td>
+                                </tr>
+                                <tr style='border-bottom: 1px solid #eee;'>
+                                    <td style='padding: 10px 0; color: #666;'>Ngày Nhận Phòng:</td>
+                                    <td style='padding: 10px 0; font-weight: bold; text-align: right;'>{req.CheckIn:dd/MM/yyyy HH:mm}</td>
+                                </tr>
+                                <tr style='border-bottom: 1px solid #eee;'>
+                                    <td style='padding: 10px 0; color: #666;'>Ngày Trả Phòng:</td>
+                                    <td style='padding: 10px 0; font-weight: bold; text-align: right;'>{req.CheckOut:dd/MM/yyyy HH:mm}</td>
+                                </tr>
+                                <tr style='border-bottom: 1px solid #eee;'>
+                                    <td style='padding: 10px 0; color: #666;'>Số Lượng Phòng:</td>
+                                    <td style='padding: 10px 0; font-weight: bold; text-align: right;'>{req.SelectedRoomIds.Count} phòng</td>
+                                </tr>
+                            </table>
+                            <p style='background-color: #f6ffed; border: 1px solid #b7eb8f; padding: 15px; border-radius: 8px; color: #52c41a; font-weight: bold; text-align: center;'>
+                                Trạng thái đơn: Đang chờ xác nhận từ Lễ tân
+                            </p>
+                            <p style='margin-top: 25px; font-size: 14px; color: #777; text-align: center;'>
+                                Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ hotline: <b>0123.456.789</b><br>
+                                Chúc bạn có một kỳ nghỉ tuyệt vời!
+                            </p>
+                        </div>
+                    </div>";
+                    await _emailService.SendEmailAsync(newBooking.GuestEmail, emailSubject, emailBody);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[EMAIL ERROR]: {ex.Message}");
+                }
+            }
 
             return Ok(
                 new { message = "Đặt phòng thành công!", bookingCode = newBooking.BookingCode }

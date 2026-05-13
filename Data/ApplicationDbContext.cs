@@ -43,6 +43,7 @@ namespace QuanTriKhachSanN5.Data
         public DbSet<Membership> Memberships { get; set; }
         public DbSet<Post> Posts { get; set; }
         public DbSet<Category> Categories { get; set; }
+        public DbSet<RoleDashboardPeriodState> RoleDashboardPeriodStates { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
