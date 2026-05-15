@@ -10,7 +10,7 @@ using QuanTriKhachSanN5.Models;
 namespace QuanTriKhachSanN5.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/audit-logs")]
 [Authorize]
 public class AuditLogsController : ControllerBase
 {
@@ -38,29 +38,30 @@ public class AuditLogsController : ControllerBase
             query = query.Where(al => al.UserId == userId.Value);
 
         if (fromDate.HasValue)
-            query = query.Where(al => al.CreatedAt >= fromDate.Value);
+            query = query.Where(al => al.LogDate >= fromDate.Value);
 
         if (toDate.HasValue)
-            query = query.Where(al => al.CreatedAt <= toDate.Value);
+            query = query.Where(al => al.LogDate <= toDate.Value);
 
         var total = await query.CountAsync();
-        var logs = await query
-            .OrderByDescending(al => al.CreatedAt)
+        var logsDb = await query
+            .OrderByDescending(al => al.LogDate)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(al => new AuditLogDto
-            {
-                Id = al.Id,
-                UserId = al.UserId,
-                UserName = al.User != null ? al.User.FullName : null,
-                Action = al.Action,
-                TableName = al.TableName,
-                RecordId = al.RecordId,
-                OldValue = al.OldValue,
-                NewValue = al.NewValue,
-                CreatedAt = al.CreatedAt
-            })
             .ToListAsync();
+
+        var logs = logsDb.Select(al => new AuditLogDto
+        {
+            Id = al.Id,
+            UserId = al.UserId,
+            UserName = al.User != null ? al.User.FullName : null,
+            Action = al.Action,
+            TableName = al.TableName,
+            RecordId = al.RecordId,
+            OldValue = al.OldValue,
+            NewValue = al.NewValue,
+            CreatedAt = al.CreatedAt
+        }).ToList();
 
         return Ok(
             new
