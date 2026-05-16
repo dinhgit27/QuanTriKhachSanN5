@@ -21,6 +21,7 @@ namespace QuanTriKhachSanN5.Controllers
         /// Lấy tất cả reviews (chỉ những reviews đã xác nhận)
         /// GET: api/reviews
         /// </summary>
+        [AllowAnonymous]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ReviewDTO>>> GetAllReviews()
         {
@@ -28,10 +29,7 @@ namespace QuanTriKhachSanN5.Controllers
             return Ok(reviews);
         }
 
-        /// <summary>
-        /// Lấy reviews theo loại phòng
-        /// GET: api/reviews/roomtype/{roomTypeId}
-        /// </summary>
+        [AllowAnonymous]
         [HttpGet("roomtype/{roomTypeId:int}")]
         public async Task<ActionResult<IEnumerable<ReviewDTO>>> GetReviewsByRoomType(int roomTypeId)
         {
@@ -39,10 +37,7 @@ namespace QuanTriKhachSanN5.Controllers
             return Ok(reviews);
         }
 
-        /// <summary>
-        /// Lấy review rating trung bình của loại phòng
-        /// GET: api/reviews/roomtype/{roomTypeId}/average-rating
-        /// </summary>
+        [AllowAnonymous]
         [HttpGet("roomtype/{roomTypeId:int}/average-rating")]
         public async Task<ActionResult<object>> GetAverageRating(int roomTypeId)
         {

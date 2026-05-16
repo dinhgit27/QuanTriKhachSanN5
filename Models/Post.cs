@@ -20,5 +20,8 @@ public class Post
 
     public Category? Category { get; set; }
 
+    [Column("RoomTypeId")]
+    public int? RoomTypeId { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

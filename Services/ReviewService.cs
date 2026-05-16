@@ -20,23 +20,19 @@ namespace QuanTriKhachSanN5.Services
             return await _context
                 .Reviews.Include(r => r.User)
                 .Include(r => r.RoomType)
-                .Where(r => r.IsVerified)
+                // .Where(r => r.IsVerified) // Tạm thời bỏ qua vì DB chưa có cột này
                 .Select(r => new ReviewDTO
                 {
                     Id = r.Id,
                     UserId = r.UserId,
-                    Username = r.User.FullName,
+                    Username = r.User != null ? r.User.FullName : "Khách",
                     RoomTypeId = r.RoomTypeId,
-                    RoomTypeName = r.RoomType.Name,
+                    RoomTypeName = r.RoomType != null ? r.RoomType.Name : "Loại phòng",
                     Rating = r.Rating,
                     Comment = r.Comment,
-                    Cleanliness = r.Cleanliness,
-                    Comfort = r.Comfort,
-                    ServiceQuality = r.ServiceQuality,
-                    ValueForMoney = r.ValueForMoney,
                     CreatedAt = r.CreatedAt,
                     UpdatedAt = r.UpdatedAt,
-                    IsVerified = r.IsVerified,
+                    IsVerified = true, // Giả định là true vì chưa có cột kiểm chứng
                 })
                 .OrderByDescending(r => r.CreatedAt)
                 .ToListAsync();
@@ -47,23 +43,19 @@ namespace QuanTriKhachSanN5.Services
             return await _context
                 .Reviews.Include(r => r.User)
                 .Include(r => r.RoomType)
-                .Where(r => r.RoomTypeId == roomTypeId && r.IsVerified)
+                .Where(r => r.RoomTypeId == roomTypeId)
                 .Select(r => new ReviewDTO
                 {
                     Id = r.Id,
                     UserId = r.UserId,
-                    Username = r.User.FullName,
+                    Username = r.User != null ? r.User.FullName : "Khách",
                     RoomTypeId = r.RoomTypeId,
-                    RoomTypeName = r.RoomType.Name,
+                    RoomTypeName = r.RoomType != null ? r.RoomType.Name : "Loại phòng",
                     Rating = r.Rating,
                     Comment = r.Comment,
-                    Cleanliness = r.Cleanliness,
-                    Comfort = r.Comfort,
-                    ServiceQuality = r.ServiceQuality,
-                    ValueForMoney = r.ValueForMoney,
                     CreatedAt = r.CreatedAt,
                     UpdatedAt = r.UpdatedAt,
-                    IsVerified = r.IsVerified,
+                    IsVerified = true,
                 })
                 .OrderByDescending(r => r.CreatedAt)
                 .ToListAsync();
@@ -79,18 +71,14 @@ namespace QuanTriKhachSanN5.Services
                 {
                     Id = r.Id,
                     UserId = r.UserId,
-                    Username = r.User.FullName,
+                    Username = r.User != null ? r.User.FullName : "Khách",
                     RoomTypeId = r.RoomTypeId,
-                    RoomTypeName = r.RoomType.Name,
+                    RoomTypeName = r.RoomType != null ? r.RoomType.Name : "Loại phòng",
                     Rating = r.Rating,
                     Comment = r.Comment,
-                    Cleanliness = r.Cleanliness,
-                    Comfort = r.Comfort,
-                    ServiceQuality = r.ServiceQuality,
-                    ValueForMoney = r.ValueForMoney,
                     CreatedAt = r.CreatedAt,
                     UpdatedAt = r.UpdatedAt,
-                    IsVerified = r.IsVerified,
+                    IsVerified = true,
                 })
                 .OrderByDescending(r => r.CreatedAt)
                 .ToListAsync();
@@ -127,45 +115,42 @@ namespace QuanTriKhachSanN5.Services
 
         public async Task<ReviewDTO> CreateReviewAsync(int userId, CreateReviewDTO dto)
         {
-            // Kiểm tra user
+            // 1. KIỂM TRA USER
             var user = await _context.Users.FindAsync(userId);
             if (user == null)
-                throw new Exception("User not found");
+                throw new Exception("Người dùng không tồn tại.");
 
-            // Kiểm tra RoomType
+            // 2. KIỂM TRA LOẠI PHÒNG
             var roomType = await _context.RoomTypes.FindAsync(dto.RoomTypeId);
             if (roomType == null)
-                throw new Exception("RoomType not found");
+                throw new Exception("Loại phòng không tồn tại.");
 
-            // Kiểm tra xem user đã ở trong phòng này chưa
-            bool isVerified = false;
-            if (dto.BookingId.HasValue)
+            // 3. KIỂM TRA ĐIỀU KIỆN ĐÁNH GIÁ: PHẢI CÓ ĐƠN ĐẶT PHÒNG HOÀN THÀNH (HOẶC ĐANG Ở)
+            // Tìm bất kỳ booking nào của user này, thuộc loại phòng này và có trạng thái Completed hoặc Checked_out
+            var hasExperienced = await _context.Bookings
+                .Include(b => b.BookingDetails)
+                .AnyAsync(b => b.UserId == userId && 
+                               (b.Status == "Completed" || b.Status == "Checked_out" || b.Status == "Hoàn thành") &&
+                               b.BookingDetails.Any(bd => bd.RoomTypeId == dto.RoomTypeId));
+
+            if (!hasExperienced)
             {
-                var booking = await _context
-                    .Bookings.Include(b => b.BookingDetails)
-                    .FirstOrDefaultAsync(b => b.Id == dto.BookingId.Value && b.UserId == userId);
-
-                if (
-                    booking != null
-                    && booking.BookingDetails.Any(bd => bd.RoomTypeId == dto.RoomTypeId)
-                )
-                {
-                    isVerified = true;
-                }
+                throw new Exception("Bạn chỉ có thể đánh giá sau khi đã trải nghiệm và thanh toán dịch vụ tại phòng này.");
             }
 
+            // 4. TẠO ĐÁNH GIÁ (Bỏ qua các cột nâng cao chưa có trong DB)
             var review = new Review
             {
                 UserId = userId,
                 RoomTypeId = dto.RoomTypeId,
-                BookingId = dto.BookingId,
+                BookingId = dto.BookingId, // Có thể null nếu user đánh giá chung cho loại phòng đã ở
                 Rating = dto.Rating,
                 Comment = dto.Comment,
-                Cleanliness = dto.Cleanliness,
-                Comfort = dto.Comfort,
-                ServiceQuality = dto.ServiceQuality,
-                ValueForMoney = dto.ValueForMoney,
-                IsVerified = isVerified,
+                // Cleanliness = dto.Cleanliness, // Tạm thời bỏ qua
+                // Comfort = dto.Comfort,
+                // ServiceQuality = dto.ServiceQuality,
+                // ValueForMoney = dto.ValueForMoney,
+                // IsVerified = true, // Tạm thời bỏ qua vì DB chưa có cột IsVerified
                 CreatedAt = DateTime.UtcNow,
             };
 

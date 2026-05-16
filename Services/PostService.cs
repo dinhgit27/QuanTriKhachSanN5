@@ -62,6 +62,16 @@ public class PostService : IPostService
         return entity is null ? null : Map(entity);
     }
 
+    public async Task<PostDTO?> GetByRoomTypeIdAsync(int roomTypeId)
+    {
+        var entity = await _db
+            .Posts.AsNoTracking()
+            .Include(x => x.Category)
+            .FirstOrDefaultAsync(x => x.RoomTypeId == roomTypeId);
+
+        return entity is null ? null : Map(entity);
+    }
+
     public async Task<bool> UpdateAsync(int id, CreatePostDTO dto)
     {
         var entity = await _db.Posts.FindAsync(id);
@@ -84,6 +94,7 @@ public class PostService : IPostService
             Content = entity.Content,
             CategoryId = entity.CategoryId,
             CategoryName = entity.Category?.Name,
+            RoomTypeId = entity.RoomTypeId,
             CreatedAt = entity.CreatedAt,
         };
 }

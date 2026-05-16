@@ -16,6 +16,7 @@ public class PostsController : ControllerBase
         _postService = postService;
     }
 
+    [AllowAnonymous]
     [HttpGet]
     public async Task<ActionResult<IEnumerable<PostDTO>>> GetAll()
     {
@@ -23,12 +24,25 @@ public class PostsController : ControllerBase
         return Ok(posts);
     }
 
+    [AllowAnonymous]
     [HttpGet("{id:int}")]
     public async Task<ActionResult<PostDTO>> GetById(int id)
     {
         var post = await _postService.GetByIdAsync(id);
         if (post is null)
             return NotFound();
+
+        return Ok(post);
+    }
+
+    // LẤY BÀI VIẾT THEO LOẠI PHÒNG (Dành cho trang chi tiết phòng)
+    [AllowAnonymous]
+    [HttpGet("roomtype/{roomTypeId:int}")]
+    public async Task<ActionResult<PostDTO>> GetByRoomType(int roomTypeId)
+    {
+        var post = await _postService.GetByRoomTypeIdAsync(roomTypeId);
+        if (post is null)
+            return NotFound(new { message = "Không tìm thấy bài viết cho loại phòng này." });
 
         return Ok(post);
     }

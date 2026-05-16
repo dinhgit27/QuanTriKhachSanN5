@@ -72,6 +72,7 @@ builder.Services.AddScoped<IAuditBatchService, AuditBatchService>();
 builder.Services.Configure<VietQRConfig>(builder.Configuration.GetSection("VietQR"));
 builder.Services.AddScoped<IVietQRService, VietQRService>();
 builder.Services.AddScoped<IMomoService, MomoService>();
+builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
 
 // AuditLogFilter registered globally above
 

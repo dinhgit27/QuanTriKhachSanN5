@@ -27,8 +27,8 @@ namespace QuanTriKhachSanN5.Controllers
             return Ok(roomTypes);
         }
 
-        // GET: api/RoomTypes/5 - Lấy chi tiết loại phòng
-        [Authorize(Roles = "Admin,Receptionist")]
+        // GET: api/RoomTypes/5 - Lấy chi tiết loại phòng (Mở cho tất cả mọi người xem bài viết & đánh giá)
+        [AllowAnonymous]
         [HttpGet("{id}")]
         public async Task<ActionResult<RoomTypeDTO>> GetRoomType(int id)
         {
