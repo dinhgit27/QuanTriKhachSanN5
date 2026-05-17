@@ -27,21 +27,27 @@ namespace QuanTriKhachSanN5.Models
         [Column("description")] // Ép chữ thường
         public string? Description { get; set; }
 
+        [NotMapped]
         [Column("size_sqm")]
         public double? SizeSqm { get; set; }
 
+        [NotMapped]
         [Column("bed_type")]
         public string? BedType { get; set; }
 
+        [NotMapped]
         [Column("view_type")]
         public string? ViewType { get; set; }
 
+        [NotMapped]
         [Column("is_active")]
         public bool IsActive { get; set; } = true;
 
+        [NotMapped]
         [Column("slug")] // Ép chữ thường
         public string? Slug { get; set; }
 
+        [NotMapped]
         [Column("content")] // Ép chữ thường
         public string? Content { get; set; }
 

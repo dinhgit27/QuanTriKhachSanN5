@@ -97,12 +97,21 @@ builder
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("MANAGE_ROOMS", policy => policy.RequireClaim("Permission", "MANAGE_ROOMS"));
+    // Cấu hình các Policy tương ứng với các quyền
+    options.AddPolicy("VIEW_DASHBOARD", policy => policy.RequireClaim("Permission", "VIEW_DASHBOARD"));
     options.AddPolicy("MANAGE_USERS", policy => policy.RequireClaim("Permission", "MANAGE_USERS"));
-    options.AddPolicy(
-        "MANAGE_BOOKINGS",
-        policy => policy.RequireClaim("Permission", "MANAGE_BOOKINGS")
-    );
+    options.AddPolicy("MANAGE_ROLES", policy => policy.RequireClaim("Permission", "MANAGE_ROLES"));
+    options.AddPolicy("VIEW_USERS", policy => policy.RequireClaim("Permission", "VIEW_USERS"));
+    options.AddPolicy("VIEW_ROLES", policy => policy.RequireClaim("Permission", "VIEW_ROLES"));
+    options.AddPolicy("EDIT_ROLES", policy => policy.RequireClaim("Permission", "EDIT_ROLES"));
+    options.AddPolicy("CREATE_USERS", policy => policy.RequireClaim("Permission", "CREATE_USERS"));
+    options.AddPolicy("MANAGE_ROOMS", policy => policy.RequireClaim("Permission", "MANAGE_ROOMS"));
+    options.AddPolicy("MANAGE_BOOKINGS", policy => policy.RequireClaim("Permission", "MANAGE_BOOKINGS"));
+    options.AddPolicy("MANAGE_INVOICES", policy => policy.RequireClaim("Permission", "MANAGE_INVOICES"));
+    options.AddPolicy("MANAGE_SERVICES", policy => policy.RequireClaim("Permission", "MANAGE_SERVICES"));
+    options.AddPolicy("VIEW_REPORTS", policy => policy.RequireClaim("Permission", "VIEW_REPORTS"));
+    options.AddPolicy("MANAGE_CONTENT", policy => policy.RequireClaim("Permission", "MANAGE_CONTENT"));
+    options.AddPolicy("MANAGE_INVENTORY", policy => policy.RequireClaim("Permission", "MANAGE_INVENTORY"));
     options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
 });
 
@@ -189,10 +198,38 @@ void SeedData(ApplicationDbContext context)
     if (!context.Permissions.Any())
     {
         context.Permissions.AddRange(
-            new Permission { Name = "MANAGE_ROOMS" },
+            new Permission { Name = "VIEW_DASHBOARD" },
             new Permission { Name = "MANAGE_USERS" },
-            new Permission { Name = "MANAGE_BOOKINGS" }
+            new Permission { Name = "MANAGE_ROLES" },
+            new Permission { Name = "VIEW_USERS" },
+            new Permission { Name = "VIEW_ROLES" },
+            new Permission { Name = "EDIT_ROLES" },
+            new Permission { Name = "CREATE_USERS" },
+            new Permission { Name = "MANAGE_ROOMS" },
+            new Permission { Name = "MANAGE_BOOKINGS" },
+            new Permission { Name = "MANAGE_INVOICES" },
+            new Permission { Name = "MANAGE_SERVICES" },
+            new Permission { Name = "VIEW_REPORTS" },
+            new Permission { Name = "MANAGE_CONTENT" },
+            new Permission { Name = "MANAGE_INVENTORY" }
         );
+        context.SaveChanges();
+    }
+    else 
+    {
+        // Thêm các quyền mới nếu chưa có
+        var existingPerms = context.Permissions.Select(p => p.Name).ToList();
+        var newPerms = new[] {
+            "VIEW_DASHBOARD", "MANAGE_USERS", "MANAGE_ROLES", "VIEW_USERS", "VIEW_ROLES", "EDIT_ROLES", "CREATE_USERS",
+            "MANAGE_ROOMS", "MANAGE_BOOKINGS", "MANAGE_INVOICES", "MANAGE_SERVICES", "VIEW_REPORTS", "MANAGE_CONTENT", "MANAGE_INVENTORY"
+        };
+        foreach (var p in newPerms)
+        {
+            if (!existingPerms.Contains(p))
+            {
+                context.Permissions.Add(new Permission { Name = p });
+            }
+        }
         context.SaveChanges();
     }
 

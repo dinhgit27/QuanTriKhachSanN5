@@ -24,7 +24,7 @@ namespace QuanTriKhachSanN5.Controllers
         // ============================================================
         // 1. LẤY TOÀN BỘ ĐƠN DỊCH VỤ
         // ============================================================
-        [Authorize(Roles = "Admin,Receptionist")]
+        [Authorize(Policy = "MANAGE_SERVICES")]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Order_Service>>> GetAll()
         {
@@ -56,7 +56,7 @@ namespace QuanTriKhachSanN5.Controllers
         // ============================================================
         // 3. TẠO ĐƠN DỊCH VỤ MỚI
         // ============================================================
-        [Authorize(Roles = "Guest,Receptionist,Admin")]
+        [Authorize(Policy = "MANAGE_SERVICES")]
         [HttpPost("order")]
         public async Task<IActionResult> CreateOrder([FromBody] OrderRequest request)
         {
@@ -107,7 +107,7 @@ namespace QuanTriKhachSanN5.Controllers
         // ============================================================
         // 4. CẬP NHẬT TRẠNG THÁI
         // ============================================================
-        [Authorize(Roles = "Admin,Receptionist")]
+        [Authorize(Policy = "MANAGE_SERVICES")]
         [HttpPut("{id}/status")]
         public async Task<IActionResult> UpdateStatus(int id, [FromBody] string status)
         {
@@ -124,7 +124,7 @@ namespace QuanTriKhachSanN5.Controllers
         // ============================================================
         // 5. HỦY ĐƠN
         // ============================================================
-        [Authorize(Roles = "Admin,Receptionist")]
+        [Authorize(Policy = "MANAGE_SERVICES")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Cancel(int id)
         {

@@ -19,7 +19,8 @@ namespace QuanTriKhachSanN5.Controllers
         }
 
         // GET: api/RoomTypes - Lấy danh sách tất cả loại phòng (Admin, Receptionist)
-        [Authorize(Roles = "Admin,Receptionist")]
+        // GET: api/RoomTypes - Lấy danh sách tất cả loại phòng (Admin, Receptionist)
+        [Authorize(Policy = "MANAGE_ROOMS")]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<RoomTypeDTO>>> GetRoomTypes()
         {
@@ -39,7 +40,7 @@ namespace QuanTriKhachSanN5.Controllers
         }
 
         // POST: api/RoomTypes - Tạo loại phòng mới (Admin only)
-        [Authorize(Policy = "MANAGE_ROOMTYPES")]
+        [Authorize(Policy = "MANAGE_ROOMS")]
         [HttpPost]
         public async Task<ActionResult<RoomTypeDTO>> CreateRoomType(
             [FromBody] CreateRoomTypeDTO dto
@@ -58,7 +59,7 @@ namespace QuanTriKhachSanN5.Controllers
         }
 
         // PUT: api/RoomTypes/5 - Cập nhật loại phòng (Admin only)
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = "MANAGE_ROOMS")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateRoomType(int id, [FromBody] RoomTypeDTO dto)
         {
@@ -77,7 +78,7 @@ namespace QuanTriKhachSanN5.Controllers
         }
 
         // DELETE: api/RoomTypes/5 - Xóa loại phòng (Admin only)
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = "MANAGE_ROOMS")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteRoomType(int id)
         {

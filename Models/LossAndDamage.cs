@@ -27,10 +27,10 @@ namespace QuanTriKhachSanN5.Models
         public DateTime? CreatedAt { get; set; }
 
         [Column("ImageUrl")]
-        public string ImageUrl { get; set; }
+        public string? ImageUrl { get; set; }
 
         [Column("status")]
-        public string Status { get; set; }
+        public string? Status { get; set; }
 
         [ForeignKey("BookingDetailId")]
         public BookingDetail? BookingDetail { get; set; }

@@ -35,7 +35,7 @@ namespace QuanTriKhachSanN5.Controllers
             _context = context;
         }
 
-        [Authorize(Roles = "Admin,Receptionist")]
+        [Authorize(Policy = "MANAGE_INVENTORY")]
         [HttpGet("amenities")]
         public async Task<IActionResult> GetAmenities()
         {
@@ -43,7 +43,7 @@ namespace QuanTriKhachSanN5.Controllers
             return Ok(equipments);
         }
 
-        [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
+        [Authorize(Policy = "MANAGE_INVENTORY")]
         [HttpGet("rooms/{roomId}/inventory")]
         public async Task<IActionResult> GetRoomInventory(int roomId)
         {
@@ -72,7 +72,7 @@ namespace QuanTriKhachSanN5.Controllers
         // =========================================================
         // 🚨 NÂNG CẤP 1: KIỂM TRA TỒN KHO TRƯỚC KHI THÊM 1 MÓN
         // =========================================================
-        [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
+        [Authorize(Policy = "MANAGE_INVENTORY")]
         [HttpPost("rooms/{roomId}/inventory")]
         public async Task<IActionResult> AssignEquipmentToRoom(int roomId, [FromBody] AssignInventoryDto dto)
         {
@@ -105,7 +105,7 @@ namespace QuanTriKhachSanN5.Controllers
         // =========================================================
         // 🚨 NÂNG CẤP 2: API THÊM HÀNG LOẠT (BULK INSERT) SIÊU NHANH
         // =========================================================
-        [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
+        [Authorize(Policy = "MANAGE_INVENTORY")]
         [HttpPost("rooms/{roomId}/inventory/bulk")]
         public async Task<IActionResult> AssignBulkEquipmentsToRoom(int roomId, [FromBody] List<AssignInventoryDto> dtos)
         {
@@ -144,7 +144,7 @@ namespace QuanTriKhachSanN5.Controllers
             return Ok(new { Message = $"Đã thêm thành công {inventoriesToAdd.Count} vật tư vào phòng!" });
         }
 
-        [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
+        [Authorize(Policy = "MANAGE_INVENTORY")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteInventory(int id)
         {
@@ -157,7 +157,7 @@ namespace QuanTriKhachSanN5.Controllers
             return NoContent(); 
         }
 
-        [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
+        [Authorize(Policy = "MANAGE_INVENTORY")]
         [HttpPut("restore/{id}")]
         public async Task<IActionResult> RestoreInventory(int id)
         {
@@ -181,7 +181,7 @@ namespace QuanTriKhachSanN5.Controllers
         // =========================================================
         // CÁC API VỀ PHÒNG (GIỮ NGUYÊN)
         // =========================================================
-        [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
+        [Authorize(Policy = "MANAGE_INVENTORY")]
         [HttpGet("rooms")]
         public async Task<IActionResult> GetRooms()
         {
@@ -189,7 +189,7 @@ namespace QuanTriKhachSanN5.Controllers
             catch (Exception ex) { return StatusCode(500, new { message = "Lỗi Server: " + ex.Message }); }
         }
 
-        [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
+        [Authorize(Policy = "MANAGE_INVENTORY")]
         [HttpGet("rooms/{id}")]
         public async Task<ActionResult<Room>> GetRoom(int id)
         {
@@ -198,7 +198,7 @@ namespace QuanTriKhachSanN5.Controllers
             return Ok(room);
         }
 
-        [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
+        [Authorize(Policy = "MANAGE_INVENTORY")]
         [HttpPut("rooms/{id}/status")]
         public async Task<IActionResult> UpdateRoomStatus(int id, [FromBody] string status)
         {
@@ -206,7 +206,7 @@ namespace QuanTriKhachSanN5.Controllers
             return NoContent();
         }
 
-        [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
+        [Authorize(Policy = "MANAGE_INVENTORY")]
         [HttpPut("rooms/{id}/mark-clean")]
         public async Task<IActionResult> MarkRoomAsClean(int id)
         {

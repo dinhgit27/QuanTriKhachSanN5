@@ -19,7 +19,7 @@ namespace QuanTriKhachSanN5.Controllers
         }
 
         // --- 1. THÊM PHÒNG (CREATE) ---
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = "MANAGE_ROOMS")]
         [HttpPost]
         public async Task<IActionResult> CreateRoom([FromBody] Room room)
         {
@@ -43,7 +43,7 @@ namespace QuanTriKhachSanN5.Controllers
         }
 
         // --- 2. LẤY DANH SÁCH PHÒNG (READ ALL) ---
-        [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
+        [Authorize(Policy = "MANAGE_ROOMS")]
         [HttpGet]
         public async Task<ActionResult<List<Room>>> GetRooms()
         {
@@ -52,7 +52,7 @@ namespace QuanTriKhachSanN5.Controllers
         }
 
         // --- 3. LẤY 1 PHÒNG (READ ONE) ---
-        [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
+        [Authorize(Policy = "MANAGE_ROOMS")]
         [HttpGet("{id}")]
         public async Task<ActionResult<Room>> GetRoom(int id)
         {
@@ -63,7 +63,7 @@ namespace QuanTriKhachSanN5.Controllers
         }
 
         // --- 4. SỬA TOÀN BỘ THÔNG TIN PHÒNG (UPDATE) ---
-        [Authorize(Roles = "Admin")] // Chỉ Admin mới được sửa số phòng, tầng, loại phòng...
+        [Authorize(Policy = "MANAGE_ROOMS")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateRoom(int id, [FromBody] Room room)
         {
@@ -81,7 +81,7 @@ namespace QuanTriKhachSanN5.Controllers
         }
 
         // --- 5. CẬP NHẬT TRẠNG THÁI NHANH (Cái này Lễ tân/Lao công hay xài) ---
-        [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
+        [Authorize(Policy = "MANAGE_ROOMS")]
         [HttpPut("{id}/status")]
         public async Task<IActionResult> UpdateRoomStatus(int id, [FromBody] string status)
         {
@@ -90,7 +90,7 @@ namespace QuanTriKhachSanN5.Controllers
         }
 
         // --- 6. XÓA PHÒNG (DELETE) ---
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = "MANAGE_ROOMS")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteRoom(int id)
         {

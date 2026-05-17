@@ -269,6 +269,12 @@ namespace QuanTriKhachSanN5.Controllers
 
             foreach (var detail in booking.BookingDetails)
             {
+                // Nếu khách trả phòng sớm hơn dự kiến, cập nhật lại ngày trả phòng thực tế
+                if (detail.CheckOutDate > DateTime.Now)
+                {
+                    detail.CheckOutDate = DateTime.Now;
+                }
+
                 if (detail.RoomId.HasValue)
                 {
                     var room = await _context.Rooms.FindAsync(detail.RoomId.Value);

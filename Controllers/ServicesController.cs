@@ -79,7 +79,7 @@ namespace QuanTriKhachSanN5.Controllers
         // THÊM SERVICE
         // ==============================
         // POST: api/services
-        [Authorize(Roles = "Admin")] // Chỉ Quản lý mới được tạo dịch vụ mới
+        [Authorize(Policy = "MANAGE_SERVICES")] // Chỉ Quản lý mới được tạo dịch vụ mới
         [HttpPost]
         public async Task<ActionResult<Service>> PostService(Service service)
         {
@@ -95,7 +95,7 @@ namespace QuanTriKhachSanN5.Controllers
         // SỬA SERVICE
         // ==============================
         // PUT: api/services/5
-        [Authorize(Roles = "Admin")] // Chỉ Quản lý mới được sửa cấu hình
+        [Authorize(Policy = "MANAGE_SERVICES")] // Chỉ Quản lý mới được sửa cấu hình
         [HttpPut("{id}")]
         public async Task<IActionResult> PutService(int id, Service service)
         {
@@ -116,7 +116,7 @@ namespace QuanTriKhachSanN5.Controllers
         // DISABLE SERVICE (KHÔNG XOÁ)
         // ==============================
         // DELETE: api/services/5
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = "MANAGE_SERVICES")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DisableService(int id)
         {
@@ -140,7 +140,7 @@ namespace QuanTriKhachSanN5.Controllers
         // ENABLE SERVICE
         // ==============================
         // PUT: api/services/enable/5
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = "MANAGE_SERVICES")]
         [HttpPut("enable/{id}")]
         public async Task<IActionResult> EnableService(int id)
         {

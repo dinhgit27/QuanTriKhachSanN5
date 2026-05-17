@@ -28,7 +28,7 @@ namespace QuanTriKhachSanN5.Controllers
             _context = context;
         }
 
-        [Authorize(Roles = "Admin,Receptionist,Housekeeping")]
+        [Authorize(Policy = "MANAGE_INVENTORY")]
         [HttpPost]
         public async Task<IActionResult> ReportLoss([FromBody] LossAndDamage report)
         {
@@ -91,7 +91,7 @@ namespace QuanTriKhachSanN5.Controllers
             }
         }
 
-        [Authorize(Roles = "Admin,Receptionist")]
+        [Authorize(Policy = "MANAGE_INVENTORY")]
         [HttpGet]
         public async Task<IActionResult> GetAllLossAndDamages()
         {
@@ -122,7 +122,7 @@ namespace QuanTriKhachSanN5.Controllers
             }
         }
 
-        [Authorize(Roles = "Admin,Receptionist")]
+        [Authorize(Policy = "MANAGE_INVENTORY")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] LossAndDamage model)
         {
@@ -136,7 +136,7 @@ namespace QuanTriKhachSanN5.Controllers
             return Ok(updatedData);
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = "MANAGE_INVENTORY")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Disable(int id)
         {
@@ -148,7 +148,7 @@ namespace QuanTriKhachSanN5.Controllers
             return Ok(new { message = "Đã hủy biên bản!" });
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = "MANAGE_INVENTORY")]
         [HttpPut("enable/{id}")]
         public async Task<IActionResult> Enable(int id)
         {
@@ -160,7 +160,7 @@ namespace QuanTriKhachSanN5.Controllers
             return Ok(new { message = "Đã khôi phục biên bản!" });
         }
 
-        [Authorize(Roles = "Admin,Receptionist")]
+        [Authorize(Policy = "MANAGE_INVENTORY")]
         [HttpPut("status/{id}")]
         public async Task<IActionResult> UpdateStatus(int id, [FromBody] string status)
         {

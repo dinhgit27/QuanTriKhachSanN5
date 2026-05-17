@@ -269,5 +269,148 @@ namespace QuanTriKhachSanN5.Controllers
                 roleName = user.UserRoles.FirstOrDefault()?.Role.Name
             });
         }
+
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDTO dto)
+        {
+            if (string.IsNullOrEmpty(dto.Email))
+                return BadRequest(new { message = "Email không được để trống!" });
+
+            string email = dto.Email.Trim().ToLower();
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (user == null)
+            {
+                return NotFound(new { message = "Không tìm thấy email này trong hệ thống!" });
+            }
+
+            var random = new Random();
+            string otp = random.Next(100000, 999999).ToString();
+            _cache.Set(email, otp, TimeSpan.FromMinutes(5));
+
+            string subject = "Mã xác nhận khôi phục mật khẩu";
+            string body = $@"
+                <h3>Chào bạn,</h3>
+                <p>Bạn đã yêu cầu đặt lại mật khẩu tại hệ thống IT HOTEL.</p>
+                <p>Mã xác thực OTP của bạn là: <b style='font-size: 20px; color: #e6b83b;'>{otp}</b></p>
+                <p>Mã này có hiệu lực trong vòng 5 phút.</p>
+                <p>Trân trọng,<br>IT HOTEL Team</p>
+            ";
+
+            try
+            {
+                await _emailService.SendEmailAsync(email, subject, body);
+                return Ok(new { message = "Đã gửi mã OTP khôi phục mật khẩu!" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi khi gửi email: " + ex.Message });
+            }
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDTO dto)
+        {
+            if (string.IsNullOrEmpty(dto.Email) || string.IsNullOrEmpty(dto.Otp) || string.IsNullOrEmpty(dto.NewPassword))
+                return BadRequest(new { message = "Vui lòng nhập đầy đủ thông tin!" });
+
+            string email = dto.Email.Trim().ToLower();
+
+            if (!_cache.TryGetValue(email, out string savedOtp))
+            {
+                return BadRequest(new { message = "Mã OTP đã hết hạn hoặc không tồn tại. Vui lòng lấy mã mới!" });
+            }
+
+            if (dto.Otp != savedOtp)
+            {
+                return BadRequest(new { message = "Mã OTP không chính xác!" });
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (user == null)
+                return NotFound(new { message = "Người dùng không tồn tại!" });
+
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+
+            _cache.Remove(email);
+
+            return Ok(new { message = "Đặt lại mật khẩu thành công!" });
+        }
+
+        [Authorize]
+        [HttpPost("change-password-send-otp")]
+        public async Task<IActionResult> ChangePasswordSendOtp()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                return Unauthorized(new { message = "Không tìm thấy thông tin user!" });
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null)
+                return NotFound(new { message = "User không tồn tại!" });
+
+            string email = user.Email;
+
+            var random = new Random();
+            string otp = random.Next(100000, 999999).ToString();
+            _cache.Set(email, otp, TimeSpan.FromMinutes(5));
+
+            string subject = "Mã xác nhận đổi mật khẩu";
+            string body = $@"
+                <h3>Chào bạn,</h3>
+                <p>Bạn đã yêu cầu đổi mật khẩu tại hệ thống IT HOTEL.</p>
+                <p>Mã xác thực OTP của bạn là: <b style='font-size: 20px; color: #e6b83b;'>{otp}</b></p>
+                <p>Mã này có hiệu lực trong vòng 5 phút.</p>
+                <p>Trân trọng,<br>IT HOTEL Team</p>
+            ";
+
+            try
+            {
+                await _emailService.SendEmailAsync(email, subject, body);
+                return Ok(new { message = "Đã gửi mã OTP xác nhận đổi mật khẩu!" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi khi gửi email: " + ex.Message });
+            }
+        }
+
+        [Authorize]
+        [HttpPost("change-password")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDTO dto)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                return Unauthorized(new { message = "Không tìm thấy thông tin user!" });
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null)
+                return NotFound(new { message = "User không tồn tại!" });
+
+            if (!BCrypt.Net.BCrypt.Verify(dto.OldPassword, user.PasswordHash))
+            {
+                return BadRequest(new { message = "Mật khẩu cũ không chính xác!" });
+            }
+
+            if (!_cache.TryGetValue(user.Email, out string savedOtp))
+            {
+                return BadRequest(new { message = "Mã OTP đã hết hạn hoặc không tồn tại. Vui lòng lấy mã mới!" });
+            }
+
+            if (dto.Otp != savedOtp)
+            {
+                return BadRequest(new { message = "Mã OTP không chính xác!" });
+            }
+
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+
+            _cache.Remove(user.Email);
+
+            return Ok(new { message = "Đổi mật khẩu thành công!" });
+        }
     }
 }
