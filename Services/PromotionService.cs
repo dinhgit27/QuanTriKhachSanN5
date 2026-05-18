@@ -1,3 +1,4 @@
+using System;
 using Microsoft.EntityFrameworkCore;
 using QuanTriKhachSanN5.Data;
 using QuanTriKhachSanN5.DTOs.Promotion;
@@ -16,17 +17,31 @@ namespace QuanTriKhachSanN5.Services
 
         public async Task<decimal> CalculateFinalAmountAsync(CalculateDiscountDTO dto)
         {
-            decimal totalDiscountPercent = 0;
+            decimal discountAmount = 0;
 
             if (!string.IsNullOrEmpty(dto.VoucherCode))
             {
+                var now = DateTime.UtcNow;
                 var voucher = await _context.Vouchers.FirstOrDefaultAsync(v =>
-                    v.Code == dto.VoucherCode && v.IsActive
+                    v.Code == dto.VoucherCode && 
+                    (v.ValidFrom == null || v.ValidFrom <= now) &&
+                    (v.ValidTo == null || v.ValidTo >= now) &&
+                    (v.UsageLimit == null || v.UsageLimit > 0)
                 );
 
                 if (voucher != null)
                 {
-                    totalDiscountPercent += voucher.DiscountPercent;
+                    if (dto.OriginalAmount >= (voucher.MinBookingValue ?? 0))
+                    {
+                        if (string.Equals(voucher.DiscountType, "PERCENT", StringComparison.OrdinalIgnoreCase))
+                        {
+                            discountAmount += dto.OriginalAmount * (voucher.DiscountValue / 100);
+                        }
+                        else if (string.Equals(voucher.DiscountType, "FIXED_AMOUNT", StringComparison.OrdinalIgnoreCase))
+                        {
+                            discountAmount += voucher.DiscountValue;
+                        }
+                    }
                 }
             }
 
@@ -35,14 +50,13 @@ namespace QuanTriKhachSanN5.Services
                 var membership = await _context.Memberships.FindAsync(dto.MembershipId.Value);
                 if (membership != null)
                 {
-                    totalDiscountPercent += membership.DiscountPercent;
+                    discountAmount += dto.OriginalAmount * (membership.DiscountPercent / 100);
                 }
             }
 
-            if (totalDiscountPercent > 100)
-                totalDiscountPercent = 100;
+            if (discountAmount > dto.OriginalAmount)
+                discountAmount = dto.OriginalAmount;
 
-            decimal discountAmount = dto.OriginalAmount * (totalDiscountPercent / 100);
             return dto.OriginalAmount - discountAmount;
         }
     }

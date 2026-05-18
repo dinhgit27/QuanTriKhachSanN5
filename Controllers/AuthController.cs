@@ -249,6 +249,9 @@ namespace QuanTriKhachSanN5.Controllers
             if (user == null)
                 return NotFound(new { message = "User không tồn tại!" });
 
+            // Thực hiện kiểm tra & tặng voucher sinh nhật ngay lập tức nếu hôm nay là sinh nhật
+            await CheckAndAwardBirthdayVoucherAsync(user);
+
             var membership = await _context.Memberships
                 .Where(m => m.Id == user.MembershipId)
                 .FirstOrDefaultAsync();
@@ -258,6 +261,9 @@ namespace QuanTriKhachSanN5.Controllers
                 id = user.Id,
                 email = user.Email,
                 fullName = user.FullName,
+                phone = user.Phone,
+                address = user.Address,
+                dateOfBirth = user.DateOfBirth,
                 points = user.Points,
                 membership = membership != null ? new
                 {
@@ -411,6 +417,118 @@ namespace QuanTriKhachSanN5.Controllers
             _cache.Remove(user.Email);
 
             return Ok(new { message = "Đổi mật khẩu thành công!" });
+        }
+
+        [Authorize]
+        [HttpPut("profile")]
+        public async Task<IActionResult> UpdateProfile([FromBody] DTOs.Auth.UpdateProfileDTO dto)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                return Unauthorized(new { message = "Không tìm thấy thông tin user!" });
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null)
+                return NotFound(new { message = "User không tồn tại!" });
+
+            if (dto.FullName != null) user.FullName = dto.FullName;
+            if (dto.Phone != null) user.Phone = dto.Phone;
+            if (dto.Address != null) user.Address = dto.Address;
+            if (dto.DateOfBirth != null) user.DateOfBirth = dto.DateOfBirth;
+
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+
+            // Kích hoạt kiểm tra & tặng voucher sinh nhật ngay lập tức nếu cập nhật trúng ngày sinh
+            await CheckAndAwardBirthdayVoucherAsync(user);
+
+            return Ok(new { message = "Cập nhật thông tin cá nhân thành công!" });
+        }
+
+        private async Task CheckAndAwardBirthdayVoucherAsync(User user)
+        {
+            if (user.DateOfBirth == null) return;
+
+            var today = DateTime.UtcNow.AddHours(7); // Múi giờ Việt Nam (UTC+7)
+            var birthDate = user.DateOfBirth.Value;
+
+            // Kiểm tra trùng ngày và tháng sinh
+            if (birthDate.Day == today.Day && birthDate.Month == today.Month)
+            {
+                // Kiểm tra xem năm nay đã nhận voucher sinh nhật chưa
+                if (user.LastBirthdayVoucherYear != today.Year)
+                {
+                    // 1. Tạo mã voucher ngẫu nhiên độc nhất
+                    var random = new Random();
+                    string randSuffix = random.Next(1000, 9999).ToString();
+                    string voucherCode = $"HPBD-{today.Year}-{user.Id}-{randSuffix}";
+
+                    var voucher = new Voucher
+                    {
+                        Code = voucherCode,
+                        DiscountType = "PERCENT",
+                        DiscountValue = 25, // Giảm 25% sinh nhật
+                        MinBookingValue = 0,
+                        ValidFrom = DateTime.UtcNow,
+                        ValidTo = DateTime.UtcNow.AddYears(1), // Hạn dùng 1 năm
+                        UsageLimit = 1
+                    };
+
+                    _context.Vouchers.Add(voucher);
+
+                    // 2. Gửi Thư (Notification) vào hộp thư cá nhân
+                    var notification = new Notification
+                    {
+                        UserId = user.Id,
+                        Title = "Chúc mừng sinh nhật! 🎂🎁",
+                        Content = $"Kính gửi Quý khách {user.FullName},\n\nKhách sạn IT HOTEL xin kính chúc Quý khách một ngày sinh nhật thật tràn đầy niềm vui, sức khỏe và hạnh phúc!\n\nNhân dịp đặc biệt này, chúng tôi xin gửi tặng Quý khách món quà ý nghĩa: Mã giảm giá giảm 25% cho lần đặt phòng tiếp theo của bạn.\n\n👉 Mã giảm giá của bạn: {voucherCode}\n(Mã có giá trị sử dụng 1 lần cho tất cả các phòng và có thời hạn sử dụng 1 năm kể từ hôm nay).\n\nChúc bạn có một kỳ nghỉ thật tuyệt vời tại IT HOTEL!",
+                        Type = "Birthday",
+                        ReferenceLink = voucherCode,
+                        IsRead = false,
+                        CreatedAt = DateTime.UtcNow
+                    };
+
+                    _context.Notifications.Add(notification);
+
+                    // 3. Cập nhật năm nhận voucher gần nhất để tránh đổi ngày sinh nhận tiếp
+                    user.LastBirthdayVoucherYear = today.Year;
+                    _context.Users.Update(user);
+
+                    await _context.SaveChangesAsync();
+
+                    // 4. Gửi email chúc mừng sinh nhật
+                    string subject = "Chúc mừng sinh nhật & Quà tặng từ IT HOTEL! 🎂";
+                    string body = $@"
+                        <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; padding: 24px; border-radius: 12px; background-color: #ffffff;'>
+                            <div style='text-align: center; margin-bottom: 20px;'>
+                                <span style='font-size: 48px;'>🎂</span>
+                                <h2 style='color: #e6b83b; margin-top: 10px;'>CHÚC MỪNG SINH NHẬT!</h2>
+                            </div>
+                            <p>Chào <b>{user.FullName}</b>,</p>
+                            <p>IT HOTEL xin gửi tới bạn lời chúc mừng sinh nhật chân thành nhất! Chúc bạn tuổi mới ngập tràn hạnh phúc, thành công và có nhiều chuyến đi thật tuyệt vời.</p>
+                            <p>Đồng hành cùng ngày vui của bạn, chúng tôi xin gửi tặng món quà sinh nhật đặc biệt:</p>
+                            <div style='background: linear-gradient(135deg, #fef3c7, #fde68a); border: 2px dashed #e6b83b; padding: 18px; border-radius: 8px; text-align: center; margin: 20px 0;'>
+                                <span style='font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #78350f;'>Mã Giảm Giá Sinh Nhật 25%</span>
+                                <div style='font-size: 26px; font-weight: bold; color: #b45309; margin: 8px 0;'>{voucherCode}</div>
+                                <span style='font-size: 12px; color: #92400e;'>Hạn dùng: 1 năm • Áp dụng 1 lần cho mọi loại phòng</span>
+                            </div>
+                            <p>Mã này cũng đã được lưu trong <b>mục thư cá nhân</b> trên tài khoản của bạn tại website.</p>
+                            <p>Chúc bạn có một ngày sinh nhật thật ấm áp bên người thân yêu!</p>
+                            <hr style='border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;'>
+                            <p style='font-size: 12px; color: #64748b; text-align: center;'>IT HOTEL - Dịch vụ lưu trú chuyên nghiệp & đẳng cấp</p>
+                        </div>
+                    ";
+
+                    try
+                    {
+                        await _emailService.SendEmailAsync(user.Email, subject, body);
+                    }
+                    catch
+                    {
+                        // Bỏ qua lỗi gửi email nếu SMTP chưa được cấu hình
+                    }
+                }
+            }
         }
     }
 }

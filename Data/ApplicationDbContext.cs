@@ -40,6 +40,7 @@ namespace QuanTriKhachSanN5.Data
         public DbSet<User_Role> UserRoles { get; set; }
         public DbSet<Audit_Log> AuditLogs { get; set; }
         public DbSet<Voucher> Vouchers { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
         public DbSet<Membership> Memberships { get; set; }
         public DbSet<Post> Posts { get; set; }
         public DbSet<PostComment> PostComments { get; set; }
