@@ -282,8 +282,10 @@ namespace QuanTriKhachSanN5.Controllers
                     status = booking.Status,
                     details = booking.BookingDetails!.Select(d => new
                     {
+                        roomId = d.RoomId,
                         roomNumber = d.Room?.RoomNumber,
                         roomTypeName = d.RoomType?.Name,
+                        roomTypeId = d.RoomTypeId ?? (d.Room != null ? d.Room.RoomTypeId : (int?)null),
                         checkIn = d.CheckInDate,
                         checkOut = d.CheckOutDate,
                         pricePerNight = d.PricePerNight,
@@ -321,6 +323,36 @@ namespace QuanTriKhachSanN5.Controllers
 
             return Ok(inHouse);
         }
+        [HttpPut("{id}/assign-room")]
+        public async Task<IActionResult> AssignRoomToBooking(int id, [FromBody] AssignRoomDto req)
+        {
+            var booking = await _context.Bookings
+                .Include(b => b.BookingDetails)
+                .FirstOrDefaultAsync(b => b.Id == id);
+            if (booking == null)
+                return NotFound(new { message = "Không tìm thấy đơn đặt phòng!" });
+
+            // Tìm chi tiết của đơn
+            var detail = booking.BookingDetails.FirstOrDefault();
+            if (detail == null)
+            {
+                return BadRequest(new { message = "Đơn hàng không có chi tiết đặt phòng!" });
+            }
+
+            // Gán RoomId được chọn
+            detail.RoomId = req.RoomId;
+
+            // Xác nhận trạng thái đơn đặt phòng
+            booking.Status = "Confirmed";
+
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "Gán phòng và xác nhận đặt phòng thành công!" });
+        }
+    }
+
+    public class AssignRoomDto
+    {
+        public int RoomId { get; set; }
     }
 
     public class UpdateStatusDto
