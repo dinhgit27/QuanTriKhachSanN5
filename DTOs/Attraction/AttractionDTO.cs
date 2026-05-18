@@ -11,5 +11,7 @@ public class AttractionDTO
     public decimal? Longitude { get; set; }
     public string? Address { get; set; }
     public bool? IsActive { get; set; }
+    public string? ImageUrl { get; set; }
+    public bool? IsHot { get; set; }
 }
 

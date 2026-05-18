@@ -26,6 +26,7 @@ namespace QuanTriKhachSanN5.Models
         [NotMapped]
         public int? BookingId { get; set; }
 
+        [NotMapped]
         [ForeignKey("BookingId")]
         public Booking? Booking { get; set; }
 

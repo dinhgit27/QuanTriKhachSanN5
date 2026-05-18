@@ -11,6 +11,7 @@ namespace QuanTriKhachSanN5.Interfaces
         Task<ReviewDTO> CreateReviewAsync(int userId, CreateReviewDTO dto);
         Task<bool> UpdateReviewAsync(int id, int userId, UpdateReviewDTO dto);
         Task<bool> DeleteReviewAsync(int id, int userId);
+        Task<bool> DeleteReviewByAdminAsync(int id);
         Task<double> GetAverageRatingByRoomTypeAsync(int roomTypeId);
     }
 }

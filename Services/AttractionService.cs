@@ -19,14 +19,16 @@ public class AttractionService : IAttractionService
     {
         var entity = new Attraction
         {
-            Name        = dto.Name.Trim(),
-            Description = dto.Description?.Trim(),
-            Address     = dto.Location?.Trim(),
-            DistanceKm  = dto.DistanceKm,
+            Name         = dto.Name.Trim(),
+            Description  = dto.Description?.Trim(),
+            Address      = dto.Location?.Trim(),
+            DistanceKm   = dto.DistanceKm,
             MapEmbedLink = dto.MapEmbedLink?.Trim(),
-            Latitude    = dto.Latitude,
-            Longitude   = dto.Longitude,
-            IsActive    = true
+            Latitude     = dto.Latitude,
+            Longitude    = dto.Longitude,
+            IsActive     = dto.IsActive ?? true,
+            ImageUrl     = dto.ImageUrl,
+            IsHot        = dto.IsHot ?? false
         };
 
         _db.Attractions.Add(entity);
@@ -50,7 +52,8 @@ public class AttractionService : IAttractionService
     {
         var list = await _db.Attractions
             .AsNoTracking()
-            .OrderBy(x => x.DistanceKm ?? 999)
+            .OrderByDescending(x => x.IsHot ?? false)
+            .ThenBy(x => x.DistanceKm ?? 999)
             .ToListAsync();
 
         return list.Select(Map);
@@ -76,6 +79,9 @@ public class AttractionService : IAttractionService
         entity.MapEmbedLink = dto.MapEmbedLink?.Trim();
         entity.Latitude     = dto.Latitude;
         entity.Longitude    = dto.Longitude;
+        entity.IsActive     = dto.IsActive ?? true;
+        entity.ImageUrl     = dto.ImageUrl;
+        entity.IsHot        = dto.IsHot ?? false;
 
         await _db.SaveChangesAsync();
         return true;
@@ -93,6 +99,8 @@ public class AttractionService : IAttractionService
             Longitude = entity.Longitude,
             Address = entity.Address,
             IsActive = entity.IsActive,
+            ImageUrl = entity.ImageUrl,
+            IsHot = entity.IsHot ?? false
         };
 }
 

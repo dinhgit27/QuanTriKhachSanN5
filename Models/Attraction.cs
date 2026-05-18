@@ -38,5 +38,12 @@ public class Attraction
 
     [Column("is_active")]
     public bool? IsActive { get; set; } = true;
+
+    [MaxLength(1000)]
+    [Column("image_url")]
+    public string? ImageUrl { get; set; }
+
+    [Column("is_hot")]
+    public bool? IsHot { get; set; } = false;
 }
 

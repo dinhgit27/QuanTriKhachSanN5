@@ -135,7 +135,18 @@ namespace QuanTriKhachSanN5.Controllers
             if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out var userId))
                 return Unauthorized("User ID not found in token");
 
-            var deleted = await _reviewService.DeleteReviewAsync(id, userId);
+            var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+            bool deleted;
+
+            if (userRole == "Admin")
+            {
+                deleted = await _reviewService.DeleteReviewByAdminAsync(id);
+            }
+            else
+            {
+                deleted = await _reviewService.DeleteReviewAsync(id, userId);
+            }
+
             if (!deleted)
                 return NotFound("Review not found or you don't have permission to delete it");
 

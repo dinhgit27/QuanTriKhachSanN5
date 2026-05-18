@@ -22,4 +22,10 @@ public class CreateAttractionDTO
     public decimal? Latitude { get; set; }
 
     public decimal? Longitude { get; set; }
+
+    public string? ImageUrl { get; set; }
+
+    public bool? IsHot { get; set; }
+
+    public bool? IsActive { get; set; }
 }
