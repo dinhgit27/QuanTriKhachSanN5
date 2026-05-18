@@ -42,6 +42,7 @@ namespace QuanTriKhachSanN5.Data
         public DbSet<Voucher> Vouchers { get; set; }
         public DbSet<Membership> Memberships { get; set; }
         public DbSet<Post> Posts { get; set; }
+        public DbSet<PostComment> PostComments { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<RoleDashboardPeriodState> RoleDashboardPeriodStates { get; set; }
 
