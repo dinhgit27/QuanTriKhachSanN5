@@ -147,6 +147,7 @@ namespace QuanTriKhachSanN5.Controllers
                 BookingCode = bookingCode,
                 DepositAmount = req.DepositAmount,
                 Status = "Pending", 
+                VoucherId = req.VoucherId,
                 BookingDetails = new List<BookingDetail>() 
             };
 

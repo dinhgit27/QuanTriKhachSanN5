@@ -264,12 +264,13 @@ namespace QuanTriKhachSanN5.Controllers
                 phone = user.Phone,
                 address = user.Address,
                 dateOfBirth = user.DateOfBirth,
+                avatarUrl = user.AvatarUrl, // Trả thêm avatarUrl
                 points = user.Points,
                 membership = membership != null ? new
                 {
                     id = membership.Id,
-                    tierName = membership.Level, // Giả sử Level là tier_name
-                    minPoints = membership.Points, // Giả sử Points là min_points
+                    tierName = membership.TierName,
+                    minPoints = membership.MinPoints,
                     discountPercent = membership.DiscountPercent
                 } : null,
                 roleName = user.UserRoles.FirstOrDefault()?.Role.Name
@@ -435,6 +436,7 @@ namespace QuanTriKhachSanN5.Controllers
             if (dto.Phone != null) user.Phone = dto.Phone;
             if (dto.Address != null) user.Address = dto.Address;
             if (dto.DateOfBirth != null) user.DateOfBirth = dto.DateOfBirth;
+            if (dto.AvatarUrl != null) user.AvatarUrl = dto.AvatarUrl;
 
             _context.Users.Update(user);
             await _context.SaveChangesAsync();
@@ -470,7 +472,7 @@ namespace QuanTriKhachSanN5.Controllers
                         DiscountValue = 25, // Giảm 25% sinh nhật
                         MinBookingValue = 0,
                         ValidFrom = DateTime.UtcNow,
-                        ValidTo = DateTime.UtcNow.AddYears(1), // Hạn dùng 1 năm
+                        ValidTo = DateTime.UtcNow.AddMonths(1), // Hạn dùng 1 tháng (30 ngày) kể từ ngày cấp
                         UsageLimit = 1
                     };
 
@@ -481,7 +483,7 @@ namespace QuanTriKhachSanN5.Controllers
                     {
                         UserId = user.Id,
                         Title = "Chúc mừng sinh nhật! 🎂🎁",
-                        Content = $"Kính gửi Quý khách {user.FullName},\n\nKhách sạn IT HOTEL xin kính chúc Quý khách một ngày sinh nhật thật tràn đầy niềm vui, sức khỏe và hạnh phúc!\n\nNhân dịp đặc biệt này, chúng tôi xin gửi tặng Quý khách món quà ý nghĩa: Mã giảm giá giảm 25% cho lần đặt phòng tiếp theo của bạn.\n\n👉 Mã giảm giá của bạn: {voucherCode}\n(Mã có giá trị sử dụng 1 lần cho tất cả các phòng và có thời hạn sử dụng 1 năm kể từ hôm nay).\n\nChúc bạn có một kỳ nghỉ thật tuyệt vời tại IT HOTEL!",
+                        Content = $"Kính gửi Quý khách {user.FullName},\n\nKhách sạn IT HOTEL xin kính chúc Quý khách một ngày sinh nhật thật tràn đầy niềm vui, sức khỏe và hạnh phúc!\n\nNhân dịp đặc biệt này, chúng tôi xin gửi tặng Quý khách món quà ý nghĩa: Mã giảm giá giảm 25% cho lần đặt phòng tiếp theo của bạn.\n\n👉 Mã giảm giá của bạn: {voucherCode}\n(Mã có giá trị sử dụng 1 lần cho tất cả các phòng và có thời hạn sử dụng 1 tháng kể từ hôm nay).\n\nChúc bạn có một kỳ nghỉ thật tuyệt vời tại IT HOTEL!",
                         Type = "Birthday",
                         ReferenceLink = voucherCode,
                         IsRead = false,
@@ -510,7 +512,7 @@ namespace QuanTriKhachSanN5.Controllers
                             <div style='background: linear-gradient(135deg, #fef3c7, #fde68a); border: 2px dashed #e6b83b; padding: 18px; border-radius: 8px; text-align: center; margin: 20px 0;'>
                                 <span style='font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #78350f;'>Mã Giảm Giá Sinh Nhật 25%</span>
                                 <div style='font-size: 26px; font-weight: bold; color: #b45309; margin: 8px 0;'>{voucherCode}</div>
-                                <span style='font-size: 12px; color: #92400e;'>Hạn dùng: 1 năm • Áp dụng 1 lần cho mọi loại phòng</span>
+                                <span style='font-size: 12px; color: #92400e;'>Hạn dùng: 1 tháng • Áp dụng 1 lần cho mọi loại phòng</span>
                             </div>
                             <p>Mã này cũng đã được lưu trong <b>mục thư cá nhân</b> trên tài khoản của bạn tại website.</p>
                             <p>Chúc bạn có một ngày sinh nhật thật ấm áp bên người thân yêu!</p>

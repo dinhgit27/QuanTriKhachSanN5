@@ -19,14 +19,4 @@ namespace QuanTriKhachSanN5.Models
         public decimal Price { get; set; }
     }
 
-    // Bảng Memberships: Hạng thẻ thành viên
-    public class Membership
-    {
-        public int Id { get; set; }
-        public int UserId { get; set; }
-        public User User { get; set; }
-        public string Level { get; set; } // Bronze, Silver, Gold
-        public int Points { get; set; }
-        public decimal DiscountPercent { get; set; }
-    }
 }

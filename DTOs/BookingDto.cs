@@ -21,6 +21,7 @@ namespace QuanTriKhachSanN5.DTOs
         public List<int> SelectedRoomIds { get; set; } 
         public int? UserId { get; set; }
         public decimal DepositAmount { get; set; }
+        public int? VoucherId { get; set; }
     }
 
     // 🚨 THÊM THẰNG NÀY VÀO ĐÂY LÀ HẾT LỖI 🚨

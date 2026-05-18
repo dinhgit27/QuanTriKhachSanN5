@@ -104,11 +104,6 @@ namespace QuanTriKhachSanN5.Data
                 .HasOne(u => u.Membership)
                 .WithMany()
                 .HasForeignKey(u => u.MembershipId);
-
-            modelBuilder.Entity<Membership>()
-                .HasOne(m => m.User)
-                .WithMany()
-                .HasForeignKey(m => m.UserId);
             
             // Định dạng tất cả kiểu thập phân thành decimal(18,2)
             foreach (

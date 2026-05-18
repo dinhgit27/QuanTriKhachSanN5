@@ -126,10 +126,33 @@ namespace QuanTriKhachSanN5.Controllers
             decimal totalPenaltyAmount = penaltyDetails.Sum(p => p.penaltyAmount);
 
             // 4. TỔNG KẾT
+            decimal discountAmount = 0m;
+            if (booking.VoucherId.HasValue)
+            {
+                var voucher = await _context.Vouchers.FindAsync(booking.VoucherId.Value);
+                if (voucher != null)
+                {
+                    if (voucher.DiscountType == "PERCENT")
+                    {
+                        discountAmount = totalRoomAmount * ((decimal)voucher.DiscountValue / 100m);
+                    }
+                    else if (voucher.DiscountType == "AMOUNT" || voucher.DiscountType == "FIXED")
+                    {
+                        discountAmount = (decimal)voucher.DiscountValue;
+                    }
+                    
+                    if (discountAmount > totalRoomAmount)
+                    {
+                        discountAmount = totalRoomAmount;
+                    }
+                }
+            }
+
             decimal totalServicesAndPenalties = totalServiceAmount + totalPenaltyAmount;
-            decimal taxAmount = (totalRoomAmount + totalServicesAndPenalties) * 0.08m;
+            decimal totalRoomAfterDiscount = totalRoomAmount - discountAmount;
+            decimal taxAmount = (totalRoomAfterDiscount + totalServicesAndPenalties) * 0.08m;
             decimal finalTotal =
-                totalRoomAmount + totalServicesAndPenalties + taxAmount - depositAmount;
+                totalRoomAfterDiscount + totalServicesAndPenalties + taxAmount - depositAmount;
 
             return Ok(
                 new
@@ -141,7 +164,7 @@ namespace QuanTriKhachSanN5.Controllers
                     totalRoomAmount = totalRoomAmount,
                     totalServiceAmount = totalServiceAmount, // Gửi riêng lẻ
                     totalPenaltyAmount = totalPenaltyAmount, // Gửi riêng lẻ
-                    discountAmount = 0m,
+                    discountAmount = discountAmount,
                     taxAmount = taxAmount,
                     finalTotal = finalTotal,
                     roomDetails = roomDetailsList,
@@ -162,8 +185,102 @@ namespace QuanTriKhachSanN5.Controllers
             if (invoice == null)
                 return NotFound(new { message = "Không tìm thấy hóa đơn!" });
 
-            // Tuyệt chiêu: Tái sử dụng hàm Preview để gom toàn bộ Phòng, Dịch vụ, Đền bù của Booking này
-            return await GetInvoicePreview(invoice.BookingId);
+            var booking = await _context
+                .Bookings.Include(b => b.BookingDetails!)
+                    .ThenInclude(bd => bd.Room)
+                .Include(b => b.BookingDetails!)
+                    .ThenInclude(bd => bd.RoomType)
+                .FirstOrDefaultAsync(b => b.Id == invoice.BookingId);
+
+            if (booking == null)
+                return NotFound(new { message = "Không tìm thấy đơn!" });
+
+            var detailIds = booking.BookingDetails.Select(bd => bd.Id).ToList();
+
+            // 1. CHI TIẾT PHÒNG
+            decimal depositAmount = booking.DepositAmount ?? 0m;
+            decimal calculatedRoomAmount = 0;
+            var roomDetailsList = new List<object>();
+
+            foreach (var detail in booking.BookingDetails)
+            {
+                int nights = (detail.CheckOutDate.Date - detail.CheckInDate.Date).Days;
+                if (nights <= 0)
+                    nights = 1;
+                decimal roomTotal = detail.PricePerNight * nights;
+                calculatedRoomAmount += roomTotal;
+
+                roomDetailsList.Add(
+                    new
+                    {
+                        roomNumber = detail.Room?.RoomNumber,
+                        roomTypeName = detail.RoomType?.Name,
+                        nights = nights,
+                        pricePerNight = detail.PricePerNight,
+                        lineTotal = roomTotal,
+                    }
+                );
+            }
+
+            // 2. CHI TIẾT DỊCH VỤ (MINI BAR)
+            var serviceDetails = await _context
+                .OrderServiceDetails.Include(osd => osd.Service)
+                .Include(osd => osd.OrderService)
+                .Where(osd =>
+                    osd.OrderService.BookingDetailId != null
+                    && detailIds.Contains(osd.OrderService.BookingDetailId.Value)
+                )
+                .Select(osd => new
+                {
+                    serviceName = osd.Service != null ? osd.Service.Name : "Dịch vụ",
+                    quantity = osd.Quantity,
+                    unitPrice = osd.UnitPrice,
+                    total = osd.Quantity * osd.UnitPrice,
+                })
+                .ToListAsync();
+
+            // 3. CHI TIẾT ĐỀN BÙ
+            var penaltyDetails = await _context
+                .LossAndDamages.Where(ld =>
+                    ld.BookingDetailId != null && detailIds.Contains(ld.BookingDetailId.Value)
+                )
+                .Select(ld => new
+                {
+                    itemName = ld.Description ?? "Phạt / Đền bù",
+                    quantity = 1,
+                    penaltyAmount = ld.PenaltyAmount ?? 0m,
+                })
+                .ToListAsync();
+
+            decimal totalPenaltyAmount = penaltyDetails.Sum(p => p.penaltyAmount);
+
+            // Sử dụng các giá trị thực tế đã chốt lưu trữ trong hóa đơn
+            decimal totalRoomAmount = invoice.TotalRoomAmount ?? calculatedRoomAmount;
+            decimal totalServiceAmount = invoice.TotalServiceAmount ?? serviceDetails.Sum(s => s.total);
+            decimal discountAmount = invoice.DiscountAmount ?? 0m;
+            decimal taxAmount = invoice.TaxAmount ?? 0m;
+            decimal finalTotal = invoice.FinalTotal ?? 0m;
+
+            return Ok(
+                new
+                {
+                    bookingId = booking.Id,
+                    bookingCode = booking.BookingCode,
+                    depositAmount = depositAmount,
+                    guestName = booking.GuestName,
+                    totalRoomAmount = totalRoomAmount,
+                    totalServiceAmount = totalServiceAmount - totalPenaltyAmount, // Tách dịch vụ riêng (trừ đi phạt nếu bị gom)
+                    totalPenaltyAmount = totalPenaltyAmount,
+                    discountAmount = discountAmount,
+                    taxAmount = taxAmount,
+                    finalTotal = finalTotal,
+                    roomDetails = roomDetailsList,
+                    serviceDetails = serviceDetails,
+                    penaltyDetails = penaltyDetails,
+                    status = invoice.Status, // Trả về trạng thái lưu trữ thực tế
+                    note = $"Hóa đơn đã chốt dữ liệu",
+                }
+            );
         }
 
         // ====================================================================
@@ -225,8 +342,29 @@ namespace QuanTriKhachSanN5.Controllers
             if (booking.Status == "Completed")
                 return BadRequest(new { message = "Đơn này đã checkout rồi!" });
 
+            // 🌟 1. CẬP NHẬT NGÀY CHECKOUT THỰC TẾ & TRẠNG THÁI PHÒNG TRƯỚC KHI TÍNH TOÁN TIỀN 🌟
+            foreach (var detail in booking.BookingDetails)
+            {
+                // Nếu khách trả phòng sớm hơn dự kiến, cập nhật lại ngày trả phòng thực tế là thời điểm hiện tại
+                if (detail.CheckOutDate > DateTime.Now)
+                {
+                    detail.CheckOutDate = DateTime.Now;
+                }
+
+                if (detail.RoomId.HasValue)
+                {
+                    var room = await _context.Rooms.FindAsync(detail.RoomId.Value);
+                    if (room != null)
+                    {
+                        room.Status = "Available";
+                        room.CleaningStatus = "Dirty";
+                    }
+                }
+            }
+
             var detailIds = booking.BookingDetails.Select(bd => bd.Id).ToList();
 
+            // 🌟 2. TÍNH TOÁN TIỀN PHÒNG DỰA TRÊN NGÀY CHECKOUT THỰC TẾ ĐÃ CẬP NHẬT 🌟
             decimal totalRoomAmount = booking.BookingDetails.Sum(d =>
                 d.PricePerNight
                 * (
@@ -248,17 +386,40 @@ namespace QuanTriKhachSanN5.Controllers
                 )
                 .SumAsync(ld => ld.PenaltyAmount ?? 0m);
 
+            decimal discountAmount = 0m;
+            if (booking.VoucherId.HasValue)
+            {
+                var voucher = await _context.Vouchers.FindAsync(booking.VoucherId.Value);
+                if (voucher != null)
+                {
+                    if (voucher.DiscountType == "PERCENT")
+                    {
+                        discountAmount = totalRoomAmount * ((decimal)voucher.DiscountValue / 100m);
+                    }
+                    else if (voucher.DiscountType == "AMOUNT" || voucher.DiscountType == "FIXED")
+                    {
+                        discountAmount = (decimal)voucher.DiscountValue;
+                    }
+                    
+                    if (discountAmount > totalRoomAmount)
+                    {
+                        discountAmount = totalRoomAmount;
+                    }
+                }
+            }
+
             decimal totalServicesCombined = totalServiceAmount + totalPenaltyAmount;
-            decimal taxAmount = (totalRoomAmount + totalServicesCombined) * 0.08m;
+            decimal totalRoomAfterDiscount = totalRoomAmount - discountAmount;
+            decimal taxAmount = (totalRoomAfterDiscount + totalServicesCombined) * 0.08m;
             decimal depositAmount = booking.DepositAmount ?? 0m;
-            decimal finalTotal = totalRoomAmount + totalServicesCombined + taxAmount - depositAmount;
+            decimal finalTotal = totalRoomAfterDiscount + totalServicesCombined + taxAmount - depositAmount;
 
             var newInvoice = new Invoice
             {
                 BookingId = booking.Id,
                 TotalRoomAmount = totalRoomAmount,
                 TotalServiceAmount = totalServicesCombined, // Gom chung lưu db theo thiết kế cũ
-                DiscountAmount = 0m,
+                DiscountAmount = discountAmount,
                 TaxAmount = taxAmount,
                 FinalTotal = finalTotal,
                 Status = "Pending",
@@ -266,25 +427,6 @@ namespace QuanTriKhachSanN5.Controllers
             _context.Invoices.Add(newInvoice);
 
             booking.Status = "Completed";
-
-            foreach (var detail in booking.BookingDetails)
-            {
-                // Nếu khách trả phòng sớm hơn dự kiến, cập nhật lại ngày trả phòng thực tế
-                if (detail.CheckOutDate > DateTime.Now)
-                {
-                    detail.CheckOutDate = DateTime.Now;
-                }
-
-                if (detail.RoomId.HasValue)
-                {
-                    var room = await _context.Rooms.FindAsync(detail.RoomId.Value);
-                    if (room != null)
-                    {
-                        room.Status = "Available";
-                        room.CleaningStatus = "Dirty";
-                    }
-                }
-            }
 
             await _context.SaveChangesAsync();
             return Ok(
@@ -307,6 +449,37 @@ namespace QuanTriKhachSanN5.Controllers
                 return BadRequest(new { message = "Không thể xác nhận hóa đơn đã hủy!" });
 
             invoice.Status = "Paid";
+
+            // 🌟 TÍCH LUỸ ĐIỂM VÀ TỰ ĐỘNG THĂNG HẠNG THÀNH VIÊN KHI THANH TOÁN THÀNH CÔNG 🌟
+            if (invoice.BookingId > 0)
+            {
+                var booking = await _context.Bookings.FindAsync(invoice.BookingId);
+                if (booking != null && booking.UserId.HasValue)
+                {
+                    var user = await _context.Users.FindAsync(booking.UserId.Value);
+                    if (user != null)
+                    {
+                        // Quy đổi chuẩn: 10,000 đ thanh toán thực tế = 1 điểm tích lũy
+                        int earnedPoints = (int)((invoice.FinalTotal ?? 0) / 10000);
+                        if (earnedPoints > 0)
+                        {
+                            user.Points += earnedPoints;
+
+                            // Tìm hạng thành viên cao nhất phù hợp với điểm số mới
+                            var newMembership = await _context.Memberships
+                                .Where(m => user.Points >= m.MinPoints)
+                                .OrderByDescending(m => m.MinPoints)
+                                .FirstOrDefaultAsync();
+
+                            if (newMembership != null)
+                            {
+                                user.MembershipId = newMembership.Id;
+                            }
+                        }
+                    }
+                }
+            }
+
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "Xác nhận thanh toán thành công!", invoiceId = invoice.Id });

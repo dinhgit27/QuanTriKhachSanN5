@@ -171,6 +171,50 @@ namespace QuanTriKhachSanN5.Controllers
             await _context.SaveChangesAsync();
             return Ok(new { message = "Đã gửi thư và quà tặng khuyến mãi thành công tới người nhận!" });
         }
+
+        /// <summary>
+        /// Kiểm tra tính hợp lệ của mã giảm giá cho khách
+        /// GET: api/Vouchers/check/{code}
+        /// </summary>
+        [HttpGet("check/{code}")]
+        public async Task<IActionResult> CheckVoucher(string code, [FromQuery] decimal? totalPrice = null)
+        {
+            if (string.IsNullOrEmpty(code))
+                return BadRequest(new { message = "Mã giảm giá không được để trống!" });
+
+            var codeUpper = code.Trim().ToUpper();
+            var voucher = await _context.Vouchers.FirstOrDefaultAsync(v => v.Code == codeUpper);
+
+            if (voucher == null)
+                return NotFound(new { message = "Mã giảm giá không tồn tại trên hệ thống!" });
+
+            var today = DateTime.UtcNow;
+
+            if (voucher.ValidFrom.HasValue && voucher.ValidFrom.Value > today)
+                return BadRequest(new { message = "Mã giảm giá chưa đến thời gian áp dụng!" });
+
+            if (voucher.ValidTo.HasValue && voucher.ValidTo.Value < today)
+                return BadRequest(new { message = "Mã giảm giá đã quá hạn sử dụng!" });
+
+            if (totalPrice.HasValue && voucher.MinBookingValue.HasValue && totalPrice.Value < (decimal)voucher.MinBookingValue.Value)
+                return BadRequest(new { message = $"Mã này chỉ áp dụng cho đơn đặt phòng từ {voucher.MinBookingValue.Value:N0}đ trở lên!" });
+
+            if (voucher.UsageLimit.HasValue)
+            {
+                var usedCount = await _context.Bookings.CountAsync(b => b.VoucherId == voucher.Id && b.Status != "Cancelled");
+                if (usedCount >= voucher.UsageLimit.Value)
+                    return BadRequest(new { message = "Mã giảm giá này đã hết lượt sử dụng!" });
+            }
+
+            return Ok(new
+            {
+                id = voucher.Id,
+                code = voucher.Code,
+                discountType = voucher.DiscountType,
+                discountValue = voucher.DiscountValue,
+                minBookingValue = voucher.MinBookingValue
+            });
+        }
     }
 
     public class SendCustomVoucherDTO
