@@ -16,6 +16,8 @@ public class AttractionsController : ControllerBase
         _attractionService = attractionService;
     }
 
+    // GET: api/Attractions — Công khai cho cả khách và admin
+    [AllowAnonymous]
     [HttpGet]
     public async Task<ActionResult<IEnumerable<AttractionDTO>>> GetAll()
     {
@@ -23,16 +25,20 @@ public class AttractionsController : ControllerBase
         return Ok(attractions);
     }
 
+    // GET: api/Attractions/{id}
+    [AllowAnonymous]
     [HttpGet("{id:int}")]
     public async Task<ActionResult<AttractionDTO>> GetById(int id)
     {
         var attraction = await _attractionService.GetByIdAsync(id);
         if (attraction is null)
-            return NotFound();
+            return NotFound(new { message = "Không tìm thấy điểm tham quan." });
 
         return Ok(attraction);
     }
 
+    // POST: api/Attractions — Chỉ Admin
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<ActionResult<AttractionDTO>> Create([FromBody] CreateAttractionDTO dto)
     {
@@ -40,22 +46,26 @@ public class AttractionsController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
+    // PUT: api/Attractions/{id} — Chỉ Admin
+    [Authorize(Roles = "Admin")]
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] CreateAttractionDTO dto)
     {
         var updated = await _attractionService.UpdateAsync(id, dto);
         if (!updated)
-            return NotFound();
+            return NotFound(new { message = "Không tìm thấy điểm tham quan để cập nhật." });
 
         return NoContent();
     }
 
+    // DELETE: api/Attractions/{id} — Chỉ Admin
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
         var deleted = await _attractionService.DeleteAsync(id);
         if (!deleted)
-            return NotFound();
+            return NotFound(new { message = "Không tìm thấy điểm tham quan để xóa." });
 
         return NoContent();
     }

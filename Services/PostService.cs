@@ -19,9 +19,15 @@ public class PostService : IPostService
     {
         var entity = new Post
         {
-            Title = dto.Title.Trim(),
-            Content = dto.Content.Trim(),
+            Title      = dto.Title.Trim(),
+            Content    = dto.Content.Trim(),
+            Excerpt    = dto.Excerpt?.Trim(),
+            ImageUrl   = dto.ImageUrl?.Trim(),
+            IsPublished = dto.IsPublished,
+            IsHot      = dto.IsHot,
             CategoryId = dto.CategoryId,
+            RoomTypeId = dto.RoomTypeId,
+            CreatedAt  = DateTime.UtcNow,
         };
 
         _db.Posts.Add(entity);
@@ -47,6 +53,7 @@ public class PostService : IPostService
         return await _db
             .Posts.AsNoTracking()
             .Include(x => x.Category)
+            .Include(x => x.RoomType)
             .OrderByDescending(x => x.CreatedAt)
             .Select(x => Map(x))
             .ToListAsync();
@@ -57,6 +64,7 @@ public class PostService : IPostService
         var entity = await _db
             .Posts.AsNoTracking()
             .Include(x => x.Category)
+            .Include(x => x.RoomType)
             .FirstOrDefaultAsync(x => x.Id == id);
 
         return entity is null ? null : Map(entity);
@@ -67,9 +75,22 @@ public class PostService : IPostService
         var entity = await _db
             .Posts.AsNoTracking()
             .Include(x => x.Category)
+            .Include(x => x.RoomType)
             .FirstOrDefaultAsync(x => x.RoomTypeId == roomTypeId);
 
         return entity is null ? null : Map(entity);
+    }
+
+    public async Task<IEnumerable<PostDTO>> GetByCategoryAsync(int categoryId)
+    {
+        return await _db
+            .Posts.AsNoTracking()
+            .Include(x => x.Category)
+            .Include(x => x.RoomType)
+            .Where(x => x.CategoryId == categoryId)
+            .OrderByDescending(x => x.CreatedAt)
+            .Select(x => Map(x))
+            .ToListAsync();
     }
 
     public async Task<bool> UpdateAsync(int id, CreatePostDTO dto)
@@ -78,9 +99,15 @@ public class PostService : IPostService
         if (entity is null)
             return false;
 
-        entity.Title = dto.Title.Trim();
-        entity.Content = dto.Content.Trim();
+        entity.Title      = dto.Title.Trim();
+        entity.Content    = dto.Content.Trim();
+        entity.Excerpt    = dto.Excerpt?.Trim();
+        entity.ImageUrl   = dto.ImageUrl?.Trim();
+        entity.IsPublished = dto.IsPublished;
+        entity.IsHot      = dto.IsHot;
         entity.CategoryId = dto.CategoryId;
+        entity.RoomTypeId = dto.RoomTypeId;
+        entity.UpdatedAt  = DateTime.UtcNow;
 
         await _db.SaveChangesAsync();
         return true;
@@ -89,12 +116,18 @@ public class PostService : IPostService
     private static PostDTO Map(Post entity) =>
         new()
         {
-            Id = entity.Id,
-            Title = entity.Title,
-            Content = entity.Content,
-            CategoryId = entity.CategoryId,
+            Id           = entity.Id,
+            Title        = entity.Title,
+            Content      = entity.Content,
+            Excerpt      = entity.Excerpt,
+            ImageUrl     = entity.ImageUrl,
+            IsPublished  = entity.IsPublished,
+            IsHot        = entity.IsHot,
+            CategoryId   = entity.CategoryId,
             CategoryName = entity.Category?.Name,
-            RoomTypeId = entity.RoomTypeId,
-            CreatedAt = entity.CreatedAt,
+            RoomTypeId   = entity.RoomTypeId,
+            RoomTypeName = entity.RoomType?.Name,
+            CreatedAt    = entity.CreatedAt,
+            UpdatedAt    = entity.UpdatedAt,
         };
 }

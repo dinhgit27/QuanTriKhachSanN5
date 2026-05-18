@@ -19,10 +19,14 @@ public class AttractionService : IAttractionService
     {
         var entity = new Attraction
         {
-            Name = dto.Name.Trim(),
+            Name        = dto.Name.Trim(),
             Description = dto.Description?.Trim(),
-            Address = dto.Location?.Trim(),
-            IsActive = true
+            Address     = dto.Location?.Trim(),
+            DistanceKm  = dto.DistanceKm,
+            MapEmbedLink = dto.MapEmbedLink?.Trim(),
+            Latitude    = dto.Latitude,
+            Longitude   = dto.Longitude,
+            IsActive    = true
         };
 
         _db.Attractions.Add(entity);
@@ -65,9 +69,13 @@ public class AttractionService : IAttractionService
         if (entity is null)
             return false;
 
-        entity.Name = dto.Name.Trim();
-        entity.Description = dto.Description?.Trim();
-        entity.Address = dto.Location?.Trim();
+        entity.Name         = dto.Name.Trim();
+        entity.Description  = dto.Description?.Trim();
+        entity.Address      = dto.Location?.Trim();
+        entity.DistanceKm   = dto.DistanceKm;
+        entity.MapEmbedLink = dto.MapEmbedLink?.Trim();
+        entity.Latitude     = dto.Latitude;
+        entity.Longitude    = dto.Longitude;
 
         await _db.SaveChangesAsync();
         return true;

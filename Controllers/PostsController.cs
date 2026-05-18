@@ -47,6 +47,15 @@ public class PostsController : ControllerBase
         return Ok(post);
     }
 
+    // LẤY BÀI VIẾT THEO DANH MỤC
+    [AllowAnonymous]
+    [HttpGet("category/{categoryId:int}")]
+    public async Task<ActionResult<IEnumerable<PostDTO>>> GetByCategory(int categoryId)
+    {
+        var posts = await _postService.GetByCategoryAsync(categoryId);
+        return Ok(posts);
+    }
+
     [HttpPost]
     public async Task<ActionResult<PostDTO>> Create([FromBody] CreatePostDTO dto)
     {

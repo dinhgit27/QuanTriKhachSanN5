@@ -13,4 +13,13 @@ public class CreateAttractionDTO
 
     [MaxLength(500)]
     public string? Location { get; set; }
+
+    public decimal? DistanceKm { get; set; }
+
+    [MaxLength(1000)]
+    public string? MapEmbedLink { get; set; }
+
+    public decimal? Latitude { get; set; }
+
+    public decimal? Longitude { get; set; }
 }

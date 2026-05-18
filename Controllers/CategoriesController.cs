@@ -7,6 +7,7 @@ namespace QuanTriKhachSanN5.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class CategoriesController : ControllerBase
 {
     private readonly ICategoryService _categoryService;
@@ -16,6 +17,7 @@ public class CategoriesController : ControllerBase
         _categoryService = categoryService;
     }
 
+    [AllowAnonymous]
     [HttpGet]
     public async Task<ActionResult<IEnumerable<CategoryDTO>>> GetAll()
     {
@@ -23,6 +25,7 @@ public class CategoriesController : ControllerBase
         return Ok(categories);
     }
 
+    [AllowAnonymous]
     [HttpGet("{id:int}")]
     public async Task<ActionResult<CategoryDTO>> GetById(int id)
     {
