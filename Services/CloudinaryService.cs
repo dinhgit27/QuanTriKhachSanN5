@@ -32,9 +32,6 @@ public class CloudinaryService : ICloudinaryService
                 File = new FileDescription(fileName, fileStream),
                 Folder = _folder,
                 Transformation = new Transformation()
-                    .Width(1200)
-                    .Height(800)
-                    .Crop("fill")
                     .Quality("auto")
             };
 
