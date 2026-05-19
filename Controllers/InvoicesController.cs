@@ -50,6 +50,53 @@ namespace QuanTriKhachSanN5.Controllers
             }
         }
 
+        [HttpGet("report")]
+        public async Task<IActionResult> GetAccountingReport([FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate)
+        {
+            try
+            {
+                var query = _context.Invoices
+                    .Include(i => i.Booking)
+                    .AsQueryable();
+
+                if (startDate.HasValue)
+                {
+                    query = query.Where(i => i.Booking != null && i.Booking.BookingDetails.Any(bd => bd.CheckInDate >= startDate.Value));
+                }
+                if (endDate.HasValue)
+                {
+                    query = query.Where(i => i.Booking != null && i.Booking.BookingDetails.Any(bd => bd.CheckOutDate <= endDate.Value));
+                }
+
+                var invoices = await query
+                    .OrderByDescending(i => i.Id)
+                    .Select(i => new
+                    {
+                        id = i.Id,
+                        bookingId = i.BookingId,
+                        bookingCode = i.Booking != null ? i.Booking.BookingCode : "N/A",
+                        guestName = i.Booking != null ? (i.Booking.GuestName ?? "Khách vãng lai") : "Khách vãng lai",
+                        guestPhone = i.Booking != null ? (i.Booking.GuestPhone ?? "") : "",
+                        totalRoomAmount = i.TotalRoomAmount ?? 0m,
+                        totalServiceAmount = i.TotalServiceAmount ?? 0m,
+                        discountAmount = i.DiscountAmount ?? 0m,
+                        taxAmount = i.TaxAmount ?? 0m,
+                        finalTotal = i.FinalTotal ?? 0m,
+                        status = i.Status,
+                        createdDate = i.Booking != null && i.Booking.BookingDetails.Any()
+                            ? i.Booking.BookingDetails.Min(bd => bd.CheckInDate)
+                            : DateTime.UtcNow
+                    })
+                    .ToListAsync();
+
+                return Ok(invoices);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi tải báo cáo kế toán: " + ex.Message });
+            }
+        }
+
         [HttpGet("preview/{bookingId}")]
         public async Task<IActionResult> GetInvoicePreview(int bookingId)
         {
