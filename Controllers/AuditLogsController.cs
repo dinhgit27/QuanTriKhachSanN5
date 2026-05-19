@@ -50,18 +50,59 @@ public class AuditLogsController : ControllerBase
             .Take(pageSize)
             .ToListAsync();
 
-        var logs = logsDb.Select(al => new AuditLogDto
+        var logs = new List<AuditLogDto>();
+        foreach (var al in logsDb)
         {
-            Id = al.Id,
-            UserId = al.UserId,
-            UserName = al.User != null ? al.User.FullName : null,
-            Action = al.Action,
-            TableName = al.TableName,
-            RecordId = al.RecordId,
-            OldValue = al.OldValue,
-            NewValue = al.NewValue,
-            CreatedAt = al.CreatedAt
-        }).ToList();
+            try
+            {
+                if (!string.IsNullOrEmpty(al.LogData) && al.LogData.TrimStart().StartsWith("{"))
+                {
+                    using var doc = JsonDocument.Parse(al.LogData);
+                    var root = doc.RootElement;
+                    if (root.TryGetProperty("Events", out var eventsProp) && eventsProp.ValueKind == JsonValueKind.Array)
+                    {
+                        foreach (var ev in eventsProp.EnumerateArray())
+                        {
+                            string evId = ev.TryGetProperty("eventId", out var p1) ? p1.GetString() ?? "" : "";
+                            string act = ev.TryGetProperty("actionType", out var p2) ? p2.GetString() ?? "" : "";
+                            string tbl = ev.TryGetProperty("targetTable", out var p3) ? p3.GetString() ?? "" : "";
+                            string status = ev.TryGetProperty("status", out var p4) ? p4.GetString() ?? "" : "";
+                            string tsStr = ev.TryGetProperty("timestamp", out var p5) ? p5.GetString() ?? "" : "";
+                            DateTime.TryParse(tsStr, out DateTime ts);
+
+                            logs.Add(new AuditLogDto
+                            {
+                                Id = al.Id,
+                                UserId = al.UserId,
+                                UserName = al.User != null ? al.User.FullName : null,
+                                Action = act,
+                                TableName = tbl,
+                                RecordId = null,
+                                OldValue = evId,
+                                NewValue = status,
+                                CreatedAt = ts == DateTime.MinValue ? al.LogDate : ts
+                            });
+                        }
+                        continue;
+                    }
+                }
+            }
+            catch {}
+
+            // Legacy format fallback
+            logs.Add(new AuditLogDto
+            {
+                Id = al.Id,
+                UserId = al.UserId,
+                UserName = al.User != null ? al.User.FullName : null,
+                Action = al.Action,
+                TableName = al.TableName,
+                RecordId = al.RecordId,
+                OldValue = al.OldValue,
+                NewValue = al.NewValue,
+                CreatedAt = al.CreatedAt
+            });
+        }
 
         return Ok(
             new
@@ -93,7 +134,7 @@ public class AuditLogsController : ControllerBase
             TableName = auditLog.TableName,
             RecordId = auditLog.RecordId,
             OldValue = auditLog.OldValue,
-            NewValue = auditLog.NewValue,
+            NewValue = auditLog.LogData, // Tra loi nguyen JSON logs de xem chi tiet
             CreatedAt = auditLog.CreatedAt
         };
 
@@ -113,6 +154,7 @@ public class AuditLogsController : ControllerBase
             // Get current user info from JWT claim if authenticated
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             int? userId = null;
+            string roleName = "Unknown";
 
             if (int.TryParse(userIdClaim, out int parsedUserId))
             {
@@ -167,12 +209,14 @@ public class AuditLogsController : ControllerBase
                 }
             }
 
-            // Parse properties dynamically from incoming payload
-            string action = "OTHER";
-            string tableName = "System";
-            int? recordId = null;
-            string oldValue = "{}";
-            string newValue = "{}";
+            if (userId.HasValue)
+            {
+                var matchedUser = await _context.Users.Include(u => u.UserRoles).ThenInclude(ur => ur.Role).FirstOrDefaultAsync(u => u.Id == userId.Value);
+                if (matchedUser != null)
+                {
+                    roleName = matchedUser.UserRoles?.FirstOrDefault()?.Role?.Name ?? "Unknown";
+                }
+            }
 
             if (payload != null)
             {
@@ -181,79 +225,36 @@ public class AuditLogsController : ControllerBase
                 using var doc = JsonDocument.Parse(jsonString);
                 var root = doc.RootElement;
 
-                // Handle single log vs batch array
-                if (root.TryGetProperty("events", out var eventsProp) && eventsProp.ValueKind == JsonValueKind.Array && eventsProp.GetArrayLength() > 0)
+                if (root.TryGetProperty("events", out var eventsProp) && eventsProp.ValueKind == JsonValueKind.Array)
                 {
-                    var firstEvent = eventsProp[0];
-                    if (firstEvent.TryGetProperty("actionType", out var actProp))
-                        action = actProp.GetString() ?? "OTHER";
-                    else if (firstEvent.TryGetProperty("action", out var actProp2))
-                        action = actProp2.GetString() ?? "OTHER";
-
-                    if (firstEvent.TryGetProperty("module", out var modProp))
-                        tableName = modProp.GetString() ?? "System";
-                    else if (firstEvent.TryGetProperty("targetTable", out var tblProp))
-                        tableName = tblProp.GetString() ?? "System";
-
-                    if (firstEvent.TryGetProperty("recordId", out var recProp))
+                    foreach (var ev in eventsProp.EnumerateArray())
                     {
-                        if (recProp.ValueKind == JsonValueKind.Number)
-                            recordId = recProp.GetInt32();
-                        else if (recProp.ValueKind == JsonValueKind.String && int.TryParse(recProp.GetString(), out int parsedId))
-                            recordId = parsedId;
+                        var eventObj = new
+                        {
+                            eventId = ev.TryGetProperty("eventId", out var evIdProp) ? evIdProp.GetString() : Guid.NewGuid().ToString("N").Substring(0, 8),
+                            actionType = ev.TryGetProperty("actionType", out var actProp) ? actProp.GetString() : (ev.TryGetProperty("action", out var actProp2) ? actProp2.GetString() : "OTHER"),
+                            targetTable = ev.TryGetProperty("targetTable", out var tblProp) ? tblProp.GetString() : (ev.TryGetProperty("module", out var modProp) ? modProp.GetString() : "System"),
+                            status = ev.TryGetProperty("status", out var statProp) ? statProp.GetString() : "Success",
+                            timestamp = ev.TryGetProperty("timestamp", out var tsProp) ? tsProp.GetString() : DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffffffZ")
+                        };
+                        await _batchService.AddEventAsync(userId ?? 0, roleName, eventObj);
                     }
-
-                    if (firstEvent.TryGetProperty("oldValue", out var oldProp))
-                        oldValue = oldProp.ValueKind == JsonValueKind.String ? (oldProp.GetString() ?? "{}") : oldProp.ToString();
-                    if (firstEvent.TryGetProperty("newValue", out var newProp))
-                        newValue = newProp.ValueKind == JsonValueKind.String ? (newProp.GetString() ?? "{}") : newProp.ToString();
-                    else if (firstEvent.TryGetProperty("description", out var descProp))
-                        newValue = descProp.GetString() ?? "{}";
                 }
                 else
                 {
-                    if (root.TryGetProperty("actionType", out var actProp))
-                        action = actProp.GetString() ?? "OTHER";
-                    else if (root.TryGetProperty("action", out var actProp2))
-                        action = actProp2.GetString() ?? "OTHER";
-
-                    if (root.TryGetProperty("module", out var modProp))
-                        tableName = modProp.GetString() ?? "System";
-                    else if (root.TryGetProperty("targetTable", out var tblProp))
-                        tableName = tblProp.GetString() ?? "System";
-
-                    if (root.TryGetProperty("recordId", out var recProp))
+                    var eventObj = new
                     {
-                        if (recProp.ValueKind == JsonValueKind.Number)
-                            recordId = recProp.GetInt32();
-                        else if (recProp.ValueKind == JsonValueKind.String && int.TryParse(recProp.GetString(), out int parsedId))
-                            recordId = parsedId;
-                    }
-
-                    if (root.TryGetProperty("oldValue", out var oldProp))
-                        oldValue = oldProp.ValueKind == JsonValueKind.String ? (oldProp.GetString() ?? "{}") : oldProp.ToString();
-                    if (root.TryGetProperty("newValue", out var newProp))
-                        newValue = newProp.ValueKind == JsonValueKind.String ? (newProp.GetString() ?? "{}") : newProp.ToString();
-                    else if (root.TryGetProperty("description", out var descProp))
-                        newValue = descProp.GetString() ?? "{}";
+                        eventId = root.TryGetProperty("eventId", out var evIdProp) ? evIdProp.GetString() : Guid.NewGuid().ToString("N").Substring(0, 8),
+                        actionType = root.TryGetProperty("actionType", out var actProp) ? actProp.GetString() : (root.TryGetProperty("action", out var actProp2) ? actProp2.GetString() : "OTHER"),
+                        targetTable = root.TryGetProperty("targetTable", out var tblProp) ? tblProp.GetString() : (root.TryGetProperty("module", out var modProp) ? modProp.GetString() : "System"),
+                        status = root.TryGetProperty("status", out var statProp) ? statProp.GetString() : "Success",
+                        timestamp = root.TryGetProperty("timestamp", out var tsProp) ? tsProp.GetString() : DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffffffZ")
+                    };
+                    await _batchService.AddEventAsync(userId ?? 0, roleName, eventObj);
                 }
             }
 
-            var auditLog = new Audit_Log
-            {
-                UserId = userId,
-                Action = action,
-                TableName = tableName,
-                RecordId = recordId,
-                OldValue = oldValue,
-                NewValue = newValue,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            _context.AuditLogs.Add(auditLog);
-            await _context.SaveChangesAsync();
-
-            return Ok(new { success = true, id = auditLog.Id });
+            return Ok(new { success = true });
         }
         catch (Exception ex)
         {

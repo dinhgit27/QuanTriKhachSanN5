@@ -60,6 +60,9 @@ namespace QuanTriKhachSanN5.Models
         [ForeignKey("UserId")]
         public User? User { get; set; }
 
+        [Column("role_name")]
+        public string? RoleName { get; set; }
+
         [Column("log_date")]
         public DateTime LogDate { get; set; } = DateTime.UtcNow;
 
