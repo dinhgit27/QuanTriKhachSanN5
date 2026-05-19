@@ -275,4 +275,59 @@ void SeedData(ApplicationDbContext context)
         });
         context.SaveChanges();
     }
+
+    // Tự động sao chép dữ liệu từ bảng Articles (nếu có) sang bảng Posts để hiển thị lên giao diện
+    try
+    {
+        if (context.Articles.Any())
+        {
+            var articleCategories = context.ArticleCategories.ToList();
+            var postCategories = context.Categories.ToList();
+
+            foreach (var artCat in articleCategories)
+            {
+                if (!postCategories.Any(pc => pc.Name.Equals(artCat.Name, StringComparison.OrdinalIgnoreCase)))
+                {
+                    var newCat = new Category { Name = artCat.Name, Description = "Nhập từ dữ liệu gốc Articles" };
+                    context.Categories.Add(newCat);
+                }
+            }
+            context.SaveChanges();
+
+            // Reload danh sách categories sau khi thêm
+            postCategories = context.Categories.ToList();
+
+            var articlesList = context.Articles.Include(a => a.Category).ToList();
+            foreach (var art in articlesList)
+            {
+                if (!context.Posts.Any(p => p.Title == art.Title))
+                {
+                    var targetCategoryName = art.Category?.Name ?? "Tin tức";
+                    var matchedCategory = postCategories.FirstOrDefault(pc => pc.Name.Equals(targetCategoryName, StringComparison.OrdinalIgnoreCase)) 
+                                          ?? postCategories.FirstOrDefault();
+
+                    if (matchedCategory != null)
+                    {
+                        var newPost = new Post
+                        {
+                            Title = art.Title,
+                            Content = art.Content,
+                            Excerpt = art.Content.Length > 200 ? art.Content.Substring(0, 197) + "..." : art.Content,
+                            ImageUrl = art.ThumbnailUrl,
+                            IsPublished = true,
+                            IsHot = art.Title.Contains("mới") || art.Title.Contains("khuyến mãi") || art.Title.Contains("nổi bật"),
+                            CategoryId = matchedCategory.Id,
+                            CreatedAt = art.PublishedAt != default ? art.PublishedAt : DateTime.UtcNow
+                        };
+                        context.Posts.Add(newPost);
+                    }
+                }
+            }
+            context.SaveChanges();
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Lỗi khi đồng bộ Articles sang Posts: {ex.Message}");
+    }
 }
