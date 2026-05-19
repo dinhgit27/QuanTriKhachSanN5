@@ -22,6 +22,20 @@ namespace QuanTriKhachSanN5.Controllers
         public bool IsActive { get; set; }
     }
 
+    public class TransferOrCloneDto
+    {
+        public int SourceRoomId { get; set; }
+        public int TargetRoomId { get; set; }
+        public bool IsMove { get; set; }
+        public List<TransferItemDto> Items { get; set; }
+    }
+
+    public class TransferItemDto
+    {
+        public int AmenityId { get; set; }
+        public int Quantity { get; set; }
+    }
+
     [ApiController]
     [Route("api/[controller]")]
     public class RoomInventoryController : ControllerBase
@@ -47,6 +61,44 @@ namespace QuanTriKhachSanN5.Controllers
         [HttpGet("rooms/{roomId}/inventory")]
         public async Task<IActionResult> GetRoomInventory(int roomId)
         {
+            // TỰ ĐỘNG PHÂN TÁCH VẬT TƯ ĐIỆN TỬ BỊ GỘP CÓ SỐ LƯỢNG > 1 THÀNH CÁC DÒNG CÓ SỐ LƯỢNG = 1
+            var databaseHasGroupedElectronics = await _context.RoomInventories
+                .Include(ri => ri.Equipment)
+                .AnyAsync(ri => ri.RoomId == roomId && ri.Equipment != null && ri.Equipment.Category == "Điện tử" && ri.Quantity > 1);
+
+            if (databaseHasGroupedElectronics)
+            {
+                var groupedItems = await _context.RoomInventories
+                    .Include(ri => ri.Equipment)
+                    .Where(ri => ri.RoomId == roomId && ri.Equipment != null && ri.Equipment.Category == "Điện tử" && ri.Quantity > 1)
+                    .ToListAsync();
+
+                foreach (var item in groupedItems)
+                {
+                    int totalQty = item.Quantity;
+                    // Sửa bản ghi hiện tại thành số lượng = 1
+                    item.Quantity = 1;
+                    _context.RoomInventories.Update(item);
+
+                    // Thêm phần số lượng còn lại thành các bản ghi riêng lẻ, mỗi bản ghi số lượng = 1
+                    for (int i = 1; i < totalQty; i++)
+                    {
+                        var splitItem = new Room_Inventory
+                        {
+                            RoomId = item.RoomId,
+                            EquipmentId = item.EquipmentId,
+                            Quantity = 1,
+                            PriceIfLost = item.PriceIfLost,
+                            IsActive = item.IsActive,
+                            Note = item.Note,
+                            ItemType = item.ItemType
+                        };
+                        _context.RoomInventories.Add(splitItem);
+                    }
+                }
+                await _context.SaveChangesAsync();
+            }
+
             var inventory = await _context.RoomInventories
                 .Where(ri => ri.RoomId == roomId)
                 .Include(ri => ri.Equipment) 
@@ -88,18 +140,39 @@ namespace QuanTriKhachSanN5.Controllers
             if (available < dto.Quantity)
                 return BadRequest(new { message = $"Kho không đủ '{equipment.Name}'. Chỉ còn lại: {available} cái." });
 
-            var newInventory = new Room_Inventory
+            if (equipment.Category == "Điện tử")
             {
-                RoomId = dto.RoomId,
-                EquipmentId = dto.AmenityId,
-                Quantity = dto.Quantity,
-                IsActive = true
-            };
-
-            _context.RoomInventories.Add(newInventory);
-            await _context.SaveChangesAsync();
-
-            return Ok(new { Message = "Đã gán vật tư cho phòng thành công!", Data = newInventory });
+                var addedList = new List<Room_Inventory>();
+                for (int i = 0; i < dto.Quantity; i++)
+                {
+                    var newInv = new Room_Inventory
+                    {
+                        RoomId = dto.RoomId,
+                        EquipmentId = dto.AmenityId,
+                        Quantity = 1,
+                        PriceIfLost = equipment.DefaultPriceIfLost ?? 0,
+                        IsActive = true
+                    };
+                    _context.RoomInventories.Add(newInv);
+                    addedList.Add(newInv);
+                }
+                await _context.SaveChangesAsync();
+                return Ok(new { Message = "Đã gán vật tư điện tử cho phòng thành công!", Data = addedList.FirstOrDefault() });
+            }
+            else
+            {
+                var newInventory = new Room_Inventory
+                {
+                    RoomId = dto.RoomId,
+                    EquipmentId = dto.AmenityId,
+                    Quantity = dto.Quantity,
+                    PriceIfLost = equipment.DefaultPriceIfLost ?? 0,
+                    IsActive = true
+                };
+                _context.RoomInventories.Add(newInventory);
+                await _context.SaveChangesAsync();
+                return Ok(new { Message = "Đã gán vật tư cho phòng thành công!", Data = newInventory });
+            }
         }
 
         // =========================================================
@@ -125,13 +198,31 @@ namespace QuanTriKhachSanN5.Controllers
                     return BadRequest(new { message = $"Kho không đủ '{equipment.Name}'. Chỉ còn: {available} cái." });
                 }
 
-                inventoriesToAdd.Add(new Room_Inventory
+                if (equipment.Category == "Điện tử")
                 {
-                    RoomId = roomId,
-                    EquipmentId = dto.AmenityId,
-                    Quantity = dto.Quantity,
-                    IsActive = true
-                });
+                    for (int i = 0; i < dto.Quantity; i++)
+                    {
+                        inventoriesToAdd.Add(new Room_Inventory
+                        {
+                            RoomId = roomId,
+                            EquipmentId = dto.AmenityId,
+                            Quantity = 1,
+                            PriceIfLost = equipment.DefaultPriceIfLost ?? 0,
+                            IsActive = true
+                        });
+                    }
+                }
+                else
+                {
+                    inventoriesToAdd.Add(new Room_Inventory
+                    {
+                        RoomId = roomId,
+                        EquipmentId = dto.AmenityId,
+                        Quantity = dto.Quantity,
+                        PriceIfLost = equipment.DefaultPriceIfLost ?? 0,
+                        IsActive = true
+                    });
+                }
             }
 
             if (!inventoriesToAdd.Any())
@@ -142,6 +233,109 @@ namespace QuanTriKhachSanN5.Controllers
             await _context.SaveChangesAsync(); 
 
             return Ok(new { Message = $"Đã thêm thành công {inventoriesToAdd.Count} vật tư vào phòng!" });
+        }
+
+        [Authorize(Policy = "MANAGE_INVENTORY")]
+        [HttpPost("transfer")]
+        public async Task<IActionResult> TransferOrCloneInventory([FromBody] TransferOrCloneDto dto)
+        {
+            if (dto.SourceRoomId == dto.TargetRoomId)
+                return BadRequest(new { message = "Phòng nguồn và phòng đích không được trùng nhau." });
+
+            if (dto.Items == null || !dto.Items.Any())
+                return BadRequest(new { message = "Danh sách vật tư chuyển giao trống." });
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                foreach (var item in dto.Items)
+                {
+                    if (item.Quantity <= 0) continue;
+
+                    // 1. Tìm vật tư ở phòng nguồn
+                    var sourceInventories = await _context.RoomInventories
+                        .Where(ri => ri.RoomId == dto.SourceRoomId && ri.EquipmentId == item.AmenityId && ri.IsActive)
+                        .ToListAsync();
+
+                    int sourceTotalQty = sourceInventories.Sum(ri => ri.Quantity);
+                    if (sourceTotalQty < item.Quantity)
+                    {
+                        return BadRequest(new { message = $"Phòng nguồn không đủ số lượng cho vật tư. Có: {sourceTotalQty}, Yêu cầu chuyển: {item.Quantity}" });
+                    }
+
+                    // 2. Nếu là "Di chuyển" (IsMove = true), trừ số lượng hoặc xóa bản ghi ở phòng nguồn
+                    if (dto.IsMove)
+                    {
+                        int qtyToSubtract = item.Quantity;
+                        foreach (var srcInv in sourceInventories.OrderBy(ri => ri.Quantity))
+                        {
+                            if (qtyToSubtract <= 0) break;
+                            if (srcInv.Quantity <= qtyToSubtract)
+                            {
+                                qtyToSubtract -= srcInv.Quantity;
+                                _context.RoomInventories.Remove(srcInv);
+                            }
+                            else
+                            {
+                                srcInv.Quantity -= qtyToSubtract;
+                                qtyToSubtract = 0;
+                                _context.RoomInventories.Update(srcInv);
+                            }
+                        }
+                    }
+
+                    // 3. Thêm hoặc cộng dồn vào phòng đích (Không cộng dồn nếu là Điện tử)
+                    var equipment = await _context.Equipments.FindAsync(item.AmenityId);
+                    if (equipment != null && equipment.Category == "Điện tử")
+                    {
+                        for (int k = 0; k < item.Quantity; k++)
+                        {
+                            var newInv = new Room_Inventory
+                            {
+                                RoomId = dto.TargetRoomId,
+                                EquipmentId = item.AmenityId,
+                                Quantity = 1,
+                                PriceIfLost = equipment.DefaultPriceIfLost ?? 0,
+                                IsActive = true
+                            };
+                            _context.RoomInventories.Add(newInv);
+                        }
+                    }
+                    else
+                    {
+                        var targetInventory = await _context.RoomInventories
+                            .FirstOrDefaultAsync(ri => ri.RoomId == dto.TargetRoomId && ri.EquipmentId == item.AmenityId && ri.IsActive);
+
+                        if (targetInventory != null)
+                        {
+                            targetInventory.Quantity += item.Quantity;
+                            _context.RoomInventories.Update(targetInventory);
+                        }
+                        else
+                        {
+                            var newInv = new Room_Inventory
+                            {
+                                RoomId = dto.TargetRoomId,
+                                EquipmentId = item.AmenityId,
+                                Quantity = item.Quantity,
+                                PriceIfLost = equipment != null ? (equipment.DefaultPriceIfLost ?? 0) : 0,
+                                IsActive = true
+                            };
+                            _context.RoomInventories.Add(newInv);
+                        }
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return Ok(new { message = dto.IsMove ? "Đã di chuyển vật tư thành công!" : "Đã sao chép vật tư thành công!" });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return StatusCode(500, new { message = "Lỗi hệ thống: " + ex.Message });
+            }
         }
 
         [Authorize(Policy = "MANAGE_INVENTORY")]
