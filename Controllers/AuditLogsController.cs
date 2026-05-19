@@ -50,59 +50,20 @@ public class AuditLogsController : ControllerBase
             .Take(pageSize)
             .ToListAsync();
 
-        var logs = new List<AuditLogDto>();
-        foreach (var al in logsDb)
+        var logs = logsDb.Select(al => new AuditLogDto
         {
-            try
-            {
-                if (!string.IsNullOrEmpty(al.LogData) && al.LogData.TrimStart().StartsWith("{"))
-                {
-                    using var doc = JsonDocument.Parse(al.LogData);
-                    var root = doc.RootElement;
-                    if (root.TryGetProperty("Events", out var eventsProp) && eventsProp.ValueKind == JsonValueKind.Array)
-                    {
-                        foreach (var ev in eventsProp.EnumerateArray())
-                        {
-                            string evId = ev.TryGetProperty("eventId", out var p1) ? p1.GetString() ?? "" : "";
-                            string act = ev.TryGetProperty("actionType", out var p2) ? p2.GetString() ?? "" : "";
-                            string tbl = ev.TryGetProperty("targetTable", out var p3) ? p3.GetString() ?? "" : "";
-                            string status = ev.TryGetProperty("status", out var p4) ? p4.GetString() ?? "" : "";
-                            string tsStr = ev.TryGetProperty("timestamp", out var p5) ? p5.GetString() ?? "" : "";
-                            DateTime.TryParse(tsStr, out DateTime ts);
-
-                            logs.Add(new AuditLogDto
-                            {
-                                Id = al.Id,
-                                UserId = al.UserId,
-                                UserName = al.User != null ? al.User.FullName : null,
-                                Action = act,
-                                TableName = tbl,
-                                RecordId = null,
-                                OldValue = evId,
-                                NewValue = status,
-                                CreatedAt = ts == DateTime.MinValue ? al.LogDate : ts
-                            });
-                        }
-                        continue;
-                    }
-                }
-            }
-            catch {}
-
-            // Legacy format fallback
-            logs.Add(new AuditLogDto
-            {
-                Id = al.Id,
-                UserId = al.UserId,
-                UserName = al.User != null ? al.User.FullName : null,
-                Action = al.Action,
-                TableName = al.TableName,
-                RecordId = al.RecordId,
-                OldValue = al.OldValue,
-                NewValue = al.NewValue,
-                CreatedAt = al.CreatedAt
-            });
-        }
+            Id = al.Id,
+            UserId = al.UserId,
+            UserName = al.User != null ? al.User.FullName : null,
+            RoleName = al.RoleName,
+            Action = al.Action,
+            TableName = al.TableName,
+            RecordId = al.RecordId,
+            OldValue = al.OldValue,
+            NewValue = al.NewValue,
+            CreatedAt = al.CreatedAt,
+            LogData = al.LogData
+        }).ToList();
 
         return Ok(
             new
@@ -268,10 +229,12 @@ public class AuditLogDto
     public int Id { get; set; }
     public int? UserId { get; set; }
     public string? UserName { get; set; }
+    public string? RoleName { get; set; }
     public string Action { get; set; } = string.Empty;
     public string TableName { get; set; } = string.Empty;
     public int? RecordId { get; set; }
     public string? OldValue { get; set; }
     public string? NewValue { get; set; }
     public DateTime CreatedAt { get; set; }
+    public string? LogData { get; set; }
 }
