@@ -53,9 +53,9 @@ namespace QuanTriKhachSanN5.Services
                     BookedRoomsCount = _context
                         .BookingDetails.Where(bd =>
                             bd.RoomTypeId == rt.Id
-                            && bd.Booking.Status != "Cancelled" // Bỏ qua các booking đã hủy
-                            && bd.CheckInDate < request.CheckOutDate
-                            && bd.CheckOutDate > request.CheckInDate
+                            && (bd.Booking.Status == "Confirmed" || bd.Booking.Status == "Checked_in" || bd.Booking.Status == "Đang ở")
+                            && bd.CheckInDate.Date < request.CheckOutDate.Date
+                            && bd.CheckOutDate.Date > request.CheckInDate.Date
                         ) // LOGIC OVERLAP CHÍNH LÀ ĐÂY
                         .Count(),
                 })
@@ -89,10 +89,10 @@ namespace QuanTriKhachSanN5.Services
             // 1. Lấy danh sách ID các phòng VẬT LÝ đã bị khóa trong khoảng thời gian này
             var bookedRoomIds = await _context.BookingDetails
                 .Where(bd => bd.RoomTypeId == roomTypeId 
-                          && bd.Booking.Status != "Cancelled" 
+                          && (bd.Booking.Status == "Confirmed" || bd.Booking.Status == "Checked_in" || bd.Booking.Status == "Đang ở") 
                           && bd.RoomId > 0 // Chỉ xét những booking đã được Lễ tân gán số phòng
-                          && bd.CheckInDate < checkOut 
-                          && bd.CheckOutDate > checkIn) // LOGIC OVERLAP
+                          && bd.CheckInDate.Date < checkOut.Date 
+                          && bd.CheckOutDate.Date > checkIn.Date) // LOGIC OVERLAP
                 .Select(bd => bd.RoomId)
                 .ToListAsync();
 

@@ -51,11 +51,10 @@ namespace QuanTriKhachSanN5.Controllers
         {
             var bookedRoomIds = await _context
                 .BookingDetails.Where(bd =>
-                    bd.CheckInDate < req.CheckOut
-                    && bd.CheckOutDate > req.CheckIn
+                    bd.CheckInDate.Date < req.CheckOut.Date
+                    && bd.CheckOutDate.Date > req.CheckIn.Date
                     && bd.Booking != null 
-                    && bd.Booking.Status != "Cancelled"
-                    && bd.Booking.Status != "Completed"
+                    && (bd.Booking.Status == "Confirmed" || bd.Booking.Status == "Checked_in" || bd.Booking.Status == "Đang ở")
                 )
                 .Where(bd => bd.RoomId != null)
                 .Select(bd => bd.RoomId.Value)
@@ -130,7 +129,10 @@ namespace QuanTriKhachSanN5.Controllers
             // 🚨 KIỂM TRA OVERBOOKING: Kiểm tra xem các phòng này đã có ai đặt chưa trong tầm ngày này
             var overlappingBookings = await _context.BookingDetails
                 .Where(bd => req.SelectedRoomIds.Contains(bd.RoomId ?? 0))
-                .Where(bd => bd.CheckInDate < req.CheckOut && bd.CheckOutDate > req.CheckIn && bd.Booking != null && bd.Booking.Status != "Cancelled" && bd.Booking.Status != "Completed")
+                .Where(bd => bd.CheckInDate.Date < req.CheckOut.Date 
+                             && bd.CheckOutDate.Date > req.CheckIn.Date 
+                             && bd.Booking != null 
+                             && (bd.Booking.Status == "Confirmed" || bd.Booking.Status == "Checked_in" || bd.Booking.Status == "Đang ở"))
                 .AnyAsync();
 
             if (overlappingBookings)
